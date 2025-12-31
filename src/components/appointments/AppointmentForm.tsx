@@ -39,7 +39,7 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: AppointmentFormProps) {
-  const { addAppointment, updateAppointment, addClient, updateClient, getClientById, addService, getServiceById } = useApp();
+  const { addAppointment, updateAppointment, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('10:00');
   const [clientName, setClientName] = useState('');
@@ -127,7 +127,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const [hours, minutes] = time.split(':').map(Number);
@@ -144,8 +144,8 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
         notes: clientNotes,
       });
     } else if (clientName.trim()) {
-      // Cria novo cliente
-      clientId = addClient({
+      // Cria novo cliente e aguarda o ID real do banco
+      clientId = await addClientAsync({
         name: clientName.trim(),
         phone: clientPhone,
         notes: clientNotes,
@@ -154,9 +154,9 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
 
     let serviceId = selectedServiceId;
 
-    // Se digitou serviço novo, cria automaticamente
+    // Se digitou serviço novo, cria automaticamente e aguarda o ID real
     if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
-      serviceId = addService({
+      serviceId = await addServiceAsync({
         description: service.trim(),
         amount: parseFloat(amount),
       });
