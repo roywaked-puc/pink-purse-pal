@@ -9,7 +9,7 @@ import { useApp } from '@/contexts/AppContext';
 interface TransactionItemProps {
   transaction: Transaction;
   onEdit: (transaction: Transaction) => void;
-  onDelete: (id: string) => void;
+  onDelete: (transaction: Transaction) => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -76,7 +76,7 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onDelete(transaction.id)}
+            onClick={() => onDelete(transaction)}
             className="h-8 w-8 text-destructive hover:text-destructive"
           >
             <Trash2 className="w-4 h-4" />

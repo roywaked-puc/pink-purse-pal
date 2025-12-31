@@ -147,3 +147,44 @@ export function useUpdateAppointmentPayment() {
     },
   });
 }
+
+export function useSubtractAppointmentPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
+      // First get current appointment data
+      const { data: current, error: fetchError } = await supabase
+        .from('appointments')
+        .select('paid_amount, amount')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Subtract the amount (minimum 0)
+      const newPaidAmount = Math.max(0, Number(current.paid_amount) - amount);
+      
+      // Recalculate status
+      let newStatus: 'nao_pago' | 'sinal' | 'pago' = 'nao_pago';
+      if (newPaidAmount >= Number(current.amount)) {
+        newStatus = 'pago';
+      } else if (newPaidAmount > 0) {
+        newStatus = 'sinal';
+      }
+      
+      const { error } = await supabase
+        .from('appointments')
+        .update({
+          paid_amount: newPaidAmount,
+          payment_status: newStatus,
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+}

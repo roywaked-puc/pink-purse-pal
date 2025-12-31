@@ -5,7 +5,7 @@ import { useClients, useAddClient, useUpdateClient, useDeleteClient } from '@/ho
 import { useServices, useAddService, useUpdateService, useDeleteService } from '@/hooks/useServices';
 import { useCategories, useAddCategory, useUpdateCategory, useDeleteCategory } from '@/hooks/useCategories';
 import { useAccounts, useAddAccount, useUpdateAccount, useDeleteAccount } from '@/hooks/useAccounts';
-import { useAppointments, useAddAppointment, useUpdateAppointment, useDeleteAppointment, useUpdateAppointmentPayment } from '@/hooks/useAppointments';
+import { useAppointments, useAddAppointment, useUpdateAppointment, useDeleteAppointment, useUpdateAppointmentPayment, useSubtractAppointmentPayment } from '@/hooks/useAppointments';
 import { useTransactions, useAddTransaction, useUpdateTransaction, useDeleteTransaction } from '@/hooks/useTransactions';
 
 interface AppContextType {
@@ -18,7 +18,7 @@ interface AppContextType {
   loading: boolean;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
-  deleteTransaction: (id: string) => void;
+  deleteTransaction: (transaction: Transaction) => void;
   addAppointment: (appointment: Omit<Appointment, 'id'>) => void;
   updateAppointment: (id: string, appointment: Omit<Appointment, 'id'>) => void;
   deleteAppointment: (id: string) => void;
@@ -81,6 +81,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateAppointmentMutation = useUpdateAppointment();
   const deleteAppointmentMutation = useDeleteAppointment();
   const updateAppointmentPaymentMutation = useUpdateAppointmentPayment();
+  const subtractAppointmentPaymentMutation = useSubtractAppointmentPayment();
   
   const addTransactionMutation = useAddTransaction();
   const updateTransactionMutation = useUpdateTransaction();
@@ -205,9 +206,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateTransactionMutation.mutate({ id, transaction });
   }, [updateTransactionMutation]);
 
-  const deleteTransaction = useCallback((id: string) => {
-    deleteTransactionMutation.mutate(id);
-  }, [deleteTransactionMutation]);
+  const deleteTransaction = useCallback((transaction: Transaction) => {
+    // If transaction is linked to an appointment, subtract the amount
+    if (transaction.appointmentId) {
+      subtractAppointmentPaymentMutation.mutate({
+        id: transaction.appointmentId,
+        amount: transaction.amount
+      });
+    }
+    deleteTransactionMutation.mutate(transaction.id);
+  }, [deleteTransactionMutation, subtractAppointmentPaymentMutation]);
 
   // Balance functions
   const getBusinessBalance = useCallback(() => {
