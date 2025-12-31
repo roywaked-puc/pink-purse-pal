@@ -21,7 +21,7 @@ const Movimentacoes = () => {
   
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
   
   const [filterScope, setFilterScope] = useState<TransactionScope | 'todos'>('todos');
   const [filterCategory, setFilterCategory] = useState<string>('todos');
@@ -38,14 +38,14 @@ const Movimentacoes = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
-    setDeleteId(id);
+  const handleDelete = (transaction: Transaction) => {
+    setDeletingTransaction(transaction);
   };
 
   const confirmDelete = () => {
-    if (deleteId) {
-      deleteTransaction(deleteId);
-      setDeleteId(null);
+    if (deletingTransaction) {
+      deleteTransaction(deletingTransaction);
+      setDeletingTransaction(null);
     }
   };
 
@@ -148,15 +148,15 @@ const Movimentacoes = () => {
         transaction={editingTransaction}
         onDelete={() => {
           if (editingTransaction) {
-            setDeleteId(editingTransaction.id);
+            setDeletingTransaction(editingTransaction);
             setShowForm(false);
           }
         }}
       />
 
       <DeleteConfirmDialog
-        open={!!deleteId}
-        onOpenChange={() => setDeleteId(null)}
+        open={!!deletingTransaction}
+        onOpenChange={() => setDeletingTransaction(null)}
         onConfirm={confirmDelete}
         title="Excluir movimentação"
         description="Tem certeza que deseja excluir esta movimentação? Os saldos serão atualizados automaticamente."
