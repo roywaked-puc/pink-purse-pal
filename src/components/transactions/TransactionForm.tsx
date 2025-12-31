@@ -173,6 +173,17 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
       });
       return;
     }
+
+    // Validação: valor não pode exceder o saldo disponível do agendamento
+    const parsedAmount = parseFloat(amount) || 0;
+    if (selectedAppointment && parsedAmount > balanceToReceive) {
+      toast({
+        title: "Erro",
+        description: `O valor não pode exceder o saldo disponível de R$ ${balanceToReceive.toFixed(2).replace('.', ',')}`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     const data: Omit<Transaction, 'id'> = {
       date,
@@ -314,11 +325,19 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
                     </Select>
                   </div>
 
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Valor a receber</p>
-                    <p className="text-lg font-semibold text-foreground">
-                      R$ {balanceToReceive.toFixed(2).replace('.', ',')}
-                    </p>
+                  <div className="p-3 bg-muted rounded-lg space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Valor total:</span>
+                      <span className="text-foreground">R$ {selectedAppointment.amount.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Já recebido:</span>
+                      <span className="text-foreground">R$ {selectedAppointment.paidAmount.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1">
+                      <span className="text-muted-foreground">Saldo a receber:</span>
+                      <span className="text-primary">R$ {balanceToReceive.toFixed(2).replace('.', ',')}</span>
+                    </div>
                   </div>
                 </>
               )}
