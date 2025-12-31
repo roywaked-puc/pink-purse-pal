@@ -169,6 +169,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       serviceId: serviceId || undefined,
       service,
       amount: parseFloat(amount) || 0,
+      paidAmount: appointment?.paidAmount || 0,
       paymentStatus,
     };
 
