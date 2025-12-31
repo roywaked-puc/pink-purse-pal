@@ -34,6 +34,9 @@ interface AppContextType {
   getPersonalBalance: () => number;
   getMonthlyPersonalExpenses: () => number;
   getAccountBalance: (accountId: string) => number;
+  getAppointmentsWithBalance: (clientId?: string) => Appointment[];
+  getAppointmentById: (id: string) => Appointment | undefined;
+  updateAppointmentPayment: (id: string, paidAmount: number) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -98,6 +101,7 @@ const initialAppointments: Appointment[] = [
     clientName: 'Maria Silva',
     service: 'Unha em gel',
     amount: 120,
+    paidAmount: 30,
     paymentStatus: 'sinal',
   },
   {
@@ -107,6 +111,7 @@ const initialAppointments: Appointment[] = [
     clientName: 'Ana Costa',
     service: 'Manicure + Pedicure',
     amount: 80,
+    paidAmount: 0,
     paymentStatus: 'nao_pago',
   },
 ];
@@ -261,6 +266,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }, 0);
   };
 
+  const getAppointmentsWithBalance = useCallback((clientId?: string): Appointment[] => {
+    return appointments.filter(a => {
+      const hasBalance = a.amount - a.paidAmount > 0;
+      if (clientId) {
+        return hasBalance && a.clientId === clientId;
+      }
+      return hasBalance;
+    });
+  }, [appointments]);
+
+  const getAppointmentById = useCallback((id: string): Appointment | undefined => {
+    return appointments.find(a => a.id === id);
+  }, [appointments]);
+
+  const updateAppointmentPayment = (id: string, paidAmount: number) => {
+    setAppointments(prev => prev.map(a => {
+      if (a.id !== id) return a;
+      const newPaidAmount = a.paidAmount + paidAmount;
+      let newStatus: 'nao_pago' | 'sinal' | 'pago' = 'nao_pago';
+      if (newPaidAmount >= a.amount) {
+        newStatus = 'pago';
+      } else if (newPaidAmount > 0) {
+        newStatus = 'sinal';
+      }
+      return { ...a, paidAmount: newPaidAmount, paymentStatus: newStatus };
+    }));
+  };
+
   return (
     <AppContext.Provider value={{
       transactions,
@@ -295,6 +328,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       getPersonalBalance,
       getMonthlyPersonalExpenses,
       getAccountBalance,
+      getAppointmentsWithBalance,
+      getAppointmentById,
+      updateAppointmentPayment,
     }}>
       {children}
     </AppContext.Provider>

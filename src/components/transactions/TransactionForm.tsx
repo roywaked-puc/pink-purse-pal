@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { Transaction, TransactionType, TransactionScope } from '@/types';
+import { Transaction, TransactionType, TransactionScope, Appointment, Client } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,8 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { ClientAutocomplete } from '@/components/appointments/ClientAutocomplete';
+import { AppointmentSelector } from './AppointmentSelector';
 
 interface TransactionFormProps {
   open: boolean;
@@ -37,7 +39,15 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ open, onOpenChange, transaction, onDelete }: TransactionFormProps) {
-  const { categories, accounts, addTransaction, updateTransaction } = useApp();
+  const { 
+    categories, 
+    accounts, 
+    addTransaction, 
+    updateTransaction,
+    getAppointmentsWithBalance,
+    updateAppointmentPayment 
+  } = useApp();
+  
   const [date, setDate] = useState<Date>(new Date());
   const [type, setType] = useState<TransactionType>('entrada');
   const [scope, setScope] = useState<TransactionScope>('empresa');
@@ -45,6 +55,24 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
   const [account, setAccount] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  
+  // Campos para vincular a agendamento
+  const [clientName, setClientName] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [paymentType, setPaymentType] = useState<'sinal' | 'pagamento'>('pagamento');
+
+  const showAppointmentFields = type === 'entrada' && scope === 'empresa';
+
+  const clientAppointments = useMemo(() => {
+    if (!selectedClientId) return [];
+    return getAppointmentsWithBalance(selectedClientId);
+  }, [selectedClientId, getAppointmentsWithBalance]);
+
+  const balanceToReceive = useMemo(() => {
+    if (!selectedAppointment) return 0;
+    return selectedAppointment.amount - selectedAppointment.paidAmount;
+  }, [selectedAppointment]);
 
   useEffect(() => {
     if (transaction) {
@@ -55,10 +83,19 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
       setAccount(transaction.account);
       setAmount(transaction.amount.toString());
       setDescription(transaction.description || '');
+      setPaymentType(transaction.paymentType || 'pagamento');
     } else {
       resetForm();
     }
   }, [transaction, open]);
+
+  // Quando selecionar agendamento, sugere o valor do saldo
+  useEffect(() => {
+    if (selectedAppointment && !transaction) {
+      setAmount(balanceToReceive.toFixed(2));
+      setDescription(`${selectedAppointment.service} - ${selectedAppointment.clientName}`);
+    }
+  }, [selectedAppointment, balanceToReceive, transaction]);
 
   const resetForm = () => {
     setDate(new Date());
@@ -68,12 +105,29 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
     setAccount('');
     setAmount('');
     setDescription('');
+    setClientName('');
+    setSelectedClientId(null);
+    setSelectedAppointment(null);
+    setPaymentType('pagamento');
+  };
+
+  const handleClientSelect = (client: Client | null) => {
+    if (client) {
+      setSelectedClientId(client.id);
+    } else {
+      setSelectedClientId(null);
+      setSelectedAppointment(null);
+    }
+  };
+
+  const handleAppointmentSelect = (appointment: Appointment | null) => {
+    setSelectedAppointment(appointment);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const data = {
+    const data: Omit<Transaction, 'id'> = {
       date,
       type,
       scope,
@@ -81,12 +135,19 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
       account,
       amount: parseFloat(amount) || 0,
       description: description || undefined,
+      appointmentId: selectedAppointment?.id,
+      paymentType: selectedAppointment ? paymentType : undefined,
     };
 
     if (transaction) {
       updateTransaction(transaction.id, data);
     } else {
       addTransaction(data);
+      
+      // Atualiza o saldo pago do agendamento
+      if (selectedAppointment) {
+        updateAppointmentPayment(selectedAppointment.id, parseFloat(amount) || 0);
+      }
     }
 
     onOpenChange(false);
@@ -127,7 +188,15 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <Select value={type} onValueChange={(v) => setType(v as TransactionType)}>
+              <Select value={type} onValueChange={(v) => {
+                setType(v as TransactionType);
+                // Limpa campos de agendamento se mudar de entrada
+                if (v !== 'entrada') {
+                  setSelectedClientId(null);
+                  setSelectedAppointment(null);
+                  setClientName('');
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -141,7 +210,15 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
 
             <div className="space-y-2">
               <Label>Origem</Label>
-              <Select value={scope} onValueChange={(v) => setScope(v as TransactionScope)}>
+              <Select value={scope} onValueChange={(v) => {
+                setScope(v as TransactionScope);
+                // Limpa campos de agendamento se mudar para pessoal
+                if (v === 'pessoal') {
+                  setSelectedClientId(null);
+                  setSelectedAppointment(null);
+                  setClientName('');
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -153,22 +230,68 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
             </div>
           </div>
 
-          {scope === 'pessoal' && (
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>Categoria</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {showAppointmentFields && !transaction && (
+            <>
+              <div className="space-y-2">
+                <Label>Cliente (opcional)</Label>
+                <ClientAutocomplete
+                  value={clientName}
+                  onChange={setClientName}
+                  onClientSelect={handleClientSelect}
+                />
+              </div>
+
+              {selectedClientId && (
+                <div className="space-y-2">
+                  <Label>Agendamento</Label>
+                  <AppointmentSelector
+                    appointments={clientAppointments}
+                    selectedId={selectedAppointment?.id || null}
+                    onSelect={handleAppointmentSelect}
+                  />
+                </div>
+              )}
+
+              {selectedAppointment && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Tipo de Recebimento</Label>
+                    <Select value={paymentType} onValueChange={(v) => setPaymentType(v as 'sinal' | 'pagamento')}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sinal">Sinal</SelectItem>
+                        <SelectItem value="pagamento">Pagamento</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">Valor a receber</p>
+                    <p className="text-lg font-semibold text-foreground">
+                      R$ {balanceToReceive.toFixed(2).replace('.', ',')}
+                    </p>
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           <div className="space-y-2">
@@ -188,7 +311,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
           </div>
 
           <div className="space-y-2">
-            <Label>Valor (R$)</Label>
+            <Label>{selectedAppointment ? 'Valor Recebido (R$)' : 'Valor (R$)'}</Label>
             <Input
               type="number"
               step="0.01"

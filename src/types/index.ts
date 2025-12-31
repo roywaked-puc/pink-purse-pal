@@ -11,6 +11,8 @@ export interface Transaction {
   account: string;
   amount: number;
   description?: string;
+  appointmentId?: string;
+  paymentType?: 'sinal' | 'pagamento';
 }
 
 export interface Client {
@@ -28,6 +30,7 @@ export interface Appointment {
   serviceId?: string;
   service: string;
   amount: number;
+  paidAmount: number;
   paymentStatus: PaymentStatus;
 }
 
