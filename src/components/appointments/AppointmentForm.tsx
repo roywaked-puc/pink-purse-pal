@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Appointment, PaymentStatus, Client, Service } from '@/types';
 import { useApp } from '@/contexts/AppContext';
@@ -30,6 +30,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from './ClientAutocomplete';
 import { ServiceAutocomplete } from './ServiceAutocomplete';
+import { toast } from 'sonner';
 
 interface AppointmentFormProps {
   open: boolean;
@@ -39,7 +40,7 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: AppointmentFormProps) {
-  const { addAppointment, updateAppointment, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { appointments, addAppointment, updateAppointment, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('10:00');
   const [clientName, setClientName] = useState('');
@@ -131,12 +132,50 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
     }
   };
 
+  // Verifica se há conflito de horário com outros agendamentos
+  const checkTimeConflict = (newStart: Date, newDuration: number): Appointment | null => {
+    const newEnd = addMinutes(newStart, newDuration);
+    
+    for (const existing of appointments) {
+      // Ignora o agendamento atual se estiver editando
+      if (appointment && existing.id === appointment.id) continue;
+      
+      const existingStart = new Date(existing.date);
+      const existingEnd = addMinutes(existingStart, existing.duration);
+      
+      // Verifica sobreposição de intervalos
+      const hasOverlap = areIntervalsOverlapping(
+        { start: newStart, end: newEnd },
+        { start: existingStart, end: existingEnd }
+      );
+      
+      if (hasOverlap) {
+        return existing;
+      }
+    }
+    
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const [hours, minutes] = time.split(':').map(Number);
     const fullDate = new Date(date);
     fullDate.setHours(hours, minutes, 0, 0);
+
+    // Verifica conflito de horário
+    const durationMinutes = parseInt(duration) || 60;
+    const conflictingAppointment = checkTimeConflict(fullDate, durationMinutes);
+    
+    if (conflictingAppointment) {
+      const conflictTime = format(new Date(conflictingAppointment.date), 'HH:mm');
+      const conflictEnd = format(addMinutes(new Date(conflictingAppointment.date), conflictingAppointment.duration), 'HH:mm');
+      toast.error('Conflito de horário', {
+        description: `Já existe um agendamento de ${conflictingAppointment.clientName} das ${conflictTime} às ${conflictEnd}.`,
+      });
+      return;
+    }
 
     let clientId = selectedClientId;
 
