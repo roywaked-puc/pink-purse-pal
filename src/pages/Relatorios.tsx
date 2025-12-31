@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Filter } from 'lucide-react';
+import { CalendarIcon, Filter, Download } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 type ScopeFilter = 'todos' | 'empresa' | 'pessoal';
@@ -21,6 +24,7 @@ type ScopeFilter = 'todos' | 'empresa' | 'pessoal';
 export default function Relatorios() {
   const { data: transactions = [] } = useTransactions();
   const { data: accounts = [] } = useAccounts();
+  const { toast } = useToast();
 
   const [selectedAccount, setSelectedAccount] = useState<string>('todos');
   const [selectedScope, setSelectedScope] = useState<ScopeFilter>('todos');
@@ -93,6 +97,153 @@ export default function Relatorios() {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
+  };
+
+  const exportToPDF = () => {
+    if (transactionsWithBalance.length === 0) {
+      toast({
+        title: "Sem dados",
+        description: "Nenhuma transacao para exportar no periodo selecionado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text('Relatorio Financeiro', pageWidth / 2, 20, { align: 'center' });
+    
+    // Period info
+    doc.setFontSize(10);
+    const periodText = `Periodo: ${format(startDate, 'dd/MM/yyyy')} a ${format(endDate, 'dd/MM/yyyy')}`;
+    const accountText = `Conta: ${selectedAccount === 'todos' ? 'Todas' : selectedAccount}`;
+    const scopeText = `Escopo: ${selectedScope === 'todos' ? 'Todos' : selectedScope === 'empresa' ? 'Empresa' : 'Pessoal'}`;
+    
+    doc.text(periodText, 14, 30);
+    doc.text(accountText, 14, 36);
+    doc.text(scopeText, 14, 42);
+
+    // Statement table
+    doc.setFontSize(12);
+    doc.text('Extrato', 14, 52);
+
+    const statementData = transactionsWithBalance.map(t => [
+      format(new Date(t.date), 'dd/MM/yyyy'),
+      t.scope === 'empresa' ? 'Emp' : 'Pes',
+      t.description || t.category,
+      t.category,
+      t.type === 'entrada' ? formatCurrency(t.amount) : '',
+      t.type === 'saida' ? formatCurrency(t.amount) : '',
+      formatCurrency(t.runningBalance),
+    ]);
+
+    autoTable(doc, {
+      startY: 56,
+      head: [['Data', 'Tipo', 'Descricao', 'Categoria', 'Entrada', 'Saida', 'Saldo']],
+      body: statementData,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 12 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 25, halign: 'right' },
+        5: { cellWidth: 25, halign: 'right' },
+        6: { cellWidth: 25, halign: 'right' },
+      },
+    });
+
+    // Category Summary
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text('Resumo por Categoria', 14, finalY);
+
+    const summaryData: string[][] = [];
+
+    const addScopeSummary = (scope: 'empresa' | 'pessoal', label: string) => {
+      const categories = categorySummary[scope];
+      const scopeTotals = totals[scope];
+      
+      if (Object.keys(categories).length > 0) {
+        summaryData.push([label, '', '', '']);
+        
+        Object.entries(categories).forEach(([category, values]) => {
+          if (values.entradas > 0 || values.saidas > 0) {
+            summaryData.push([
+              '',
+              category,
+              values.entradas > 0 ? formatCurrency(values.entradas) : '-',
+              values.saidas > 0 ? formatCurrency(values.saidas) : '-',
+            ]);
+          }
+        });
+
+        const balance = scopeTotals.entradas - scopeTotals.saidas;
+        summaryData.push([
+          '',
+          'Subtotal',
+          formatCurrency(scopeTotals.entradas),
+          formatCurrency(scopeTotals.saidas),
+        ]);
+        summaryData.push(['', 'Saldo', '', (balance >= 0 ? '+' : '') + formatCurrency(balance)]);
+      }
+    };
+
+    if (selectedScope === 'todos' || selectedScope === 'empresa') {
+      addScopeSummary('empresa', 'EMPRESA');
+    }
+    if (selectedScope === 'todos' || selectedScope === 'pessoal') {
+      addScopeSummary('pessoal', 'PESSOAL');
+    }
+
+    autoTable(doc, {
+      startY: finalY + 4,
+      head: [['Escopo', 'Categoria', 'Entradas', 'Saidas']],
+      body: summaryData,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    // Totals
+    const finalY2 = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text('Totais do Periodo', 14, finalY2);
+
+    const totalsData: string[][] = [];
+    
+    if (selectedScope === 'todos' || selectedScope === 'empresa') {
+      const empresaBalance = totals.empresa.entradas - totals.empresa.saidas;
+      totalsData.push(['Empresa', (empresaBalance >= 0 ? '+' : '') + formatCurrency(empresaBalance)]);
+    }
+    if (selectedScope === 'todos' || selectedScope === 'pessoal') {
+      const pessoalBalance = totals.pessoal.entradas - totals.pessoal.saidas;
+      totalsData.push(['Pessoal', (pessoalBalance >= 0 ? '+' : '') + formatCurrency(pessoalBalance)]);
+    }
+    
+    totalsData.push(['SALDO GERAL', (totalGeral >= 0 ? '+' : '') + formatCurrency(totalGeral)]);
+
+    autoTable(doc, {
+      startY: finalY2 + 4,
+      body: totalsData,
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        1: { halign: 'right', fontStyle: 'bold' },
+      },
+    });
+
+    // Save
+    const fileName = `relatorio_${format(startDate, 'ddMMyyyy')}_${format(endDate, 'ddMMyyyy')}.pdf`;
+    doc.save(fileName);
+
+    toast({
+      title: "PDF exportado",
+      description: `Arquivo ${fileName} salvo com sucesso.`,
+    });
   };
 
   const renderCategorySummary = (scope: 'empresa' | 'pessoal', title: string) => {
@@ -174,8 +325,14 @@ export default function Relatorios() {
   return (
     <MainLayout>
       <PageHeader
-        title="Relatórios"
+        title="Relatorios"
         subtitle="Extrato e resumo financeiro"
+        action={
+          <Button onClick={exportToPDF} size="sm" variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            PDF
+          </Button>
+        }
       />
 
       <div className="space-y-4">
