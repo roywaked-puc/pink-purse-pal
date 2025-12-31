@@ -1,14 +1,15 @@
 import { useState, useMemo } from 'react';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus, Calendar, DollarSign } from 'lucide-react';
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { AppointmentForm } from '@/components/appointments/AppointmentForm';
+import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
-import { Appointment, PaymentStatus } from '@/types';
+import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { Clock, User, Pencil, Trash2 } from 'lucide-react';
 
@@ -17,6 +18,12 @@ const formatCurrency = (value: number) => {
     style: 'currency',
     currency: 'BRL',
   }).format(value);
+};
+
+const getPaymentStatus = (appointment: Appointment) => {
+  if (appointment.paidAmount >= appointment.amount) return 'pago';
+  if (appointment.paidAmount > 0) return 'sinal';
+  return 'nao_pago';
 };
 
 const statusLabels = {
@@ -29,7 +36,9 @@ const Agendamentos = () => {
   const { appointments, deleteAppointment } = useApp();
   
   const [showForm, setShowForm] = useState(false);
+  const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const sortedAppointments = useMemo(() => {
@@ -55,6 +64,11 @@ const Agendamentos = () => {
     setDeleteId(id);
   };
 
+  const handleReceive = (appointment: Appointment) => {
+    setReceivingAppointment(appointment);
+    setShowTransactionForm(true);
+  };
+
   const confirmDelete = () => {
     if (deleteId) {
       deleteAppointment(deleteId);
@@ -65,6 +79,9 @@ const Agendamentos = () => {
   const renderAppointment = (appointment: Appointment, index: number) => {
     const appointmentDate = new Date(appointment.date);
     const isAppointmentToday = isToday(appointmentDate);
+    const paymentStatus = getPaymentStatus(appointment);
+    const hasBalance = appointment.paidAmount < appointment.amount;
+    const canDelete = appointment.paidAmount === 0;
 
     return (
       <div
@@ -97,11 +114,11 @@ const Agendamentos = () => {
           </div>
           <span className={cn(
             "text-xs font-medium px-2.5 py-1 rounded-full",
-            appointment.paymentStatus === 'pago' && "status-paid",
-            appointment.paymentStatus === 'nao_pago' && "status-pending",
-            appointment.paymentStatus === 'sinal' && "status-today"
+            paymentStatus === 'pago' && "status-paid",
+            paymentStatus === 'nao_pago' && "status-pending",
+            paymentStatus === 'sinal' && "status-today"
           )}>
-            {statusLabels[appointment.paymentStatus]}
+            {statusLabels[paymentStatus]}
           </span>
         </div>
 
@@ -114,6 +131,11 @@ const Agendamentos = () => {
           <div>
             <p className="text-sm text-muted-foreground">{appointment.service}</p>
             <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
+            {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
+              <p className="text-xs text-muted-foreground">
+                Recebido: {formatCurrency(appointment.paidAmount)}
+              </p>
+            )}
           </div>
           <div className="flex gap-1">
             <Button
@@ -124,14 +146,26 @@ const Agendamentos = () => {
             >
               <Pencil className="w-4 h-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDelete(appointment.id)}
-              className="h-8 w-8 text-destructive hover:text-destructive"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {hasBalance && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleReceive(appointment)}
+                className="h-8 w-8 text-green-600 hover:text-green-700"
+              >
+                <DollarSign className="w-4 h-4" />
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(appointment.id)}
+                className="h-8 w-8 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -219,6 +253,15 @@ const Agendamentos = () => {
             setShowForm(false);
           }
         }}
+      />
+
+      <TransactionForm
+        open={showTransactionForm}
+        onOpenChange={(open) => {
+          setShowTransactionForm(open);
+          if (!open) setReceivingAppointment(null);
+        }}
+        prefilledAppointment={receivingAppointment}
       />
 
       <DeleteConfirmDialog

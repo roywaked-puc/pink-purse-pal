@@ -24,9 +24,15 @@ const Index = () => {
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [deleteAppointmentId, setDeleteAppointmentId] = useState<string | null>(null);
+  const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
 
+  // Filtra agendamentos futuros que ainda têm saldo a receber
   const upcomingAppointments = appointments
-    .filter(a => new Date(a.date) >= new Date())
+    .filter(a => {
+      const isFuture = new Date(a.date) >= new Date();
+      const isPaid = a.paidAmount >= a.amount;
+      return isFuture && !isPaid;
+    })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 3);
 
@@ -37,6 +43,11 @@ const Index = () => {
 
   const handleDeleteAppointment = (id: string) => {
     setDeleteAppointmentId(id);
+  };
+
+  const handleReceiveAppointment = (appointment: Appointment) => {
+    setReceivingAppointment(appointment);
+    setShowTransactionForm(true);
   };
 
   const confirmDeleteAppointment = () => {
@@ -118,6 +129,7 @@ const Index = () => {
                   appointment={appointment}
                   onEdit={handleEditAppointment}
                   onDelete={handleDeleteAppointment}
+                  onReceive={handleReceiveAppointment}
                 />
               </div>
             ))}
@@ -133,7 +145,11 @@ const Index = () => {
       {/* Forms */}
       <TransactionForm
         open={showTransactionForm}
-        onOpenChange={setShowTransactionForm}
+        onOpenChange={(open) => {
+          setShowTransactionForm(open);
+          if (!open) setReceivingAppointment(null);
+        }}
+        prefilledAppointment={receivingAppointment}
       />
 
       <AppointmentForm
