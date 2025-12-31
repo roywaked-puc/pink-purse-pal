@@ -89,7 +89,14 @@ const Movimentacoes = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todas</SelectItem>
-              {categories.map((cat) => (
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Empresa</div>
+              {categories.filter(c => c.scope === 'empresa').map((cat) => (
+                <SelectItem key={cat.id} value={cat.name}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Pessoal</div>
+              {categories.filter(c => c.scope === 'pessoal').map((cat) => (
                 <SelectItem key={cat.id} value={cat.name}>
                   {cat.name}
                 </SelectItem>

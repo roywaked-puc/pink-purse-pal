@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowUpCircle, ArrowDownCircle, RefreshCw, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, Pencil, Trash2 } from 'lucide-react';
 import { Transaction } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,6 @@ const formatCurrency = (value: number) => {
 const typeConfig = {
   entrada: { icon: ArrowUpCircle, label: 'Entrada', color: 'text-success' },
   saida: { icon: ArrowDownCircle, label: 'Saída', color: 'text-destructive' },
-  ajuste: { icon: RefreshCw, label: 'Ajuste', color: 'text-primary' },
 };
 
 export function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps) {

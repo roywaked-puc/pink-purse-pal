@@ -44,12 +44,24 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
 const initialCategories: Category[] = [
-  { id: '1', name: 'Alimentação' },
-  { id: '2', name: 'Transporte' },
-  { id: '3', name: 'Beleza' },
-  { id: '4', name: 'Saúde' },
-  { id: '5', name: 'Lazer' },
-  { id: '6', name: 'Casa' },
+  // Empresa - Entrada
+  { id: '1', name: 'Recebimento de Serviço', type: 'entrada', scope: 'empresa' },
+  { id: '2', name: 'Ajuste de Entrada', type: 'entrada', scope: 'empresa' },
+  // Empresa - Saída
+  { id: '3', name: 'Materiais', type: 'saida', scope: 'empresa' },
+  { id: '4', name: 'Fornecedores', type: 'saida', scope: 'empresa' },
+  { id: '5', name: 'Marketing', type: 'saida', scope: 'empresa' },
+  { id: '6', name: 'Ajuste de Saída', type: 'saida', scope: 'empresa' },
+  // Pessoal - Entrada
+  { id: '7', name: 'Salário', type: 'entrada', scope: 'pessoal' },
+  { id: '8', name: 'Ajuste de Entrada', type: 'entrada', scope: 'pessoal' },
+  // Pessoal - Saída
+  { id: '9', name: 'Alimentação', type: 'saida', scope: 'pessoal' },
+  { id: '10', name: 'Transporte', type: 'saida', scope: 'pessoal' },
+  { id: '11', name: 'Beleza', type: 'saida', scope: 'pessoal' },
+  { id: '12', name: 'Lazer', type: 'saida', scope: 'pessoal' },
+  { id: '13', name: 'Casa', type: 'saida', scope: 'pessoal' },
+  { id: '14', name: 'Ajuste de Saída', type: 'saida', scope: 'pessoal' },
 ];
 
 const initialAccounts: Account[] = [
