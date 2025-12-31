@@ -1,4 +1,4 @@
-import { Home, ArrowLeftRight, Calendar, Settings } from 'lucide-react';
+import { Home, ArrowLeftRight, Calendar, FileText, Settings } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -6,7 +6,8 @@ const navItems = [
   { icon: Home, label: 'Início', path: '/' },
   { icon: ArrowLeftRight, label: 'Movimentações', path: '/movimentacoes' },
   { icon: Calendar, label: 'Agenda', path: '/agendamentos' },
-  { icon: Settings, label: 'Configurações', path: '/configuracoes' },
+  { icon: FileText, label: 'Relatórios', path: '/relatorios' },
+  { icon: Settings, label: 'Config', path: '/configuracoes' },
 ];
 
 export function BottomNav() {
