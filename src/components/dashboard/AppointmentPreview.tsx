@@ -4,7 +4,6 @@ import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus } 
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useApp } from '@/contexts/AppContext';
 
 interface AppointmentPreviewProps {
   appointment: Appointment;
@@ -70,16 +69,11 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
 };
 
 export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
-  const { getServiceById } = useApp();
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
   const hasBalance = appointment.paidAmount < appointment.amount;
   const canDelete = appointment.paidAmount === 0;
-
-  // Busca a duração do serviço vinculado
-  const service = appointment.serviceId ? getServiceById(appointment.serviceId) : null;
-  const serviceDuration = service?.duration || 60;
 
   const clientPhone = getClientPhone?.(appointment.clientId || '');
   const hasPhone = clientPhone && clientPhone.length > 0;
@@ -151,7 +145,7 @@ export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, g
             asChild
             className="h-8 w-8 text-blue-600 hover:text-blue-700"
           >
-            <a href={formatGoogleCalendarUrl(appointment, serviceDuration)} target="_blank" rel="noopener noreferrer">
+            <a href={formatGoogleCalendarUrl(appointment, appointment.duration)} target="_blank" rel="noopener noreferrer">
               <CalendarPlus className="w-4 h-4" />
             </a>
           </Button>
