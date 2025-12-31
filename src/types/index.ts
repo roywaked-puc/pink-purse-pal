@@ -51,5 +51,6 @@ export interface Service {
   id: string;
   description: string;
   amount: number;
+  duration: number; // em minutos
   notes?: string;
 }

@@ -159,6 +159,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       serviceId = await addServiceAsync({
         description: service.trim(),
         amount: parseFloat(amount),
+        duration: 60, // Duração padrão de 1 hora para novos serviços
       });
     }
 

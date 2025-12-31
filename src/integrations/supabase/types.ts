@@ -154,6 +154,7 @@ export type Database = {
           amount: number
           created_at: string
           description: string
+          duration: number
           id: string
           notes: string | null
           user_id: string
@@ -162,6 +163,7 @@ export type Database = {
           amount?: number
           created_at?: string
           description: string
+          duration?: number
           id?: string
           notes?: string | null
           user_id: string
@@ -170,6 +172,7 @@ export type Database = {
           amount?: number
           created_at?: string
           description?: string
+          duration?: number
           id?: string
           notes?: string | null
           user_id?: string
