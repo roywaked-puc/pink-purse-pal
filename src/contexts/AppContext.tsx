@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Transaction, Appointment, Category, Account } from '@/types';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { Transaction, Appointment, Category, Account, Client } from '@/types';
 
 interface AppContextType {
   transactions: Transaction[];
   appointments: Appointment[];
   categories: Category[];
   accounts: Account[];
+  clients: Client[];
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
@@ -18,6 +19,11 @@ interface AppContextType {
   addAccount: (account: Omit<Account, 'id'>) => void;
   updateAccount: (id: string, account: Omit<Account, 'id'>) => void;
   deleteAccount: (id: string) => void;
+  addClient: (client: Omit<Client, 'id'>) => string;
+  updateClient: (id: string, client: Omit<Client, 'id'>) => void;
+  deleteClient: (id: string) => void;
+  searchClients: (query: string) => Client[];
+  getClientById: (id: string) => Client | undefined;
   getBusinessBalance: () => number;
   getPersonalBalance: () => number;
   getMonthlyPersonalExpenses: () => number;
@@ -41,6 +47,11 @@ const initialAccounts: Account[] = [
   { id: '1', name: 'Dinheiro', type: 'dinheiro' },
   { id: '2', name: 'Nubank', type: 'banco' },
   { id: '3', name: 'Maquininha Stone', type: 'maquininha' },
+];
+
+const initialClients: Client[] = [
+  { id: '1', name: 'Maria Silva', phone: '(11) 99999-1111', notes: 'Prefere horário da manhã' },
+  { id: '2', name: 'Ana Costa', phone: '(11) 99999-2222', notes: '' },
 ];
 
 const initialTransactions: Transaction[] = [
@@ -70,6 +81,7 @@ const initialAppointments: Appointment[] = [
   {
     id: '1',
     date: new Date(Date.now() + 86400000),
+    clientId: '1',
     clientName: 'Maria Silva',
     service: 'Unha em gel',
     amount: 120,
@@ -78,6 +90,7 @@ const initialAppointments: Appointment[] = [
   {
     id: '2',
     date: new Date(Date.now() + 172800000),
+    clientId: '2',
     clientName: 'Ana Costa',
     service: 'Manicure + Pedicure',
     amount: 80,
@@ -90,6 +103,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
+  const [clients, setClients] = useState<Client[]>(initialClients);
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     setTransactions(prev => [...prev, { ...transaction, id: generateId() }]);
@@ -139,13 +153,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setAccounts(prev => prev.filter(a => a.id !== id));
   };
 
+  const addClient = (client: Omit<Client, 'id'>): string => {
+    const id = generateId();
+    setClients(prev => [...prev, { ...client, id }]);
+    return id;
+  };
+
+  const updateClient = (id: string, client: Omit<Client, 'id'>) => {
+    setClients(prev => prev.map(c => c.id === id ? { ...client, id } : c));
+  };
+
+  const deleteClient = (id: string) => {
+    setClients(prev => prev.filter(c => c.id !== id));
+  };
+
+  const searchClients = useCallback((query: string): Client[] => {
+    if (!query || query.length < 2) return [];
+    const lowerQuery = query.toLowerCase();
+    return clients.filter(c => c.name.toLowerCase().includes(lowerQuery));
+  }, [clients]);
+
+  const getClientById = useCallback((id: string): Client | undefined => {
+    return clients.find(c => c.id === id);
+  }, [clients]);
+
   const getBusinessBalance = () => {
     return transactions
       .filter(t => t.scope === 'empresa')
       .reduce((acc, t) => {
         if (t.type === 'entrada') return acc + t.amount;
         if (t.type === 'saida') return acc - t.amount;
-        return acc + t.amount; // ajuste
+        return acc + t.amount;
       }, 0);
   };
 
@@ -191,6 +229,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       appointments,
       categories,
       accounts,
+      clients,
       addTransaction,
       updateTransaction,
       deleteTransaction,
@@ -203,6 +242,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addAccount,
       updateAccount,
       deleteAccount,
+      addClient,
+      updateClient,
+      deleteClient,
+      searchClients,
+      getClientById,
       getBusinessBalance,
       getPersonalBalance,
       getMonthlyPersonalExpenses,
