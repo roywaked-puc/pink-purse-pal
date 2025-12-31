@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Calendar, DollarSign, MessageCircle } from 'lucide-react';
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -12,6 +12,26 @@ import { useApp } from '@/contexts/AppContext';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { Clock, User, Pencil, Trash2 } from 'lucide-react';
+
+const formatWhatsAppMessage = (appointment: Appointment) => {
+  const date = format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR });
+  const time = format(new Date(appointment.date), "HH:mm");
+
+  const message = `Olá ${appointment.clientName}! 
+
+Passando para lembrar do seu agendamento:
+
+📅 Data: ${date}
+⏰ Horário: ${time}
+💅 Serviço: ${appointment.service}
+💰 Valor: ${formatCurrency(appointment.amount)}
+
+Em caso de imprevistos ou necessidade de cancelamento, por favor entre em contato por este WhatsApp o mais breve possível.
+
+Aguardamos você! ✨`;
+
+  return encodeURIComponent(message);
+};
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -33,7 +53,12 @@ const statusLabels = {
 };
 
 const Agendamentos = () => {
-  const { appointments, deleteAppointment } = useApp();
+  const { appointments, deleteAppointment, getClientById } = useApp();
+
+  const getClientPhone = (clientId: string) => {
+    const client = getClientById(clientId);
+    return client?.phone;
+  };
   
   const [showForm, setShowForm] = useState(false);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
@@ -146,6 +171,25 @@ const Agendamentos = () => {
             >
               <Pencil className="w-4 h-4" />
             </Button>
+            {(() => {
+              const clientPhone = getClientPhone(appointment.clientId || '');
+              const hasPhone = clientPhone && clientPhone.length > 0;
+              const cleanPhone = clientPhone?.replace(/\D/g, '') || '';
+              const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment)}`;
+              
+              return hasPhone ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className="h-8 w-8 text-green-600 hover:text-green-700"
+                >
+                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="w-4 h-4" />
+                  </a>
+                </Button>
+              ) : null;
+            })()}
             {hasBalance && (
               <Button
                 variant="ghost"

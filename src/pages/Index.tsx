@@ -17,8 +17,14 @@ const Index = () => {
     getBusinessBalance, 
     getPersonalBalance, 
     getMonthlyPersonalExpenses,
-    deleteAppointment 
+    deleteAppointment,
+    getClientById
   } = useApp();
+
+  const getClientPhone = (clientId: string) => {
+    const client = getClientById(clientId);
+    return client?.phone;
+  };
 
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
@@ -130,6 +136,7 @@ const Index = () => {
                   onEdit={handleEditAppointment}
                   onDelete={handleDeleteAppointment}
                   onReceive={handleReceiveAppointment}
+                  getClientPhone={getClientPhone}
                 />
               </div>
             ))}
