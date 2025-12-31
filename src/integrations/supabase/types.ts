@@ -14,7 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      accounts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      appointments: {
+        Row: {
+          amount: number
+          client_id: string | null
+          client_name: string
+          created_at: string
+          date: string
+          id: string
+          paid_amount: number
+          payment_status: string
+          service: string
+          service_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          client_id?: string | null
+          client_name: string
+          created_at?: string
+          date: string
+          id?: string
+          paid_amount?: number
+          payment_status?: string
+          service: string
+          service_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          client_name?: string
+          created_at?: string
+          date?: string
+          id?: string
+          paid_amount?: number
+          payment_status?: string
+          service?: string
+          service_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          scope: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          scope: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          scope?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          account: string
+          amount: number
+          appointment_id: string | null
+          category: string
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          payment_type: string | null
+          scope: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          account: string
+          amount?: number
+          appointment_id?: string | null
+          category: string
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          payment_type?: string | null
+          scope: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          account?: string
+          amount?: number
+          appointment_id?: string | null
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          payment_type?: string | null
+          scope?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
