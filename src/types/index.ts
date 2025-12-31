@@ -1,4 +1,4 @@
-export type TransactionType = 'entrada' | 'saida' | 'ajuste';
+export type TransactionType = 'entrada' | 'saida';
 export type TransactionScope = 'empresa' | 'pessoal';
 export type PaymentStatus = 'pago' | 'nao_pago' | 'sinal';
 
@@ -37,6 +37,8 @@ export interface Appointment {
 export interface Category {
   id: string;
   name: string;
+  type: 'entrada' | 'saida';
+  scope: 'empresa' | 'pessoal';
 }
 
 export interface Account {

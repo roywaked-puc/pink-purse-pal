@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { Transaction, TransactionType, TransactionScope, Appointment, Client } from '@/types';
+import { Transaction, TransactionType, TransactionScope, Appointment, Client, Category } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from '@/components/appointments/ClientAutocomplete';
 import { AppointmentSelector } from './AppointmentSelector';
+import { useToast } from '@/hooks/use-toast';
 
 interface TransactionFormProps {
   open: boolean;
@@ -47,11 +48,12 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
     getAppointmentsWithBalance,
     updateAppointmentPayment 
   } = useApp();
+  const { toast } = useToast();
   
   const [date, setDate] = useState<Date>(new Date());
-  const [type, setType] = useState<TransactionType>('entrada');
-  const [scope, setScope] = useState<TransactionScope>('empresa');
-  const [category, setCategory] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [type, setType] = useState<TransactionType | ''>('');
+  const [scope, setScope] = useState<TransactionScope | ''>('');
   const [account, setAccount] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -61,6 +63,10 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [paymentType, setPaymentType] = useState<'sinal' | 'pagamento'>('pagamento');
+
+  const selectedCategory = useMemo(() => {
+    return categories.find(c => c.id === selectedCategoryId);
+  }, [categories, selectedCategoryId]);
 
   const showAppointmentFields = type === 'entrada' && scope === 'empresa';
 
@@ -74,12 +80,34 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
     return selectedAppointment.amount - selectedAppointment.paidAmount;
   }, [selectedAppointment]);
 
+  // Quando seleciona categoria, preenche tipo e origem automaticamente
+  useEffect(() => {
+    if (selectedCategory) {
+      setType(selectedCategory.type);
+      setScope(selectedCategory.scope);
+      
+      // Limpa campos de cliente se mudar para categoria que não é entrada+empresa
+      if (!(selectedCategory.type === 'entrada' && selectedCategory.scope === 'empresa')) {
+        setSelectedClientId(null);
+        setSelectedAppointment(null);
+        setClientName('');
+      }
+    } else {
+      setType('');
+      setScope('');
+    }
+  }, [selectedCategory]);
+
   useEffect(() => {
     if (transaction) {
       setDate(new Date(transaction.date));
+      // Encontra a categoria pela combinação de nome, tipo e scope
+      const cat = categories.find(
+        c => c.name === transaction.category && c.type === transaction.type && c.scope === transaction.scope
+      );
+      setSelectedCategoryId(cat?.id || '');
       setType(transaction.type);
       setScope(transaction.scope);
-      setCategory(transaction.category);
       setAccount(transaction.account);
       setAmount(transaction.amount.toString());
       setDescription(transaction.description || '');
@@ -87,7 +115,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
     } else {
       resetForm();
     }
-  }, [transaction, open]);
+  }, [transaction, open, categories]);
 
   // Quando selecionar agendamento, sugere o valor do saldo
   useEffect(() => {
@@ -99,9 +127,9 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
 
   const resetForm = () => {
     setDate(new Date());
-    setType('entrada');
-    setScope('empresa');
-    setCategory('');
+    setSelectedCategoryId('');
+    setType('');
+    setScope('');
     setAccount('');
     setAmount('');
     setDescription('');
@@ -127,11 +155,30 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedCategory || !type || !scope) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma categoria",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validação: cliente obrigatório para entrada + empresa
+    if (type === 'entrada' && scope === 'empresa' && !selectedClientId && !transaction) {
+      toast({
+        title: "Erro",
+        description: "Para recebimentos da empresa, o campo cliente é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const data: Omit<Transaction, 'id'> = {
       date,
-      type,
-      scope,
-      category: category || 'Geral',
+      type: type as TransactionType,
+      scope: scope as TransactionScope,
+      category: selectedCategory.name,
       account,
       amount: parseFloat(amount) || 0,
       description: description || undefined,
@@ -185,71 +232,55 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
             </Popover>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select value={type} onValueChange={(v) => {
-                setType(v as TransactionType);
-                // Limpa campos de agendamento se mudar de entrada
-                if (v !== 'entrada') {
-                  setSelectedClientId(null);
-                  setSelectedAppointment(null);
-                  setClientName('');
-                }
-              }}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="entrada">Entrada</SelectItem>
-                  <SelectItem value="saida">Saída</SelectItem>
-                  <SelectItem value="ajuste">Ajuste</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Origem</Label>
-              <Select value={scope} onValueChange={(v) => {
-                setScope(v as TransactionScope);
-                // Limpa campos de agendamento se mudar para pessoal
-                if (v === 'pessoal') {
-                  setSelectedClientId(null);
-                  setSelectedAppointment(null);
-                  setClientName('');
-                }
-              }}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="empresa">Empresa</SelectItem>
-                  <SelectItem value="pessoal">Pessoal</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <div className="space-y-2">
             <Label>Categoria</Label>
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
+                <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.name}>
-                    {cat.name}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Empresa</div>
+                {categories.filter(c => c.scope === 'empresa').map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
+                  </SelectItem>
+                ))}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Pessoal</div>
+                {categories.filter(c => c.scope === 'pessoal').map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Input 
+                value={type === 'entrada' ? 'Entrada' : type === 'saida' ? 'Saída' : ''} 
+                placeholder="Selecione uma categoria"
+                disabled 
+                className="bg-muted"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Origem</Label>
+              <Input 
+                value={scope === 'empresa' ? 'Empresa' : scope === 'pessoal' ? 'Pessoal' : ''} 
+                placeholder="Selecione uma categoria"
+                disabled 
+                className="bg-muted"
+              />
+            </div>
+          </div>
+
           {showAppointmentFields && !transaction && (
             <>
               <div className="space-y-2">
-                <Label>Cliente (opcional)</Label>
+                <Label>Cliente</Label>
                 <ClientAutocomplete
                   value={clientName}
                   onChange={setClientName}
