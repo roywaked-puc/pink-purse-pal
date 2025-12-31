@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { ServiceList } from '@/components/settings/ServiceList';
 import { CategoryList } from '@/components/settings/CategoryList';
 import { AccountList } from '@/components/settings/AccountList';
+import { ExportData } from '@/components/settings/ExportData';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,6 +65,10 @@ const Configuracoes = () => {
         <Separator />
         
         <AccountList />
+        
+        <Separator />
+        
+        <ExportData />
       </div>
     </MainLayout>
   );
