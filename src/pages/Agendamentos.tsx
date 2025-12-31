@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Calendar, DollarSign, MessageCircle } from 'lucide-react';
+import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays } from 'lucide-react';
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -7,7 +7,9 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { AppointmentForm } from '@/components/appointments/AppointmentForm';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { WeeklyCalendar } from '@/components/appointments/WeeklyCalendar';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/contexts/AppContext';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
@@ -65,6 +67,7 @@ const Agendamentos = () => {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'week'>('list');
 
   const sortedAppointments = useMemo(() => {
     return [...appointments].sort((a, b) => 
@@ -216,72 +219,98 @@ const Agendamentos = () => {
     );
   };
 
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setShowForm(true);
+  };
+
   return (
     <MainLayout>
       <PageHeader
         title="Agendamentos"
         subtitle="Gerencie sua agenda"
         action={
-          <Button
-            size="icon"
-            onClick={() => {
-              setEditingAppointment(null);
-              setShowForm(true);
-            }}
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'week')}>
+              <TabsList className="h-9">
+                <TabsTrigger value="list" className="px-2">
+                  <List className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="week" className="px-2">
+                  <CalendarDays className="w-4 h-4" />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button
+              size="icon"
+              onClick={() => {
+                setEditingAppointment(null);
+                setShowForm(true);
+              }}
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          </div>
         }
       />
 
-      {/* Today */}
-      {todayAppointments.length > 0 && (
-        <section className="mb-6">
-          <h2 className="font-semibold mb-3 flex items-center gap-2 text-primary">
-            <Calendar className="w-5 h-5" />
-            Hoje
-          </h2>
-          <div className="space-y-3">
-            {todayAppointments.map((a, i) => renderAppointment(a, i))}
-          </div>
-        </section>
-      )}
+      {viewMode === 'week' ? (
+        <WeeklyCalendar 
+          appointments={appointments} 
+          onAppointmentClick={handleAppointmentClick} 
+        />
+      ) : (
+        <>
+          {/* Today */}
+          {todayAppointments.length > 0 && (
+            <section className="mb-6">
+              <h2 className="font-semibold mb-3 flex items-center gap-2 text-primary">
+                <Calendar className="w-5 h-5" />
+                Hoje
+              </h2>
+              <div className="space-y-3">
+                {todayAppointments.map((a, i) => renderAppointment(a, i))}
+              </div>
+            </section>
+          )}
 
-      {/* Upcoming */}
-      {upcomingAppointments.length > 0 && (
-        <section className="mb-6">
-          <h2 className="font-semibold mb-3 text-muted-foreground">Próximos</h2>
-          <div className="space-y-3">
-            {upcomingAppointments.map((a, i) => renderAppointment(a, i))}
-          </div>
-        </section>
-      )}
+          {/* Upcoming */}
+          {upcomingAppointments.length > 0 && (
+            <section className="mb-6">
+              <h2 className="font-semibold mb-3 text-muted-foreground">Próximos</h2>
+              <div className="space-y-3">
+                {upcomingAppointments.map((a, i) => renderAppointment(a, i))}
+              </div>
+            </section>
+          )}
 
-      {/* Past */}
-      {pastAppointments.length > 0 && (
-        <section className="mb-6">
-          <h2 className="font-semibold mb-3 text-muted-foreground">Anteriores</h2>
-          <div className="space-y-3 opacity-70">
-            {pastAppointments.slice(0, 5).map((a, i) => renderAppointment(a, i))}
-          </div>
-        </section>
-      )}
+          {/* Past */}
+          {pastAppointments.length > 0 && (
+            <section className="mb-6">
+              <h2 className="font-semibold mb-3 text-muted-foreground">Anteriores</h2>
+              <div className="space-y-3 opacity-70">
+                {pastAppointments.slice(0, 5).map((a, i) => renderAppointment(a, i))}
+              </div>
+            </section>
+          )}
 
-      {appointments.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>Nenhum agendamento</p>
-          <Button
-            variant="link"
-            onClick={() => {
-              setEditingAppointment(null);
-              setShowForm(true);
-            }}
-            className="mt-2"
-          >
-            Adicionar primeiro agendamento
-          </Button>
-        </div>
+          {appointments.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>Nenhum agendamento</p>
+              <Button
+                variant="link"
+                onClick={() => {
+                  setEditingAppointment(null);
+                  setShowForm(true);
+                }}
+                className="mt-2"
+              >
+                Adicionar primeiro agendamento
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       <AppointmentForm
