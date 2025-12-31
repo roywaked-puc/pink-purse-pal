@@ -50,6 +50,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [serviceNotes, setServiceNotes] = useState('');
   const [amount, setAmount] = useState('');
+  const [duration, setDuration] = useState('60');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       setClientName(appointment.clientName);
       setService(appointment.service);
       setAmount(appointment.amount.toString());
+      setDuration(appointment.duration.toString());
       setPaymentStatus(appointment.paymentStatus);
       
       if (appointment.clientId) {
@@ -101,6 +103,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
     setSelectedServiceId(null);
     setServiceNotes('');
     setAmount('');
+    setDuration('60');
     setPaymentStatus('nao_pago');
   };
 
@@ -120,6 +123,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
     if (svc) {
       setSelectedServiceId(svc.id);
       setAmount(svc.amount.toString());
+      setDuration(svc.duration.toString());
       setServiceNotes(svc.notes || '');
     } else {
       setSelectedServiceId(null);
@@ -172,6 +176,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       amount: parseFloat(amount) || 0,
       paidAmount: appointment?.paidAmount || 0,
       paymentStatus,
+      duration: parseInt(duration) || 60,
     };
 
     if (appointment) {
@@ -269,17 +274,31 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label>Valor (R$)</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0,00"
-              required
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Valor (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0,00"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Duração (min)</Label>
+              <Input
+                type="number"
+                min="15"
+                step="15"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="60"
+                required
+              />
+            </div>
           </div>
 
           {appointment && (

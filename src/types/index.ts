@@ -32,6 +32,7 @@ export interface Appointment {
   amount: number;
   paidAmount: number;
   paymentStatus: PaymentStatus;
+  duration: number; // em minutos
 }
 
 export interface Category {
