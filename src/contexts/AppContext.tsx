@@ -29,11 +29,13 @@ interface AppContextType {
   updateAccount: (id: string, account: Omit<Account, 'id'>) => void;
   deleteAccount: (id: string) => void;
   addClient: (client: Omit<Client, 'id'>) => string;
+  addClientAsync: (client: Omit<Client, 'id'>) => Promise<string>;
   updateClient: (id: string, client: Omit<Client, 'id'>) => void;
   deleteClient: (id: string) => void;
   searchClients: (query: string) => Client[];
   getClientById: (id: string) => Client | undefined;
   addService: (service: Omit<Service, 'id'>) => string;
+  addServiceAsync: (service: Omit<Service, 'id'>) => Promise<string>;
   updateService: (id: string, service: Omit<Service, 'id'>) => void;
   deleteService: (id: string) => void;
   searchServices: (query: string) => Service[];
@@ -97,6 +99,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return tempId;
   }, [addClientMutation]);
 
+  const addClientAsync = useCallback(async (client: Omit<Client, 'id'>): Promise<string> => {
+    return await addClientMutation.mutateAsync(client);
+  }, [addClientMutation]);
+
   const updateClient = useCallback((id: string, client: Omit<Client, 'id'>) => {
     updateClientMutation.mutate({ id, client });
   }, [updateClientMutation]);
@@ -120,6 +126,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const tempId = Math.random().toString(36).substring(2, 9);
     addServiceMutation.mutate(service);
     return tempId;
+  }, [addServiceMutation]);
+
+  const addServiceAsync = useCallback(async (service: Omit<Service, 'id'>): Promise<string> => {
+    return await addServiceMutation.mutateAsync(service);
   }, [addServiceMutation]);
 
   const updateService = useCallback((id: string, service: Omit<Service, 'id'>) => {
@@ -288,11 +298,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateAccount,
     deleteAccount,
     addClient,
+    addClientAsync,
     updateClient,
     deleteClient,
     searchClients,
     getClientById,
     addService,
+    addServiceAsync,
     updateService,
     deleteService,
     searchServices,
@@ -325,11 +337,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateAccount,
     deleteAccount,
     addClient,
+    addClientAsync,
     updateClient,
     deleteClient,
     searchClients,
     getClientById,
     addService,
+    addServiceAsync,
     updateService,
     deleteService,
     searchServices,
