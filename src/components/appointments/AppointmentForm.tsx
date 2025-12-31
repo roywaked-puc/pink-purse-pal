@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { Appointment, PaymentStatus, Client } from '@/types';
+import { Appointment, PaymentStatus, Client, Service } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from './ClientAutocomplete';
+import { ServiceAutocomplete } from './ServiceAutocomplete';
 
 interface AppointmentFormProps {
   open: boolean;
@@ -38,7 +39,7 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: AppointmentFormProps) {
-  const { addAppointment, updateAppointment, addClient, updateClient, getClientById } = useApp();
+  const { addAppointment, updateAppointment, addClient, updateClient, getClientById, addService, getServiceById } = useApp();
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('10:00');
   const [clientName, setClientName] = useState('');
@@ -46,6 +47,8 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
   const [clientNotes, setClientNotes] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [service, setService] = useState('');
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [serviceNotes, setServiceNotes] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
 
@@ -71,10 +74,21 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
         setClientPhone('');
         setClientNotes('');
       }
+
+      if (appointment.serviceId) {
+        setSelectedServiceId(appointment.serviceId);
+        const svc = getServiceById(appointment.serviceId);
+        if (svc) {
+          setServiceNotes(svc.notes || '');
+        }
+      } else {
+        setSelectedServiceId(null);
+        setServiceNotes('');
+      }
     } else {
       resetForm();
     }
-  }, [appointment, open, getClientById]);
+  }, [appointment, open, getClientById, getServiceById]);
 
   const resetForm = () => {
     setDate(new Date());
@@ -84,6 +98,8 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
     setClientNotes('');
     setSelectedClientId(null);
     setService('');
+    setSelectedServiceId(null);
+    setServiceNotes('');
     setAmount('');
     setPaymentStatus('nao_pago');
   };
@@ -97,6 +113,17 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       setSelectedClientId(null);
       setClientPhone('');
       setClientNotes('');
+    }
+  };
+
+  const handleServiceSelect = (svc: Service | null) => {
+    if (svc) {
+      setSelectedServiceId(svc.id);
+      setAmount(svc.amount.toString());
+      setServiceNotes(svc.notes || '');
+    } else {
+      setSelectedServiceId(null);
+      setServiceNotes('');
     }
   };
 
@@ -125,10 +152,21 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       });
     }
 
+    let serviceId = selectedServiceId;
+
+    // Se digitou serviço novo, cria automaticamente
+    if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
+      serviceId = addService({
+        description: service.trim(),
+        amount: parseFloat(amount),
+      });
+    }
+
     const data = {
       date: fullDate,
       clientId: clientId || undefined,
       clientName: clientName.trim(),
+      serviceId: serviceId || undefined,
       service,
       amount: parseFloat(amount) || 0,
       paymentStatus,
@@ -219,12 +257,14 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
 
           <div className="space-y-2">
             <Label>Serviço</Label>
-            <Input
+            <ServiceAutocomplete
               value={service}
-              onChange={(e) => setService(e.target.value)}
-              placeholder="Ex: Manicure + Pedicure"
-              required
+              onChange={setService}
+              onServiceSelect={handleServiceSelect}
             />
+            {serviceNotes && (
+              <p className="text-xs text-muted-foreground">{serviceNotes}</p>
+            )}
           </div>
 
           <div className="space-y-2">

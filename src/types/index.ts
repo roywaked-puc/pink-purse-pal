@@ -25,6 +25,7 @@ export interface Appointment {
   date: Date;
   clientId?: string;
   clientName: string;
+  serviceId?: string;
   service: string;
   amount: number;
   paymentStatus: PaymentStatus;
@@ -39,4 +40,11 @@ export interface Account {
   id: string;
   name: string;
   type: 'dinheiro' | 'banco' | 'maquininha';
+}
+
+export interface Service {
+  id: string;
+  description: string;
+  amount: number;
+  notes?: string;
 }
