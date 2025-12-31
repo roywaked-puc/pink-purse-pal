@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { Transaction, Appointment, Category, Account, Client } from '@/types';
+import { Transaction, Appointment, Category, Account, Client, Service } from '@/types';
 
 interface AppContextType {
   transactions: Transaction[];
@@ -7,6 +7,7 @@ interface AppContextType {
   categories: Category[];
   accounts: Account[];
   clients: Client[];
+  services: Service[];
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
@@ -24,6 +25,11 @@ interface AppContextType {
   deleteClient: (id: string) => void;
   searchClients: (query: string) => Client[];
   getClientById: (id: string) => Client | undefined;
+  addService: (service: Omit<Service, 'id'>) => string;
+  updateService: (id: string, service: Omit<Service, 'id'>) => void;
+  deleteService: (id: string) => void;
+  searchServices: (query: string) => Service[];
+  getServiceById: (id: string) => Service | undefined;
   getBusinessBalance: () => number;
   getPersonalBalance: () => number;
   getMonthlyPersonalExpenses: () => number;
@@ -52,6 +58,13 @@ const initialAccounts: Account[] = [
 const initialClients: Client[] = [
   { id: '1', name: 'Maria Silva', phone: '(11) 99999-1111', notes: 'Prefere horário da manhã' },
   { id: '2', name: 'Ana Costa', phone: '(11) 99999-2222', notes: '' },
+];
+
+const initialServices: Service[] = [
+  { id: '1', description: 'Manicure', amount: 35, notes: 'Tempo: 40min' },
+  { id: '2', description: 'Pedicure', amount: 45, notes: 'Tempo: 50min' },
+  { id: '3', description: 'Manicure + Pedicure', amount: 70, notes: 'Tempo: 1h30' },
+  { id: '4', description: 'Unha em gel', amount: 120, notes: 'Tempo: 2h' },
 ];
 
 const initialTransactions: Transaction[] = [
@@ -104,6 +117,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
   const [clients, setClients] = useState<Client[]>(initialClients);
+  const [services, setServices] = useState<Service[]>(initialServices);
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     setTransactions(prev => [...prev, { ...transaction, id: generateId() }]);
@@ -177,6 +191,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return clients.find(c => c.id === id);
   }, [clients]);
 
+  const addService = (service: Omit<Service, 'id'>): string => {
+    const id = generateId();
+    setServices(prev => [...prev, { ...service, id }]);
+    return id;
+  };
+
+  const updateService = (id: string, service: Omit<Service, 'id'>) => {
+    setServices(prev => prev.map(s => s.id === id ? { ...service, id } : s));
+  };
+
+  const deleteService = (id: string) => {
+    setServices(prev => prev.filter(s => s.id !== id));
+  };
+
+  const searchServices = useCallback((query: string): Service[] => {
+    if (!query || query.length < 2) return [];
+    const lowerQuery = query.toLowerCase();
+    return services.filter(s => s.description.toLowerCase().includes(lowerQuery));
+  }, [services]);
+
+  const getServiceById = useCallback((id: string): Service | undefined => {
+    return services.find(s => s.id === id);
+  }, [services]);
+
   const getBusinessBalance = () => {
     return transactions
       .filter(t => t.scope === 'empresa')
@@ -230,6 +268,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       categories,
       accounts,
       clients,
+      services,
       addTransaction,
       updateTransaction,
       deleteTransaction,
@@ -247,6 +286,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deleteClient,
       searchClients,
       getClientById,
+      addService,
+      updateService,
+      deleteService,
+      searchServices,
+      getServiceById,
       getBusinessBalance,
       getPersonalBalance,
       getMonthlyPersonalExpenses,
