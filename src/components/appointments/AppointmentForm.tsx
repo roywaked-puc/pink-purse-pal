@@ -281,22 +281,27 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Status do Pagamento</Label>
-            <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nao_pago">Não pago</SelectItem>
-                <SelectItem value="sinal">Sinal</SelectItem>
-                <SelectItem value="pago">Pago</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {appointment && (
+            <div className="space-y-2">
+              <Label>Status do Pagamento</Label>
+              <Input 
+                value={
+                  appointment.paidAmount >= appointment.amount ? 'Pago' :
+                  appointment.paidAmount > 0 ? 'Sinal' : 'Não pago'
+                }
+                disabled 
+                className="bg-muted"
+              />
+              {appointment.paidAmount > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Recebido: R$ {appointment.paidAmount.toFixed(2).replace('.', ',')} de R$ {appointment.amount.toFixed(2).replace('.', ',')}
+                </p>
+              )}
+            </div>
+          )}
 
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-            {appointment && onDelete && (
+            {appointment && onDelete && appointment.paidAmount === 0 && (
               <Button
                 type="button"
                 variant="destructive"

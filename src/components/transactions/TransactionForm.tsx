@@ -37,9 +37,10 @@ interface TransactionFormProps {
   onOpenChange: (open: boolean) => void;
   transaction?: Transaction | null;
   onDelete?: () => void;
+  prefilledAppointment?: Appointment | null;
 }
 
-export function TransactionForm({ open, onOpenChange, transaction, onDelete }: TransactionFormProps) {
+export function TransactionForm({ open, onOpenChange, transaction, onDelete, prefilledAppointment }: TransactionFormProps) {
   const { 
     categories, 
     accounts, 
@@ -112,10 +113,30 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
       setAmount(transaction.amount.toString());
       setDescription(transaction.description || '');
       setPaymentType(transaction.paymentType || 'pagamento');
+    } else if (prefilledAppointment) {
+      // Pre-preenche com dados do agendamento
+      resetForm();
+      setDate(new Date());
+      // Encontra a categoria "Serviços" (entrada + empresa)
+      const serviceCat = categories.find(
+        c => c.name === 'Serviços' && c.type === 'entrada' && c.scope === 'empresa'
+      );
+      if (serviceCat) {
+        setSelectedCategoryId(serviceCat.id);
+        setType('entrada');
+        setScope('empresa');
+      }
+      setClientName(prefilledAppointment.clientName);
+      setSelectedClientId(prefilledAppointment.clientId || null);
+      setSelectedAppointment(prefilledAppointment);
+      const balance = prefilledAppointment.amount - prefilledAppointment.paidAmount;
+      setAmount(balance.toFixed(2));
+      setDescription(`${prefilledAppointment.service} - ${prefilledAppointment.clientName}`);
+      setPaymentType('pagamento');
     } else {
       resetForm();
     }
-  }, [transaction, open, categories]);
+  }, [transaction, prefilledAppointment, open, categories]);
 
   // Quando selecionar agendamento, sugere o valor do saldo
   useEffect(() => {
@@ -296,10 +317,11 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: T
                   value={clientName}
                   onChange={setClientName}
                   onClientSelect={handleClientSelect}
+                  disabled={!!prefilledAppointment}
                 />
               </div>
 
-              {selectedClientId && (
+              {selectedClientId && !prefilledAppointment && (
                 <div className="space-y-2">
                   <Label>Agendamento</Label>
                   <AppointmentSelector
