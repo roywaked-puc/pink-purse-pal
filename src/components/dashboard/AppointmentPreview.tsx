@@ -1,6 +1,6 @@
 import { format, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, User, Pencil, Trash2, DollarSign } from 'lucide-react';
+import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle } from 'lucide-react';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ interface AppointmentPreviewProps {
   onEdit: (appointment: Appointment) => void;
   onDelete: (id: string) => void;
   onReceive?: (appointment: Appointment) => void;
+  getClientPhone?: (clientId: string) => string | undefined;
 }
 
 const formatCurrency = (value: number) => {
@@ -31,12 +32,37 @@ const statusLabels = {
   sinal: 'Sinal',
 };
 
-export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive }: AppointmentPreviewProps) {
+const formatWhatsAppMessage = (appointment: Appointment) => {
+  const date = format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR });
+  const time = format(new Date(appointment.date), "HH:mm");
+
+  const message = `Olá ${appointment.clientName}! 
+
+Passando para lembrar do seu agendamento:
+
+📅 Data: ${date}
+⏰ Horário: ${time}
+💅 Serviço: ${appointment.service}
+💰 Valor: ${formatCurrency(appointment.amount)}
+
+Em caso de imprevistos ou necessidade de cancelamento, por favor entre em contato por este WhatsApp o mais breve possível.
+
+Aguardamos você! ✨`;
+
+  return encodeURIComponent(message);
+};
+
+export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
   const hasBalance = appointment.paidAmount < appointment.amount;
   const canDelete = appointment.paidAmount === 0;
+
+  const clientPhone = getClientPhone?.(appointment.clientId || '');
+  const hasPhone = clientPhone && clientPhone.length > 0;
+  const cleanPhone = clientPhone?.replace(/\D/g, '') || '';
+  const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment)}`;
 
   return (
     <div className={cn(
@@ -97,6 +123,18 @@ export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive }:
           >
             <Pencil className="w-4 h-4" />
           </Button>
+          {hasPhone && (
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="h-8 w-8 text-green-600 hover:text-green-700"
+            >
+              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="w-4 h-4" />
+              </a>
+            </Button>
+          )}
           {hasBalance && onReceive && (
             <Button
               variant="ghost"
