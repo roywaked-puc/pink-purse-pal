@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { Appointment, PaymentStatus } from '@/types';
+import { Appointment, PaymentStatus, Client } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { ClientAutocomplete } from './ClientAutocomplete';
 
 interface AppointmentFormProps {
   open: boolean;
@@ -36,10 +38,13 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: AppointmentFormProps) {
-  const { addAppointment, updateAppointment } = useApp();
+  const { addAppointment, updateAppointment, addClient, updateClient, getClientById } = useApp();
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('10:00');
   const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientNotes, setClientNotes] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [service, setService] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
@@ -53,18 +58,46 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       setService(appointment.service);
       setAmount(appointment.amount.toString());
       setPaymentStatus(appointment.paymentStatus);
+      
+      if (appointment.clientId) {
+        setSelectedClientId(appointment.clientId);
+        const client = getClientById(appointment.clientId);
+        if (client) {
+          setClientPhone(client.phone);
+          setClientNotes(client.notes || '');
+        }
+      } else {
+        setSelectedClientId(null);
+        setClientPhone('');
+        setClientNotes('');
+      }
     } else {
       resetForm();
     }
-  }, [appointment, open]);
+  }, [appointment, open, getClientById]);
 
   const resetForm = () => {
     setDate(new Date());
     setTime('10:00');
     setClientName('');
+    setClientPhone('');
+    setClientNotes('');
+    setSelectedClientId(null);
     setService('');
     setAmount('');
     setPaymentStatus('nao_pago');
+  };
+
+  const handleClientSelect = (client: Client | null) => {
+    if (client) {
+      setSelectedClientId(client.id);
+      setClientPhone(client.phone);
+      setClientNotes(client.notes || '');
+    } else {
+      setSelectedClientId(null);
+      setClientPhone('');
+      setClientNotes('');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,9 +107,28 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
     const fullDate = new Date(date);
     fullDate.setHours(hours, minutes, 0, 0);
 
+    let clientId = selectedClientId;
+
+    // Se tem cliente selecionado, atualiza os dados se mudaram
+    if (selectedClientId) {
+      updateClient(selectedClientId, {
+        name: clientName,
+        phone: clientPhone,
+        notes: clientNotes,
+      });
+    } else if (clientName.trim()) {
+      // Cria novo cliente
+      clientId = addClient({
+        name: clientName.trim(),
+        phone: clientPhone,
+        notes: clientNotes,
+      });
+    }
+
     const data = {
       date: fullDate,
-      clientName,
+      clientId: clientId || undefined,
+      clientName: clientName.trim(),
       service,
       amount: parseFloat(amount) || 0,
       paymentStatus,
@@ -137,11 +189,31 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
 
           <div className="space-y-2">
             <Label>Nome da Cliente</Label>
-            <Input
+            <ClientAutocomplete
               value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder="Ex: Maria Silva"
-              required
+              onChange={setClientName}
+              onClientSelect={handleClientSelect}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Telefone</Label>
+            <Input
+              value={clientPhone}
+              onChange={(e) => setClientPhone(e.target.value)}
+              placeholder="(11) 99999-9999"
+              type="tel"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Observação da Cliente</Label>
+            <Textarea
+              value={clientNotes}
+              onChange={(e) => setClientNotes(e.target.value)}
+              placeholder="Ex: Prefere horário da manhã, alergia a esmalte..."
+              rows={2}
+              className="resize-none"
             />
           </div>
 

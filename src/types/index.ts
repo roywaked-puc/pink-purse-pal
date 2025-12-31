@@ -13,9 +13,17 @@ export interface Transaction {
   description?: string;
 }
 
+export interface Client {
+  id: string;
+  name: string;
+  phone: string;
+  notes?: string;
+}
+
 export interface Appointment {
   id: string;
   date: Date;
+  clientId?: string;
   clientName: string;
   service: string;
   amount: number;
