@@ -22,6 +22,7 @@ export function useServices() {
         id: s.id,
         description: s.description,
         amount: Number(s.amount),
+        duration: s.duration,
         notes: s.notes || undefined,
       }));
     },
@@ -43,6 +44,7 @@ export function useAddService() {
           user_id: user.id,
           description: service.description,
           amount: service.amount,
+          duration: service.duration,
           notes: service.notes,
         })
         .select('id')
@@ -67,6 +69,7 @@ export function useUpdateService() {
         .update({
           description: service.description,
           amount: service.amount,
+          duration: service.duration,
           notes: service.notes,
         })
         .eq('id', id);
