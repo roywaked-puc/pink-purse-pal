@@ -1,6 +1,6 @@
-import { format, isToday } from 'date-fns';
+import { format, isToday, addHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle } from 'lucide-react';
+import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus } from 'lucide-react';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,22 @@ Em caso de imprevistos ou necessidade de cancelamento, por favor entre em contat
 Aguardamos você! ✨`;
 
   return encodeURIComponent(message);
+};
+
+const formatGoogleCalendarUrl = (appointment: Appointment) => {
+  const startDate = new Date(appointment.date);
+  const endDate = addHours(startDate, 1); // Duração padrão de 1 hora
+  
+  // Formato: YYYYMMDDTHHmmss (sem timezone para horário local)
+  const formatDateForGoogle = (date: Date) => {
+    return format(date, "yyyyMMdd'T'HHmmss");
+  };
+  
+  const title = encodeURIComponent(`${appointment.service} - ${appointment.clientName}`);
+  const details = encodeURIComponent(`Cliente: ${appointment.clientName}\nServiço: ${appointment.service}\nValor: ${formatCurrency(appointment.amount)}`);
+  const dates = `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`;
+  
+  return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
 };
 
 export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
@@ -122,6 +138,16 @@ export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, g
             className="h-8 w-8"
           >
             <Pencil className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            className="h-8 w-8 text-blue-600 hover:text-blue-700"
+          >
+            <a href={formatGoogleCalendarUrl(appointment)} target="_blank" rel="noopener noreferrer">
+              <CalendarPlus className="w-4 h-4" />
+            </a>
           </Button>
           {hasPhone && (
             <Button
