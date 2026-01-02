@@ -11,7 +11,7 @@ import {
   addMinutes 
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
@@ -193,6 +193,14 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                       <p className="text-[10px] text-muted-foreground truncate">
                         {appointment.service}
                       </p>
+                      {appointment.notes && (
+                        <div className="flex items-center gap-0.5 mt-0.5">
+                          <FileText className="w-2.5 h-2.5 flex-shrink-0 text-muted-foreground" />
+                          <p className="text-[10px] text-muted-foreground italic truncate">
+                            {appointment.notes}
+                          </p>
+                        </div>
+                      )}
                     </button>
                   );
                 })}
