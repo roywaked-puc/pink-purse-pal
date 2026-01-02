@@ -53,6 +53,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
   const [amount, setAmount] = useState('');
   const [duration, setDuration] = useState('60');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (appointment) {
@@ -64,6 +65,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       setAmount(appointment.amount.toString());
       setDuration(appointment.duration.toString());
       setPaymentStatus(appointment.paymentStatus);
+      setNotes(appointment.notes || '');
       
       if (appointment.clientId) {
         setSelectedClientId(appointment.clientId);
@@ -106,6 +108,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
     setAmount('');
     setDuration('60');
     setPaymentStatus('nao_pago');
+    setNotes('');
   };
 
   const handleClientSelect = (client: Client | null) => {
@@ -216,6 +219,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       paidAmount: appointment?.paidAmount || 0,
       paymentStatus,
       duration: parseInt(duration) || 60,
+      notes: notes.trim() || undefined,
     };
 
     if (appointment) {
@@ -338,6 +342,17 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Observação do Atendimento</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Ex: Trazer foto de referência, usar produto X..."
+              rows={2}
+              className="resize-none"
+            />
           </div>
 
           {appointment && (

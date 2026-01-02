@@ -33,6 +33,7 @@ export interface Appointment {
   paidAmount: number;
   paymentStatus: PaymentStatus;
   duration: number; // em minutos
+  notes?: string;
 }
 
 export interface Category {

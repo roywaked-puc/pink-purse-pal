@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays } from 'lucide-react';
+import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText } from 'lucide-react';
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -154,6 +154,15 @@ const Agendamentos = () => {
           <User className="w-4 h-4 text-muted-foreground" />
           <span className="font-medium">{appointment.clientName}</span>
         </div>
+
+        {appointment.notes && (
+          <div className="flex items-start gap-2 mb-3">
+            <FileText className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-muted-foreground italic line-clamp-2">
+              {appointment.notes}
+            </p>
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <div>
