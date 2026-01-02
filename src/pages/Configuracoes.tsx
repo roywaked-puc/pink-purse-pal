@@ -1,5 +1,6 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { ClientList } from '@/components/settings/ClientList';
 import { ServiceList } from '@/components/settings/ServiceList';
 import { CategoryList } from '@/components/settings/CategoryList';
 import { AccountList } from '@/components/settings/AccountList';
@@ -53,6 +54,10 @@ const Configuracoes = () => {
             Sair
           </Button>
         </div>
+        
+        <Separator />
+        
+        <ClientList />
         
         <Separator />
         
