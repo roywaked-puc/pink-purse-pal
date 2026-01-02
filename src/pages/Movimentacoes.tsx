@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, ChevronDown, FileText, Calendar } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { TransactionItem } from '@/components/transactions/TransactionItem';
@@ -13,6 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useApp } from '@/contexts/AppContext';
 import { Transaction, TransactionScope } from '@/types';
 
@@ -20,6 +26,7 @@ const Movimentacoes = () => {
   const { transactions, categories, deleteTransaction } = useApp();
   
   const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState<'normal' | 'avulso'>('normal');
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
   
@@ -55,15 +62,35 @@ const Movimentacoes = () => {
         title="Movimentações"
         subtitle="Controle suas entradas e saídas"
         action={
-          <Button
-            size="icon"
-            onClick={() => {
-              setEditingTransaction(null);
-              setShowForm(true);
-            }}
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon">
+                <Plus className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-popover">
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditingTransaction(null);
+                  setFormMode('normal');
+                  setShowForm(true);
+                }}
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Nova Movimentação
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditingTransaction(null);
+                  setFormMode('avulso');
+                  setShowForm(true);
+                }}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Incluir Avulso
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       />
 
@@ -125,10 +152,11 @@ const Movimentacoes = () => {
         ) : (
           <div className="text-center py-12 text-muted-foreground">
             <p>Nenhuma movimentação encontrada</p>
-            <Button
+          <Button
               variant="link"
               onClick={() => {
                 setEditingTransaction(null);
+                setFormMode('normal');
                 setShowForm(true);
               }}
               className="mt-2"
@@ -146,6 +174,7 @@ const Movimentacoes = () => {
           if (!open) setEditingTransaction(null);
         }}
         transaction={editingTransaction}
+        mode={editingTransaction ? 'normal' : formMode}
         onDelete={() => {
           if (editingTransaction) {
             setDeletingTransaction(editingTransaction);
