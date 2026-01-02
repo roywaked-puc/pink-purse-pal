@@ -28,10 +28,10 @@ export function ServiceList() {
   };
 
   const handleSaveEdit = () => {
-    if (editingId && editDescription.trim() && editAmount) {
+    if (editingId && editDescription.trim()) {
       updateService(editingId, { 
         description: editDescription.trim(), 
-        amount: parseFloat(editAmount),
+        amount: parseFloat(editAmount) || 0,
         duration: parseInt(editDuration) || 60,
         notes: editNotes.trim() || undefined
       });
@@ -48,10 +48,10 @@ export function ServiceList() {
   };
 
   const handleAdd = () => {
-    if (newDescription.trim() && newAmount) {
+    if (newDescription.trim()) {
       addService({ 
         description: newDescription.trim(), 
-        amount: parseFloat(newAmount),
+        amount: parseFloat(newAmount) || 0,
         duration: parseInt(newDuration) || 60,
         notes: newNotes.trim() || undefined
       });
@@ -125,7 +125,7 @@ export function ServiceList() {
             placeholder="Observação (opcional)"
           />
           <div className="flex gap-2">
-            <Button size="sm" onClick={handleAdd} disabled={!newDescription.trim() || !newAmount}>
+            <Button size="sm" onClick={handleAdd} disabled={!newDescription.trim()}>
               <Check className="h-4 w-4 mr-1" />
               Salvar
             </Button>
@@ -194,8 +194,12 @@ export function ServiceList() {
                 <div className="flex-1">
                   <p className="font-medium text-foreground">{service.description}</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-primary font-semibold">{formatCurrency(service.amount)}</span>
-                    <span className="text-xs text-muted-foreground">• {service.duration} min</span>
+                    {service.amount > 0 && (
+                      <span className="text-sm text-primary font-semibold">{formatCurrency(service.amount)}</span>
+                    )}
+                    {service.duration > 0 && (
+                      <span className="text-xs text-muted-foreground">{service.amount > 0 ? '• ' : ''}{service.duration} min</span>
+                    )}
                   </div>
                   {service.notes && (
                     <p className="text-xs text-muted-foreground">{service.notes}</p>
