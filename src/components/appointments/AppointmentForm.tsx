@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, HelpCircle } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Appointment, PaymentStatus, Client, Service } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -295,7 +301,19 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
           </div>
 
           <div className="space-y-2">
-            <Label>Observação da Cliente</Label>
+            <div className="flex items-center gap-2">
+              <Label>Observação da Cliente</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">Este campo é apenas informativo para você. Não será exibido em nenhuma outra tela nem enviado ao cliente.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Textarea
               value={clientNotes}
               onChange={(e) => setClientNotes(e.target.value)}
@@ -345,7 +363,19 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
           </div>
 
           <div className="space-y-2">
-            <Label>Observação do Atendimento</Label>
+            <div className="flex items-center gap-2">
+              <Label>Observação do Atendimento</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">Esta observação será exibida em todas as consultas de agendamentos e também incluída na mensagem do WhatsApp.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
