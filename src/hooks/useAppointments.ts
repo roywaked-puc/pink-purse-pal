@@ -29,6 +29,7 @@ export function useAppointments() {
         paidAmount: Number(a.paid_amount),
         paymentStatus: a.payment_status as 'pago' | 'nao_pago' | 'sinal',
         duration: a.duration,
+        notes: a.notes || undefined,
       }));
     },
     enabled: !!user,
@@ -56,6 +57,7 @@ export function useAddAppointment() {
           paid_amount: appointment.paidAmount,
           payment_status: appointment.paymentStatus,
           duration: appointment.duration,
+          notes: appointment.notes,
         });
       
       if (error) throw error;
@@ -83,6 +85,7 @@ export function useUpdateAppointment() {
           paid_amount: appointment.paidAmount,
           payment_status: appointment.paymentStatus,
           duration: appointment.duration,
+          notes: appointment.notes,
         })
         .eq('id', id);
       
