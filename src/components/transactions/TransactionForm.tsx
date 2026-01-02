@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { Transaction, TransactionType, TransactionScope, Appointment, Client, Category } from '@/types';
+import { Transaction, TransactionType, TransactionScope, Appointment, Client, Category, Service } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from '@/components/appointments/ClientAutocomplete';
 import { AppointmentSelector } from './AppointmentSelector';
+import { ServiceAutocomplete } from '@/components/appointments/ServiceAutocomplete';
 import { useToast } from '@/hooks/use-toast';
 
 interface TransactionFormProps {
@@ -38,9 +39,10 @@ interface TransactionFormProps {
   transaction?: Transaction | null;
   onDelete?: () => void;
   prefilledAppointment?: Appointment | null;
+  mode?: 'normal' | 'avulso';
 }
 
-export function TransactionForm({ open, onOpenChange, transaction, onDelete, prefilledAppointment }: TransactionFormProps) {
+export function TransactionForm({ open, onOpenChange, transaction, onDelete, prefilledAppointment, mode = 'normal' }: TransactionFormProps) {
   const { 
     categories, 
     accounts, 
@@ -64,6 +66,12 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [paymentType, setPaymentType] = useState<'sinal' | 'pagamento'>('pagamento');
+
+  // Campos para modo avulso
+  const [serviceName, setServiceName] = useState('');
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  const isAvulsoMode = mode === 'avulso' && !transaction;
 
   const selectedCategory = useMemo(() => {
     return categories.find(c => c.id === selectedCategoryId);
@@ -133,10 +141,22 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setAmount(balance.toFixed(2));
       setDescription(`${prefilledAppointment.service} - ${prefilledAppointment.clientName}`);
       setPaymentType('pagamento');
+    } else if (isAvulsoMode) {
+      // Modo avulso: pré-configura categoria Serviços
+      resetForm();
+      setDate(new Date());
+      const serviceCat = categories.find(
+        c => c.name === 'Serviços' && c.type === 'entrada' && c.scope === 'empresa'
+      );
+      if (serviceCat) {
+        setSelectedCategoryId(serviceCat.id);
+        setType('entrada');
+        setScope('empresa');
+      }
     } else {
       resetForm();
     }
-  }, [transaction, prefilledAppointment, open, categories]);
+  }, [transaction, prefilledAppointment, open, categories, isAvulsoMode]);
 
   // Quando selecionar agendamento, sugere o valor do saldo
   useEffect(() => {
@@ -158,6 +178,18 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     setSelectedClientId(null);
     setSelectedAppointment(null);
     setPaymentType('pagamento');
+    setServiceName('');
+    setSelectedService(null);
+  };
+
+  const handleServiceSelect = (service: Service | null) => {
+    setSelectedService(service);
+    if (service) {
+      if (service.amount > 0) {
+        setAmount(service.amount.toString());
+      }
+      setDescription(service.description);
+    }
   };
 
   const handleClientSelect = (client: Client | null) => {
@@ -185,6 +217,16 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       return;
     }
 
+    // Validação para modo avulso: serviço obrigatório
+    if (isAvulsoMode && !serviceName.trim()) {
+      toast({
+        title: "Erro",
+        description: "O campo Serviço é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validação: conta/banco obrigatório
     if (!account) {
       toast({
@@ -206,8 +248,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       return;
     }
 
-    // Validação: cliente obrigatório para entrada + empresa
-    if (type === 'entrada' && scope === 'empresa' && !selectedClientId && !transaction) {
+    // Validação: cliente obrigatório para entrada + empresa (exceto modo avulso)
+    if (!isAvulsoMode && type === 'entrada' && scope === 'empresa' && !selectedClientId && !transaction) {
       toast({
         title: "Erro",
         description: "Para recebimentos da empresa, o campo cliente é obrigatório",
@@ -226,6 +268,9 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       return;
     }
     
+    // Para modo avulso, usa o nome do serviço como descrição
+    const finalDescription = isAvulsoMode ? serviceName.trim() : (description || undefined);
+    
     const data: Omit<Transaction, 'id'> = {
       date,
       type: type as TransactionType,
@@ -233,7 +278,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       category: selectedCategory.name,
       account,
       amount: parseFloat(amount) || 0,
-      description: description || undefined,
+      description: finalDescription,
       appointmentId: selectedAppointment?.id,
       paymentType: selectedAppointment ? paymentType : undefined,
     };
@@ -258,7 +303,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       <DialogContent className="max-w-[95%] sm:max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {transaction ? 'Editar Movimentação' : 'Nova Movimentação'}
+            {transaction ? 'Editar Movimentação' : isAvulsoMode ? 'Incluir Avulso' : 'Nova Movimentação'}
           </DialogTitle>
         </DialogHeader>
 
@@ -284,28 +329,39 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             </Popover>
           </div>
 
-          <div className="space-y-2">
-            <Label>Categoria <span className="text-destructive">*</span></Label>
-            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Empresa</div>
-                {categories.filter(c => c.scope === 'empresa').map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
-                  </SelectItem>
-                ))}
-                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Pessoal</div>
-                {categories.filter(c => c.scope === 'pessoal').map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isAvulsoMode ? (
+            <div className="space-y-2">
+              <Label>Categoria</Label>
+              <Input 
+                value="Serviços (Entrada - Empresa)" 
+                disabled 
+                className="bg-muted"
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Categoria <span className="text-destructive">*</span></Label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Empresa</div>
+                  {categories.filter(c => c.scope === 'empresa').map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
+                    </SelectItem>
+                  ))}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Pessoal</div>
+                  {categories.filter(c => c.scope === 'pessoal').map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
@@ -329,7 +385,20 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             </div>
           </div>
 
-          {showAppointmentFields && !transaction && (
+          {/* Campo de serviço para modo avulso */}
+          {isAvulsoMode && (
+            <div className="space-y-2">
+              <Label>Serviço <span className="text-destructive">*</span></Label>
+              <ServiceAutocomplete
+                value={serviceName}
+                onChange={setServiceName}
+                onServiceSelect={handleServiceSelect}
+              />
+            </div>
+          )}
+
+          {/* Campos de cliente/agendamento para modo normal */}
+          {showAppointmentFields && !transaction && !isAvulsoMode && (
             <>
               <div className="space-y-2">
                 <Label>Cliente <span className="text-destructive">*</span></Label>
@@ -415,15 +484,17 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Descrição (opcional)</Label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detalhes da movimentação..."
-              rows={2}
-            />
-          </div>
+          {!isAvulsoMode && (
+            <div className="space-y-2">
+              <Label>Descrição (opcional)</Label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Detalhes da movimentação..."
+                rows={2}
+              />
+            </div>
+          )}
 
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
             {transaction && onDelete && (
