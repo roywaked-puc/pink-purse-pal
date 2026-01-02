@@ -185,6 +185,27 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       return;
     }
 
+    // Validação: conta/banco obrigatório
+    if (!account) {
+      toast({
+        title: "Erro",
+        description: "O campo Conta/Banco é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validação: valor obrigatório e maior que zero
+    const parsedAmount = parseFloat(amount) || 0;
+    if (parsedAmount <= 0) {
+      toast({
+        title: "Erro",
+        description: "O campo Valor é obrigatório e deve ser maior que zero",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validação: cliente obrigatório para entrada + empresa
     if (type === 'entrada' && scope === 'empresa' && !selectedClientId && !transaction) {
       toast({
@@ -196,7 +217,6 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     }
 
     // Validação: valor não pode exceder o saldo disponível do agendamento
-    const parsedAmount = parseFloat(amount) || 0;
     if (selectedAppointment && parsedAmount > balanceToReceive) {
       toast({
         title: "Erro",
