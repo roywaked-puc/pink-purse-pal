@@ -1,6 +1,6 @@
 import { format, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus } from 'lucide-react';
+import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, FileText } from 'lucide-react';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -119,6 +119,15 @@ export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, g
         <User className="w-4 h-4 text-muted-foreground" />
         <span className="font-medium">{appointment.clientName}</span>
       </div>
+
+      {appointment.notes && (
+        <div className="flex items-start gap-2 mb-2">
+          <FileText className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-muted-foreground italic line-clamp-2">
+            {appointment.notes}
+          </p>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <div>
