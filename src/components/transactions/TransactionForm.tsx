@@ -264,7 +264,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Data</Label>
+            <Label>Data <span className="text-destructive">*</span></Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -285,7 +285,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
           </div>
 
           <div className="space-y-2">
-            <Label>Categoria</Label>
+            <Label>Categoria <span className="text-destructive">*</span></Label>
             <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma categoria" />
@@ -332,7 +332,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
           {showAppointmentFields && !transaction && (
             <>
               <div className="space-y-2">
-                <Label>Cliente</Label>
+                <Label>Cliente <span className="text-destructive">*</span></Label>
                 <ClientAutocomplete
                   value={clientName}
                   onChange={setClientName}
@@ -387,7 +387,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
           )}
 
           <div className="space-y-2">
-            <Label>Conta / Banco</Label>
+            <Label>Conta / Banco <span className="text-destructive">*</span></Label>
             <Select value={account} onValueChange={setAccount}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
@@ -403,7 +403,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
           </div>
 
           <div className="space-y-2">
-            <Label>{selectedAppointment ? 'Valor Recebido (R$)' : 'Valor (R$)'}</Label>
+            <Label>{selectedAppointment ? 'Valor Recebido (R$)' : 'Valor (R$)'} <span className="text-destructive">*</span></Label>
             <Input
               type="number"
               step="0.01"
