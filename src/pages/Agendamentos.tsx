@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X } from 'lucide-react';
-import { format, isToday, isFuture, isPast } from 'date-fns';
+import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X, CalendarPlus } from 'lucide-react';
+import { format, isToday, isFuture, isPast, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -52,6 +52,21 @@ const getPaymentStatus = (appointment: Appointment) => {
   if (appointment.paidAmount >= appointment.amount) return 'pago';
   if (appointment.paidAmount > 0) return 'sinal';
   return 'nao_pago';
+};
+
+const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: number = 60) => {
+  const startDate = new Date(appointment.date);
+  const endDate = addMinutes(startDate, durationMinutes);
+  
+  const formatDateForGoogle = (date: Date) => {
+    return format(date, "yyyyMMdd'T'HHmmss");
+  };
+  
+  const title = encodeURIComponent(`${appointment.service} - ${appointment.clientName}`);
+  const details = encodeURIComponent(`Cliente: ${appointment.clientName}\nServiço: ${appointment.service}\nValor: ${formatCurrency(appointment.amount)}${appointment.notes ? `\nObservações: ${appointment.notes}` : ''}`);
+  const dates = `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`;
+  
+  return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
 };
 
 const confirmationStatusConfig = {
@@ -235,6 +250,16 @@ const Agendamentos = () => {
               className="h-8 w-8"
             >
               <Pencil className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="h-8 w-8 text-blue-600 hover:text-blue-700"
+            >
+              <a href={formatGoogleCalendarUrl(appointment, appointment.duration)} target="_blank" rel="noopener noreferrer">
+                <CalendarPlus className="w-4 h-4" />
+              </a>
             </Button>
             {(() => {
               const clientPhone = getClientPhone(appointment.clientId || '');
