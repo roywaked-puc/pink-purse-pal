@@ -222,7 +222,7 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                         ...(serviceColor ? bgStyle : {})
                       }}
                     >
-                      <p className="text-xs font-medium truncate">
+                      <p className="text-[10px] truncate">
                         {appointment.clientName}
                       </p>
                       <div className="flex items-center gap-0.5 min-w-0">
