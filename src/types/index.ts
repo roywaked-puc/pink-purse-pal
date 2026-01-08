@@ -1,6 +1,7 @@
 export type TransactionType = 'entrada' | 'saida';
 export type TransactionScope = 'empresa' | 'pessoal';
 export type PaymentStatus = 'pago' | 'nao_pago' | 'sinal';
+export type ConfirmationStatus = 'pendente' | 'confirmado' | 'atendido' | 'cancelado';
 
 export interface Transaction {
   id: string;
@@ -32,6 +33,7 @@ export interface Appointment {
   amount: number;
   paidAmount: number;
   paymentStatus: PaymentStatus;
+  confirmationStatus: ConfirmationStatus;
   duration: number; // em minutos
   notes?: string;
 }

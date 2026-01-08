@@ -28,6 +28,7 @@ export function useAppointments() {
         amount: Number(a.amount),
         paidAmount: Number(a.paid_amount),
         paymentStatus: a.payment_status as 'pago' | 'nao_pago' | 'sinal',
+        confirmationStatus: (a as any).confirmation_status as 'pendente' | 'confirmado' | 'atendido' | 'cancelado',
         duration: a.duration,
         notes: a.notes || undefined,
       }));
@@ -56,9 +57,10 @@ export function useAddAppointment() {
           amount: appointment.amount,
           paid_amount: appointment.paidAmount,
           payment_status: appointment.paymentStatus,
+          confirmation_status: appointment.confirmationStatus,
           duration: appointment.duration,
           notes: appointment.notes,
-        });
+        } as any);
       
       if (error) throw error;
     },
@@ -84,9 +86,10 @@ export function useUpdateAppointment() {
           amount: appointment.amount,
           paid_amount: appointment.paidAmount,
           payment_status: appointment.paymentStatus,
+          confirmation_status: appointment.confirmationStatus,
           duration: appointment.duration,
           notes: appointment.notes,
-        })
+        } as any)
         .eq('id', id);
       
       if (error) throw error;
@@ -185,6 +188,24 @@ export function useSubtractAppointmentPayment() {
           paid_amount: newPaidAmount,
           payment_status: newStatus,
         })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+}
+
+export function useUpdateConfirmationStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'pendente' | 'confirmado' | 'atendido' | 'cancelado' }) => {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ confirmation_status: status } as any)
         .eq('id', id);
       
       if (error) throw error;
