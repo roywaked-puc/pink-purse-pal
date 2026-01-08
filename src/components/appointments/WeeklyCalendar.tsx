@@ -215,18 +215,16 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                       onClick={() => onAppointmentClick(appointment)}
                       className={cn(
                         "absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-left overflow-hidden transition-all hover:opacity-80 hover:ring-2 hover:ring-primary/50 border-l-2",
-                        !serviceColor && status === 'pago' && "bg-emerald-500/20 border-emerald-500",
-                        !serviceColor && status === 'nao_pago' && "bg-amber-500/20 border-amber-500",
-                        !serviceColor && status === 'sinal' && "bg-blue-500/20 border-blue-500"
+                        !serviceColor && "bg-muted/50 border-muted-foreground/30"
                       )}
                       style={{
                         ...getAppointmentStyle(appointment),
                         ...(serviceColor ? bgStyle : {})
                       }}
                     >
-                      <div className="flex items-center gap-1 min-w-0">
-                        <ConfirmationIcon className={cn("w-3 h-3 flex-shrink-0", confirmationColor)} />
-                        <span className="text-xs font-medium truncate">
+                      <div className="flex items-center gap-0.5 min-w-0">
+                        <ConfirmationIcon className={cn("w-2 h-2 flex-shrink-0", confirmationColor)} />
+                        <span className="text-xs font-semibold truncate">
                           {appointment.clientName}
                         </span>
                       </div>
