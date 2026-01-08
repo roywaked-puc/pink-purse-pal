@@ -113,15 +113,22 @@ const Agendamentos = () => {
     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
     const serviceColor = service?.color;
 
-    return (
-      <div
-        key={appointment.id}
-        style={{ animationDelay: `${index * 50}ms` }}
-        className={cn(
-          "p-4 rounded-xl bg-card border border-border shadow-soft animate-fade-in",
-          isAppointmentToday && "ring-2 ring-primary/30"
-        )}
-      >
+      return (
+        <div
+          key={appointment.id}
+          style={{ 
+            animationDelay: `${index * 50}ms`,
+            ...(serviceColor && {
+              backgroundColor: `${serviceColor}20`,
+              borderLeftColor: serviceColor,
+              borderLeftWidth: '4px'
+            })
+          }}
+          className={cn(
+            "p-4 rounded-xl bg-card border border-border shadow-soft animate-fade-in",
+            isAppointmentToday && "ring-2 ring-primary/30"
+          )}
+        >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className={cn(
@@ -167,22 +174,14 @@ const Agendamentos = () => {
         )}
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {serviceColor && (
-              <div 
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: serviceColor }}
-              />
+          <div>
+            <p className="text-sm text-muted-foreground">{appointment.service}</p>
+            <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
+            {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
+              <p className="text-xs text-muted-foreground">
+                Recebido: {formatCurrency(appointment.paidAmount)}
+              </p>
             )}
-            <div>
-              <p className="text-sm text-muted-foreground">{appointment.service}</p>
-              <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
-              {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
-                <p className="text-xs text-muted-foreground">
-                  Recebido: {formatCurrency(appointment.paidAmount)}
-                </p>
-              )}
-            </div>
           </div>
           <div className="flex gap-1">
             <Button
