@@ -47,6 +47,16 @@ const confirmationColors: Record<ConfirmationStatus, string> = {
   cancelado: 'text-destructive',
 };
 
+const shortDayNames: Record<string, string> = {
+  'segunda-feira': 'seg',
+  'terça-feira': 'ter',
+  'quarta-feira': 'qua',
+  'quinta-feira': 'qui',
+  'sexta-feira': 'sex',
+  'sábado': 'sáb',
+  'domingo': 'dom',
+};
+
 export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalendarProps) {
   const { getServiceById } = useApp();
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -120,32 +130,37 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
       </div>
 
       {/* Days Header */}
-      <div className="grid grid-cols-[50px_repeat(7,1fr)] border-b border-border">
-        <div className="p-2" /> {/* Time column header */}
-        {weekDays.map((day) => (
-          <div 
-            key={day.toISOString()} 
-            className={cn(
-              "p-2 text-center border-l border-border",
-              isToday(day) && "bg-primary/10"
-            )}
-          >
-            <p className="text-xs text-muted-foreground uppercase">
-              {format(day, "EEE", { locale: ptBR })}
-            </p>
-            <p className={cn(
-              "text-lg font-semibold",
-              isToday(day) && "text-primary"
-            )}>
-              {format(day, "dd")}
-            </p>
-          </div>
-        ))}
+      <div className="grid grid-cols-[40px_repeat(7,1fr)] border-b border-border">
+        <div className="p-1 sm:p-2" /> {/* Time column header */}
+        {weekDays.map((day) => {
+          const dayName = format(day, "EEEE", { locale: ptBR }).toLowerCase();
+          const shortDay = shortDayNames[dayName] || format(day, "EEE", { locale: ptBR });
+          
+          return (
+            <div 
+              key={day.toISOString()} 
+              className={cn(
+                "p-1 sm:p-2 text-center border-l border-border",
+                isToday(day) && "bg-primary/10"
+              )}
+            >
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase">
+                {shortDay}
+              </p>
+              <p className={cn(
+                "text-base sm:text-lg font-semibold",
+                isToday(day) && "text-primary"
+              )}>
+                {format(day, "dd")}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Time Grid */}
       <ScrollArea className="flex-1">
-        <div className="grid grid-cols-[50px_repeat(7,1fr)] relative">
+        <div className="grid grid-cols-[40px_repeat(7,1fr)] relative">
           {/* Time Labels */}
           <div className="relative">
             {hours.map((hour) => (
