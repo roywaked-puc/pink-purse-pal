@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Appointment, PaymentStatus, Client, Service } from '@/types';
+import { Appointment, PaymentStatus, ConfirmationStatus, Client, Service } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +59,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
   const [amount, setAmount] = useState('');
   const [duration, setDuration] = useState('60');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
+  const [confirmationStatus, setConfirmationStatus] = useState<ConfirmationStatus>('pendente');
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
@@ -71,6 +72,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       setAmount(appointment.amount.toString());
       setDuration(appointment.duration.toString());
       setPaymentStatus(appointment.paymentStatus);
+      setConfirmationStatus(appointment.confirmationStatus);
       setNotes(appointment.notes || '');
       
       if (appointment.clientId) {
@@ -114,6 +116,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
     setAmount('');
     setDuration('60');
     setPaymentStatus('nao_pago');
+    setConfirmationStatus('pendente');
     setNotes('');
   };
 
@@ -224,6 +227,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
       amount: parseFloat(amount) || 0,
       paidAmount: appointment?.paidAmount || 0,
       paymentStatus,
+      confirmationStatus,
       duration: parseInt(duration) || 60,
       notes: notes.trim() || undefined,
     };
@@ -386,22 +390,39 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
           </div>
 
           {appointment && (
-            <div className="space-y-2">
-              <Label>Status do Pagamento</Label>
-              <Input 
-                value={
-                  appointment.paidAmount >= appointment.amount ? 'Pago' :
-                  appointment.paidAmount > 0 ? 'Sinal' : 'Não pago'
-                }
-                disabled 
-                className="bg-muted"
-              />
-              {appointment.paidAmount > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Recebido: R$ {appointment.paidAmount.toFixed(2).replace('.', ',')} de R$ {appointment.amount.toFixed(2).replace('.', ',')}
-                </p>
-              )}
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label>Status de Confirmação</Label>
+                <Select value={confirmationStatus} onValueChange={(v) => setConfirmationStatus(v as ConfirmationStatus)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendente">⏳ Pendente</SelectItem>
+                    <SelectItem value="confirmado">✓ Confirmado</SelectItem>
+                    <SelectItem value="atendido">✓✓ Atendido</SelectItem>
+                    <SelectItem value="cancelado">✗ Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Status do Pagamento</Label>
+                <Input 
+                  value={
+                    appointment.paidAmount >= appointment.amount ? 'Pago' :
+                    appointment.paidAmount > 0 ? 'Sinal' : 'Não pago'
+                  }
+                  disabled 
+                  className="bg-muted"
+                />
+                {appointment.paidAmount > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Recebido: R$ {appointment.paidAmount.toFixed(2).replace('.', ',')} de R$ {appointment.amount.toFixed(2).replace('.', ',')}
+                  </p>
+                )}
+              </div>
+            </>
           )}
 
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">

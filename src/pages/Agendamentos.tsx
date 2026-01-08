@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText } from 'lucide-react';
+import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X } from 'lucide-react';
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -10,10 +10,16 @@ import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { WeeklyCalendar } from '@/components/appointments/WeeklyCalendar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useApp } from '@/contexts/AppContext';
-import { Appointment } from '@/types';
+import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
-import { Clock, User, Pencil, Trash2 } from 'lucide-react';
+import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 
 const formatWhatsAppMessage = (appointment: Appointment) => {
   const date = format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR });
@@ -48,14 +54,16 @@ const getPaymentStatus = (appointment: Appointment) => {
   return 'nao_pago';
 };
 
-const statusLabels = {
-  pago: 'Pago',
-  nao_pago: 'Não pago',
-  sinal: 'Sinal',
+const confirmationStatusConfig = {
+  pendente: { icon: Clock, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'Pendente' },
+  confirmado: { icon: Check, color: 'text-emerald-600', bgColor: 'bg-emerald-100 dark:bg-emerald-900/30', label: 'Confirmado' },
+  atendido: { icon: CheckCheck, color: 'text-blue-600', bgColor: 'bg-blue-100 dark:bg-blue-900/30', label: 'Atendido' },
+  cancelado: { icon: X, color: 'text-destructive', bgColor: 'bg-destructive/10', label: 'Cancelado' },
 };
 
 const Agendamentos = () => {
   const { appointments, deleteAppointment, getClientById, getServiceById } = useApp();
+  const { mutate: updateConfirmationStatus } = useUpdateConfirmationStatus();
 
   const getClientPhone = (clientId: string) => {
     const client = getClientById(clientId);
@@ -103,6 +111,9 @@ const Agendamentos = () => {
       setDeleteId(null);
     }
   };
+  const handleConfirmationStatusChange = (appointmentId: string, status: ConfirmationStatus) => {
+    updateConfirmationStatus({ id: appointmentId, status });
+  };
 
   const renderAppointment = (appointment: Appointment, index: number) => {
     const appointmentDate = new Date(appointment.date);
@@ -112,6 +123,8 @@ const Agendamentos = () => {
     const canDelete = appointment.paidAmount === 0;
     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
     const serviceColor = service?.color;
+    const confirmationConfig = confirmationStatusConfig[appointment.confirmationStatus] || confirmationStatusConfig.pendente;
+    const ConfirmationIcon = confirmationConfig.icon;
 
       return (
         <div
@@ -131,15 +144,37 @@ const Agendamentos = () => {
         >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className={cn(
-              "p-2 rounded-lg",
-              isAppointmentToday ? "bg-primary/15" : "bg-muted"
-            )}>
-              <Clock className={cn(
-                "w-4 h-4",
-                isAppointmentToday ? "text-primary" : "text-muted-foreground"
-              )} />
-            </div>
+            {/* Confirmation Status Icon */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "p-2 rounded-lg transition-colors",
+                    confirmationConfig.bgColor
+                  )}
+                >
+                  <ConfirmationIcon className={cn("w-4 h-4", confirmationConfig.color)} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => handleConfirmationStatusChange(appointment.id, 'pendente')}>
+                  <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
+                  Pendente
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleConfirmationStatusChange(appointment.id, 'confirmado')}>
+                  <Check className="w-4 h-4 mr-2 text-emerald-600" />
+                  Confirmado
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleConfirmationStatusChange(appointment.id, 'atendido')}>
+                  <CheckCheck className="w-4 h-4 mr-2 text-blue-600" />
+                  Atendido
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleConfirmationStatusChange(appointment.id, 'cancelado')}>
+                  <X className="w-4 h-4 mr-2 text-destructive" />
+                  Cancelado
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div>
               <p className="text-sm font-medium">
                 {format(appointmentDate, "dd 'de' MMMM", { locale: ptBR })}
@@ -149,14 +184,23 @@ const Agendamentos = () => {
               </p>
             </div>
           </div>
-          <span className={cn(
-            "text-xs font-medium px-2.5 py-1 rounded-full",
-            paymentStatus === 'pago' && "status-paid",
-            paymentStatus === 'nao_pago' && "status-pending",
-            paymentStatus === 'sinal' && "status-today"
-          )}>
-            {statusLabels[paymentStatus]}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={cn(
+              "text-xs px-2 py-0.5 rounded-full",
+              confirmationConfig.bgColor,
+              confirmationConfig.color
+            )}>
+              {confirmationConfig.label}
+            </span>
+            <span className={cn(
+              "text-xs font-medium px-2.5 py-1 rounded-full",
+              paymentStatus === 'pago' && "status-paid",
+              paymentStatus === 'nao_pago' && "status-pending",
+              paymentStatus === 'sinal' && "status-today"
+            )}>
+              {paymentStatus === 'pago' ? 'Pago' : paymentStatus === 'sinal' ? 'Sinal' : 'Não pago'}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 mb-2">

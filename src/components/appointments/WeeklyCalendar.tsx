@@ -11,9 +11,9 @@ import {
   addMinutes 
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, User, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, FileText, Clock, Check, CheckCheck, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Appointment } from '@/types';
+import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApp } from '@/contexts/AppContext';
@@ -31,6 +31,20 @@ const getPaymentStatus = (appointment: Appointment) => {
   if (appointment.paidAmount >= appointment.amount) return 'pago';
   if (appointment.paidAmount > 0) return 'sinal';
   return 'nao_pago';
+};
+
+const confirmationIcons = {
+  pendente: Clock,
+  confirmado: Check,
+  atendido: CheckCheck,
+  cancelado: X,
+};
+
+const confirmationColors: Record<ConfirmationStatus, string> = {
+  pendente: 'text-muted-foreground',
+  confirmado: 'text-emerald-600',
+  atendido: 'text-blue-600',
+  cancelado: 'text-destructive',
 };
 
 export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalendarProps) {
@@ -170,13 +184,15 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                   const status = getPaymentStatus(appointment);
                   const aptDate = new Date(appointment.date);
                   const endTime = addMinutes(aptDate, appointment.duration);
-                  const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
-                  const serviceColor = service?.color;
-                  
-                  // Use service color if available, otherwise fall back to payment status colors
-                  const bgStyle = serviceColor 
-                    ? { backgroundColor: `${serviceColor}20`, borderLeftColor: serviceColor }
-                    : undefined;
+                    const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
+                    const serviceColor = service?.color;
+                    const ConfirmationIcon = confirmationIcons[appointment.confirmationStatus] || Clock;
+                    const confirmationColor = confirmationColors[appointment.confirmationStatus] || 'text-muted-foreground';
+                    
+                    // Use service color if available, otherwise fall back to payment status colors
+                    const bgStyle = serviceColor 
+                      ? { backgroundColor: `${serviceColor}20`, borderLeftColor: serviceColor }
+                      : undefined;
                   
                   return (
                     <button
@@ -194,7 +210,7 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                       }}
                     >
                       <div className="flex items-center gap-1 min-w-0">
-                        <User className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
+                        <ConfirmationIcon className={cn("w-3 h-3 flex-shrink-0", confirmationColor)} />
                         <span className="text-xs font-medium truncate">
                           {appointment.clientName}
                         </span>

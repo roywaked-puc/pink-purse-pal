@@ -43,6 +43,7 @@ export type Database = {
           amount: number
           client_id: string | null
           client_name: string
+          confirmation_status: string
           created_at: string
           date: string
           duration: number
@@ -58,6 +59,7 @@ export type Database = {
           amount?: number
           client_id?: string | null
           client_name: string
+          confirmation_status?: string
           created_at?: string
           date: string
           duration?: number
@@ -73,6 +75,7 @@ export type Database = {
           amount?: number
           client_id?: string | null
           client_name?: string
+          confirmation_status?: string
           created_at?: string
           date?: string
           duration?: number
