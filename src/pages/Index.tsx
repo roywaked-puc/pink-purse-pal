@@ -32,22 +32,26 @@ const Index = () => {
   const [deleteAppointmentId, setDeleteAppointmentId] = useState<string | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
 
-  // Filtra agendamentos futuros que ainda têm saldo a receber
+  // Filtra agendamentos futuros que ainda precisam de ação (não concluídos OU não pagos)
   const upcomingAppointments = appointments
     .filter(a => {
       const isFuture = new Date(a.date) >= new Date();
+      const isCompleted = a.confirmationStatus === 'atendido' || a.confirmationStatus === 'cancelado';
       const isPaid = a.paidAmount >= a.amount;
-      return isFuture && !isPaid;
+      // Mostrar se não foi concluído OU não foi pago
+      return isFuture && (!isCompleted || !isPaid);
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 3);
 
-  // Filtra agendamentos passados que ainda não foram concluídos nem cancelados
+  // Filtra agendamentos passados que ainda precisam de ação (não concluídos OU não pagos, exceto cancelados)
   const pendingCompletionAppointments = appointments
     .filter(a => {
       const isPast = new Date(a.date) < new Date();
       const isNotCompleted = a.confirmationStatus === 'pendente' || a.confirmationStatus === 'confirmado';
-      return isPast && isNotCompleted;
+      const isNotPaid = a.paidAmount < a.amount;
+      // Mostrar se não foi concluído OU não foi pago (exceto cancelados)
+      return isPast && a.confirmationStatus !== 'cancelado' && (isNotCompleted || isNotPaid);
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
