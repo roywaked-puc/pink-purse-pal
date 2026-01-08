@@ -55,7 +55,7 @@ const statusLabels = {
 };
 
 const Agendamentos = () => {
-  const { appointments, deleteAppointment, getClientById } = useApp();
+  const { appointments, deleteAppointment, getClientById, getServiceById } = useApp();
 
   const getClientPhone = (clientId: string) => {
     const client = getClientById(clientId);
@@ -110,6 +110,8 @@ const Agendamentos = () => {
     const paymentStatus = getPaymentStatus(appointment);
     const hasBalance = appointment.paidAmount < appointment.amount;
     const canDelete = appointment.paidAmount === 0;
+    const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
+    const serviceColor = service?.color;
 
     return (
       <div
@@ -165,14 +167,22 @@ const Agendamentos = () => {
         )}
 
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{appointment.service}</p>
-            <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
-            {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
-              <p className="text-xs text-muted-foreground">
-                Recebido: {formatCurrency(appointment.paidAmount)}
-              </p>
+          <div className="flex items-center gap-2">
+            {serviceColor && (
+              <div 
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: serviceColor }}
+              />
             )}
+            <div>
+              <p className="text-sm text-muted-foreground">{appointment.service}</p>
+              <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
+              {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
+                <p className="text-xs text-muted-foreground">
+                  Recebido: {formatCurrency(appointment.paidAmount)}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex gap-1">
             <Button
