@@ -55,4 +55,5 @@ export interface Service {
   amount: number;
   duration: number; // em minutos
   notes?: string;
+  color?: string;
 }

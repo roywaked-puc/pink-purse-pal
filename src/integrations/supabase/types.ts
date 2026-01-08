@@ -158,6 +158,7 @@ export type Database = {
       services: {
         Row: {
           amount: number
+          color: string | null
           created_at: string
           description: string
           duration: number
@@ -167,6 +168,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          color?: string | null
           created_at?: string
           description: string
           duration?: number
@@ -176,6 +178,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          color?: string | null
           created_at?: string
           description?: string
           duration?: number

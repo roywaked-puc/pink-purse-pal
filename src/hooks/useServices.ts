@@ -24,6 +24,7 @@ export function useServices() {
         amount: Number(s.amount),
         duration: s.duration,
         notes: s.notes || undefined,
+        color: s.color || undefined,
       }));
     },
     enabled: !!user,
@@ -46,6 +47,7 @@ export function useAddService() {
           amount: service.amount,
           duration: service.duration,
           notes: service.notes,
+          color: service.color,
         })
         .select('id')
         .single();
@@ -71,6 +73,7 @@ export function useUpdateService() {
           amount: service.amount,
           duration: service.duration,
           notes: service.notes,
+          color: service.color,
         })
         .eq('id', id);
       

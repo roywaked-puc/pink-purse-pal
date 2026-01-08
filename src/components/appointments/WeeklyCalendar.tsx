@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useApp } from '@/contexts/AppContext';
 
 interface WeeklyCalendarProps {
   appointments: Appointment[];
@@ -33,6 +34,7 @@ const getPaymentStatus = (appointment: Appointment) => {
 };
 
 export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalendarProps) {
+  const { getServiceById } = useApp();
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 }); // Monday
@@ -168,18 +170,28 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                   const status = getPaymentStatus(appointment);
                   const aptDate = new Date(appointment.date);
                   const endTime = addMinutes(aptDate, appointment.duration);
+                  const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
+                  const serviceColor = service?.color;
+                  
+                  // Use service color if available, otherwise fall back to payment status colors
+                  const bgStyle = serviceColor 
+                    ? { backgroundColor: `${serviceColor}20`, borderLeftColor: serviceColor }
+                    : undefined;
                   
                   return (
                     <button
                       key={appointment.id}
                       onClick={() => onAppointmentClick(appointment)}
                       className={cn(
-                        "absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-left overflow-hidden transition-all hover:opacity-80 hover:ring-2 hover:ring-primary/50",
-                        status === 'pago' && "bg-emerald-500/20 border-l-2 border-emerald-500",
-                        status === 'nao_pago' && "bg-amber-500/20 border-l-2 border-amber-500",
-                        status === 'sinal' && "bg-blue-500/20 border-l-2 border-blue-500"
+                        "absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-left overflow-hidden transition-all hover:opacity-80 hover:ring-2 hover:ring-primary/50 border-l-2",
+                        !serviceColor && status === 'pago' && "bg-emerald-500/20 border-emerald-500",
+                        !serviceColor && status === 'nao_pago' && "bg-amber-500/20 border-amber-500",
+                        !serviceColor && status === 'sinal' && "bg-blue-500/20 border-blue-500"
                       )}
-                      style={getAppointmentStyle(appointment)}
+                      style={{
+                        ...getAppointmentStyle(appointment),
+                        ...(serviceColor ? bgStyle : {})
+                      }}
                     >
                       <div className="flex items-center gap-1 min-w-0">
                         <User className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
