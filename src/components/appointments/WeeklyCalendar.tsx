@@ -222,15 +222,15 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                         ...(serviceColor ? bgStyle : {})
                       }}
                     >
+                      <p className="text-xs font-medium truncate">
+                        {appointment.clientName}
+                      </p>
                       <div className="flex items-center gap-0.5 min-w-0">
                         <ConfirmationIcon className={cn("w-2 h-2 flex-shrink-0", confirmationColor)} />
-                        <span className="text-xs font-semibold truncate">
-                          {appointment.clientName}
+                        <span className="text-[10px] text-muted-foreground truncate">
+                          {format(aptDate, "HH:mm")} - {format(endTime, "HH:mm")}
                         </span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        {format(aptDate, "HH:mm")} - {format(endTime, "HH:mm")}
-                      </p>
                       <p className="text-[10px] text-muted-foreground truncate">
                         {appointment.service}
                       </p>
