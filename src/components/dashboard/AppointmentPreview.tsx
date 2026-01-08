@@ -1,9 +1,16 @@
 import { format, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, FileText } from 'lucide-react';
-import { Appointment } from '@/types';
+import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, FileText, Check, CheckCheck, X } from 'lucide-react';
+import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
+const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
+  pendente: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Pendente' },
+  confirmado: { icon: Check, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Confirmado' },
+  atendido: { icon: CheckCheck, color: 'text-green-600', bg: 'bg-green-100', label: 'Atendido' },
+  cancelado: { icon: X, color: 'text-red-600', bg: 'bg-red-100', label: 'Cancelado' },
+};
 
 interface AppointmentPreviewProps {
   appointment: Appointment;
@@ -74,6 +81,8 @@ export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, g
   const paymentStatus = getPaymentStatus(appointment);
   const hasBalance = appointment.paidAmount < appointment.amount;
   const canDelete = appointment.paidAmount === 0;
+  const confirmationConfig = confirmationStatusConfig[appointment.confirmationStatus];
+  const ConfirmationIcon = confirmationConfig.icon;
 
   const clientPhone = getClientPhone?.(appointment.clientId || '');
   const hasPhone = clientPhone && clientPhone.length > 0;
@@ -105,14 +114,23 @@ export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, g
             </p>
           </div>
         </div>
-        <span className={cn(
-          "text-xs font-medium px-2.5 py-1 rounded-full",
-          paymentStatus === 'pago' && "status-paid",
-          paymentStatus === 'nao_pago' && "status-pending",
-          paymentStatus === 'sinal' && "status-today"
-        )}>
-          {statusLabels[paymentStatus]}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className={cn(
+            "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
+            confirmationConfig.bg, confirmationConfig.color
+          )}>
+            <ConfirmationIcon className="w-3 h-3" />
+            {confirmationConfig.label}
+          </span>
+          <span className={cn(
+            "text-xs font-medium px-2.5 py-1 rounded-full",
+            paymentStatus === 'pago' && "status-paid",
+            paymentStatus === 'nao_pago' && "status-pending",
+            paymentStatus === 'sinal' && "status-today"
+          )}>
+            {statusLabels[paymentStatus]}
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 mb-2">

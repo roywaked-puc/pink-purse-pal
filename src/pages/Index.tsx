@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Briefcase, User, TrendingDown, Plus, Calendar } from 'lucide-react';
+import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
@@ -41,6 +41,16 @@ const Index = () => {
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 3);
+
+  // Filtra agendamentos passados que ainda não foram concluídos nem cancelados
+  const pendingCompletionAppointments = appointments
+    .filter(a => {
+      const isPast = new Date(a.date) < new Date();
+      const isNotCompleted = a.confirmationStatus === 'pendente' || a.confirmationStatus === 'confirmado';
+      return isPast && isNotCompleted;
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
 
   const handleEditAppointment = (appointment: Appointment) => {
     setEditingAppointment(appointment);
@@ -117,7 +127,7 @@ const Index = () => {
       </div>
 
       {/* Upcoming Appointments */}
-      <section>
+      <section className="mb-6">
         <h2 className="font-semibold mb-3 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-primary" />
           Próximos Agendamentos
@@ -148,6 +158,34 @@ const Index = () => {
           </div>
         )}
       </section>
+
+      {/* Pending Completion Appointments */}
+      {pendingCompletionAppointments.length > 0 && (
+        <section>
+          <h2 className="font-semibold mb-3 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-amber-500" />
+            Pendentes de Conclusão
+          </h2>
+          
+          <div className="space-y-3">
+            {pendingCompletionAppointments.map((appointment, index) => (
+              <div
+                key={appointment.id}
+                style={{ animationDelay: `${index * 100}ms` }}
+                className="animate-slide-up"
+              >
+                <AppointmentPreview
+                  appointment={appointment}
+                  onEdit={handleEditAppointment}
+                  onDelete={handleDeleteAppointment}
+                  onReceive={handleReceiveAppointment}
+                  getClientPhone={getClientPhone}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Forms */}
       <TransactionForm
