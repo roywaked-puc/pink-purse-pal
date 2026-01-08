@@ -90,7 +90,7 @@ const Agendamentos = () => {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'week'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'week'>('week');
 
   const sortedAppointments = useMemo(() => {
     return [...appointments].sort((a, b) => 
