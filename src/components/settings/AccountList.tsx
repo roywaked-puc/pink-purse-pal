@@ -74,8 +74,7 @@ export function AccountList() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Contas e Bancos</h3>
+      <div className="flex items-center justify-end">
         <Button
           variant="ghost"
           size="sm"

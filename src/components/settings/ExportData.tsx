@@ -136,12 +136,9 @@ export const ExportData = () => {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">Exportar Dados</h3>
-        <p className="text-sm text-muted-foreground">
-          Exporte seus dados em formato CSV para backup ou migração.
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Exporte seus dados em formato CSV para backup ou migração.
+      </p>
 
       <div className="grid grid-cols-2 gap-3">
         {exportItems.map((item) => (

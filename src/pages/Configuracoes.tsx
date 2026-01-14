@@ -5,16 +5,21 @@ import { ServiceList } from '@/components/settings/ServiceList';
 import { CategoryList } from '@/components/settings/CategoryList';
 import { AccountList } from '@/components/settings/AccountList';
 import { ExportData } from '@/components/settings/ExportData';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
-import { LogOut, Loader2 } from 'lucide-react';
+import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const Configuracoes = () => {
   const { user, signOut } = useAuth();
-  const { loading } = useApp();
+  const { loading, clients, services, categories, accounts } = useApp();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -42,7 +47,7 @@ const Configuracoes = () => {
         subtitle="Personalize seu app"
       />
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* User Info */}
         <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
           <div>
@@ -54,26 +59,93 @@ const Configuracoes = () => {
             Sair
           </Button>
         </div>
-        
-        <Separator />
-        
-        <ClientList />
-        
-        <Separator />
-        
-        <ServiceList />
-        
-        <Separator />
-        
-        <CategoryList />
-        
-        <Separator />
-        
-        <AccountList />
-        
-        <Separator />
-        
-        <ExportData />
+
+        <Accordion type="single" collapsible className="space-y-2">
+          <AccordionItem value="clients" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">Clientes</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    {clients.length} cadastrados
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ClientList />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="services" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Scissors className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">Serviços</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    {services.length} cadastrados
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ServiceList />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="categories" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Tags className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">Categorias</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    {categories.length} cadastradas
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <CategoryList />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="accounts" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Landmark className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">Contas e Bancos</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    {accounts.length} cadastradas
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <AccountList />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="export" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Download className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">Exportar Dados</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    Backup em CSV
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ExportData />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </MainLayout>
   );

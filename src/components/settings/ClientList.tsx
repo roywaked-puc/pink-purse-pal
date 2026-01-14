@@ -101,11 +101,7 @@ export function ClientList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Clientes</h3>
-          <p className="text-sm text-muted-foreground">Gerencie seus clientes</p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button size="sm" onClick={handleOpenNew}>
           <Plus className="h-4 w-4 mr-1" />
           Adicionar
