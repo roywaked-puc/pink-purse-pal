@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Key, Loader2 } from 'lucide-react';
+import { validatePassword, getPasswordStrength } from '@/lib/passwordValidation';
 
 export function ChangePasswordDialog() {
   const { updatePassword } = useAuth();
@@ -30,19 +32,11 @@ export function ChangePasswordDialog() {
     e.preventDefault();
 
     // Validation
-    if (newPassword.length < 6) {
+    const validation = validatePassword(newPassword);
+    if (!validation.valid) {
       toast({
-        title: 'Senha muito curta',
-        description: 'A senha deve ter no mínimo 6 caracteres.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (newPassword.length > 100) {
-      toast({
-        title: 'Senha muito longa',
-        description: 'A senha deve ter no máximo 100 caracteres.',
+        title: 'Senha inválida',
+        description: validation.error,
         variant: 'destructive',
       });
       return;
@@ -99,12 +93,32 @@ export function ChangePasswordDialog() {
             <Input
               id="newPassword"
               type="password"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               disabled={loading}
               required
             />
+            {newPassword && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Progress 
+                    value={(getPasswordStrength(newPassword).score / 5) * 100} 
+                    className="h-2 flex-1"
+                  />
+                  <span className={`text-xs font-medium ${
+                    getPasswordStrength(newPassword).score <= 2 ? 'text-destructive' :
+                    getPasswordStrength(newPassword).score <= 3 ? 'text-yellow-600' :
+                    'text-green-600'
+                  }`}>
+                    {getPasswordStrength(newPassword).label}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use 8+ caracteres, maiúscula, número e símbolo
+                </p>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirmar nova senha</Label>

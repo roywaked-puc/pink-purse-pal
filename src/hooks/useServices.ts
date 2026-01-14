@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Service } from '@/types';
+import { sanitizeDbError } from '@/lib/sanitizeError';
 
 export function useServices() {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ export function useServices() {
         .select('*')
         .order('description');
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
       
       return data.map(s => ({
         id: s.id,
@@ -52,7 +53,7 @@ export function useAddService() {
         .select('id')
         .single();
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
       return data.id;
     },
     onSuccess: () => {
@@ -77,7 +78,7 @@ export function useUpdateService() {
         })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['services'] });
@@ -95,7 +96,7 @@ export function useDeleteService() {
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['services'] });

@@ -9,10 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
+import { passwordSchema, getPasswordStrength } from '@/lib/passwordValidation';
+import { Progress } from '@/components/ui/progress';
+
+const emailSchema = z.string().email('Email inválido').max(255, 'Email muito longo');
 
 const authSchema = z.object({
-  email: z.string().email('Email inválido').max(255, 'Email muito longo'),
-  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres').max(100, 'Senha muito longa'),
+  email: emailSchema,
+  password: passwordSchema,
 });
 
 const Auth = () => {
@@ -88,7 +92,7 @@ const Auth = () => {
       if (error.message.includes('User already registered')) {
         message = 'Este email já está cadastrado. Tente fazer login.';
       } else if (error.message.includes('Password should be at least')) {
-        message = 'A senha deve ter no mínimo 6 caracteres';
+        message = 'A senha não atende aos requisitos de segurança';
       }
       toast({
         title: 'Erro',
@@ -180,12 +184,32 @@ const Auth = () => {
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
                   />
+                  {password && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Progress 
+                          value={(getPasswordStrength(password).score / 5) * 100} 
+                          className={`h-2 flex-1`}
+                        />
+                        <span className={`text-xs font-medium ${
+                          getPasswordStrength(password).score <= 2 ? 'text-destructive' :
+                          getPasswordStrength(password).score <= 3 ? 'text-yellow-600' :
+                          'text-green-600'
+                        }`}>
+                          {getPasswordStrength(password).label}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Use 8+ caracteres, maiúscula, número e símbolo
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
