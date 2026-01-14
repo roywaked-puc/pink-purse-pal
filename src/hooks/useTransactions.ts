@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Transaction } from '@/types';
+import { sanitizeDbError } from '@/lib/sanitizeError';
 
 export function useTransactions() {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ export function useTransactions() {
         .select('*')
         .order('date', { ascending: false });
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
       
       return data.map(t => ({
         id: t.id,
@@ -58,7 +59,7 @@ export function useAddTransaction() {
           payment_type: transaction.paymentType,
         });
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -86,7 +87,7 @@ export function useUpdateTransaction() {
         })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -104,7 +105,7 @@ export function useDeleteTransaction() {
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });

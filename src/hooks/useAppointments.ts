@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Appointment } from '@/types';
+import { sanitizeDbError } from '@/lib/sanitizeError';
 
 export function useAppointments() {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ export function useAppointments() {
         .select('*')
         .order('date', { ascending: true });
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
       
       return data.map(a => ({
         id: a.id,
@@ -62,7 +63,7 @@ export function useAddAppointment() {
           notes: appointment.notes,
         } as any);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -92,7 +93,7 @@ export function useUpdateAppointment() {
         } as any)
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -110,7 +111,7 @@ export function useDeleteAppointment() {
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -130,7 +131,7 @@ export function useUpdateAppointmentPayment() {
         .eq('id', id)
         .single();
       
-      if (fetchError) throw fetchError;
+      if (fetchError) throw sanitizeDbError(fetchError);
       
       const newPaidAmount = Number(current.paid_amount) + paidAmount;
       let newStatus: 'nao_pago' | 'sinal' | 'pago' = 'nao_pago';
@@ -149,7 +150,7 @@ export function useUpdateAppointmentPayment() {
         })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -169,7 +170,7 @@ export function useSubtractAppointmentPayment() {
         .eq('id', id)
         .single();
       
-      if (fetchError) throw fetchError;
+      if (fetchError) throw sanitizeDbError(fetchError);
       
       // Subtract the amount (minimum 0)
       const newPaidAmount = Math.max(0, Number(current.paid_amount) - amount);
@@ -190,7 +191,7 @@ export function useSubtractAppointmentPayment() {
         })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -208,7 +209,7 @@ export function useUpdateConfirmationStatus() {
         .update({ confirmation_status: status } as any)
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });

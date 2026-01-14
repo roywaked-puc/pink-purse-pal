@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Category } from '@/types';
+import { sanitizeDbError } from '@/lib/sanitizeError';
 
 export function useCategories() {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ export function useCategories() {
         .select('*')
         .order('name');
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
       
       return data.map(c => ({
         id: c.id,
@@ -46,7 +47,7 @@ export function useAddCategory() {
           scope: category.scope,
         });
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -68,7 +69,7 @@ export function useUpdateCategory() {
         })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -86,7 +87,7 @@ export function useDeleteCategory() {
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Account } from '@/types';
+import { sanitizeDbError } from '@/lib/sanitizeError';
 
 export function useAccounts() {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ export function useAccounts() {
         .select('*')
         .order('name');
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
       
       return data.map(a => ({
         id: a.id,
@@ -44,7 +45,7 @@ export function useAddAccount() {
           type: account.type,
         });
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
@@ -65,7 +66,7 @@ export function useUpdateAccount() {
         })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
@@ -83,7 +84,7 @@ export function useDeleteAccount() {
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
