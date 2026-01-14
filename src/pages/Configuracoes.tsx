@@ -5,6 +5,7 @@ import { ServiceList } from '@/components/settings/ServiceList';
 import { CategoryList } from '@/components/settings/CategoryList';
 import { AccountList } from '@/components/settings/AccountList';
 import { ExportData } from '@/components/settings/ExportData';
+import { ChangePasswordDialog } from '@/components/settings/ChangePasswordDialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
@@ -54,10 +55,13 @@ const Configuracoes = () => {
             <p className="text-sm text-muted-foreground">Conectado como</p>
             <p className="font-medium">{user?.email}</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sair
-          </Button>
+          <div className="flex gap-2">
+            <ChangePasswordDialog />
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
+          </div>
         </div>
 
         <Accordion type="single" collapsible className="space-y-2">
