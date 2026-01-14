@@ -72,7 +72,11 @@ export const ExportData = () => {
       toast({ title: 'Sem dados', description: 'Não há serviços para exportar.', variant: 'destructive' });
       return;
     }
-    const csv = convertToCSV(services, ['Descrição', 'Valor', 'Observações'], ['description', 'amount', 'notes']);
+    const csv = convertToCSV(
+      services, 
+      ['Descrição', 'Valor', 'Duração (min)', 'Cor', 'Observações'], 
+      ['description', 'amount', 'duration', 'color', 'notes']
+    );
     downloadCSV(csv, `servicos_${getDateSuffix()}.csv`);
     toast({ title: 'Exportação concluída', description: `${services.length} serviços exportados.` });
   };
@@ -84,8 +88,8 @@ export const ExportData = () => {
     }
     const csv = convertToCSV(
       appointments,
-      ['Data', 'Cliente', 'Serviço', 'Valor', 'Valor Pago', 'Status'],
-      ['date', 'clientName', 'service', 'amount', 'paidAmount', 'paymentStatus']
+      ['Data', 'Cliente', 'Serviço', 'Valor', 'Valor Pago', 'Status Pagamento', 'Status Confirmação', 'Duração (min)', 'Observações'],
+      ['date', 'clientName', 'service', 'amount', 'paidAmount', 'paymentStatus', 'confirmationStatus', 'duration', 'notes']
     );
     downloadCSV(csv, `agendamentos_${getDateSuffix()}.csv`);
     toast({ title: 'Exportação concluída', description: `${appointments.length} agendamentos exportados.` });
@@ -98,8 +102,8 @@ export const ExportData = () => {
     }
     const csv = convertToCSV(
       transactions,
-      ['Data', 'Tipo', 'Origem', 'Categoria', 'Conta', 'Valor', 'Descrição'],
-      ['date', 'type', 'scope', 'category', 'account', 'amount', 'description']
+      ['Data', 'Tipo', 'Origem', 'Categoria', 'Conta', 'Valor', 'Descrição', 'ID Agendamento', 'Tipo Recebimento'],
+      ['date', 'type', 'scope', 'category', 'account', 'amount', 'description', 'appointmentId', 'paymentType']
     );
     downloadCSV(csv, `movimentacoes_${getDateSuffix()}.csv`);
     toast({ title: 'Exportação concluída', description: `${transactions.length} movimentações exportadas.` });
