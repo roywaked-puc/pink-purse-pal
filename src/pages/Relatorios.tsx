@@ -74,6 +74,24 @@ export default function Relatorios() {
     return summary;
   }, [filteredTransactions]);
 
+  // Account summary
+  const accountSummary = useMemo(() => {
+    const summary: Record<string, { entradas: number; saidas: number }> = {};
+
+    filteredTransactions.forEach(t => {
+      if (!summary[t.account]) {
+        summary[t.account] = { entradas: 0, saidas: 0 };
+      }
+      if (t.type === 'entrada') {
+        summary[t.account].entradas += t.amount;
+      } else {
+        summary[t.account].saidas += t.amount;
+      }
+    });
+
+    return summary;
+  }, [filteredTransactions]);
+
   // Totals
   const totals = useMemo(() => {
     const result = {
@@ -204,6 +222,29 @@ export default function Relatorios() {
       startY: finalY + 4,
       head: [['Escopo', 'Categoria', 'Entradas', 'Saidas']],
       body: summaryData,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    // Account Summary
+    const accountFinalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text('Resumo por Conta', 14, accountFinalY);
+
+    const accountData = Object.entries(accountSummary).map(([account, values]) => {
+      const balance = values.entradas - values.saidas;
+      return [
+        account,
+        formatCurrency(values.entradas),
+        formatCurrency(values.saidas),
+        (balance >= 0 ? '+' : '') + formatCurrency(balance),
+      ];
+    });
+
+    autoTable(doc, {
+      startY: accountFinalY + 4,
+      head: [['Conta', 'Entradas', 'Saidas', 'Saldo']],
+      body: accountData,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [59, 130, 246] },
     });
@@ -476,6 +517,39 @@ export default function Relatorios() {
             
             {(selectedScope === 'todos' || selectedScope === 'pessoal') && (
               renderCategorySummary('pessoal', 'Pessoal')
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Account Summary */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Resumo por Conta</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(accountSummary).length > 0 ? (
+              <div className="space-y-3">
+                {Object.entries(accountSummary).map(([account, values]) => {
+                  const balance = values.entradas - values.saidas;
+                  return (
+                    <div key={account} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{account}</span>
+                        <span className={cn(balance >= 0 ? 'text-success' : 'text-destructive', 'font-medium')}>
+                          {balance >= 0 ? '+' : ''}{formatCurrency(balance)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Entradas: {formatCurrency(values.entradas)}</span>
+                        <span>Saídas: {formatCurrency(values.saidas)}</span>
+                      </div>
+                      <Separator />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhuma transação no período</p>
             )}
           </CardContent>
         </Card>
