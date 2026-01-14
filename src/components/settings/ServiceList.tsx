@@ -126,8 +126,7 @@ export function ServiceList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">Serviços</h3>
+      <div className="flex items-center justify-end">
         {!isAdding && (
           <Button
             size="sm"

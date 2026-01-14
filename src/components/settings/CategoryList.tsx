@@ -151,8 +151,7 @@ export function CategoryList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Categorias</h3>
+      <div className="flex items-center justify-end">
         <Button
           variant="ghost"
           size="sm"
