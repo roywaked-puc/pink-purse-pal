@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { Transaction, TransactionType, TransactionScope, Appointment, Client, Category, Service } from '@/types';
+import { Transaction, TransactionType, TransactionScope, Appointment, Client } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -30,7 +31,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from '@/components/appointments/ClientAutocomplete';
 import { AppointmentSelector } from './AppointmentSelector';
-import { ServiceAutocomplete } from '@/components/appointments/ServiceAutocomplete';
 import { useToast } from '@/hooks/use-toast';
 
 interface TransactionFormProps {
@@ -39,10 +39,9 @@ interface TransactionFormProps {
   transaction?: Transaction | null;
   onDelete?: () => void;
   prefilledAppointment?: Appointment | null;
-  mode?: 'normal' | 'avulso';
 }
 
-export function TransactionForm({ open, onOpenChange, transaction, onDelete, prefilledAppointment, mode = 'normal' }: TransactionFormProps) {
+export function TransactionForm({ open, onOpenChange, transaction, onDelete, prefilledAppointment }: TransactionFormProps) {
   const { 
     categories, 
     accounts, 
@@ -61,23 +60,20 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   
+  // Checkbox para vincular a agendamento
+  const [linkToAppointment, setLinkToAppointment] = useState(false);
+  
   // Campos para vincular a agendamento
   const [clientName, setClientName] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [paymentType, setPaymentType] = useState<'sinal' | 'pagamento'>('pagamento');
 
-  // Campos para modo avulso
-  const [serviceName, setServiceName] = useState('');
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-
-  const isAvulsoMode = mode === 'avulso' && !transaction;
-
   const selectedCategory = useMemo(() => {
     return categories.find(c => c.id === selectedCategoryId);
   }, [categories, selectedCategoryId]);
 
-  const showAppointmentFields = type === 'entrada' && scope === 'empresa';
+  const showLinkOption = type === 'entrada' && !transaction;
 
   const clientAppointments = useMemo(() => {
     if (!selectedClientId) return [];
@@ -95,8 +91,9 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setType(selectedCategory.type);
       setScope(selectedCategory.scope);
       
-      // Limpa campos de cliente se mudar para categoria que não é entrada+empresa
-      if (!(selectedCategory.type === 'entrada' && selectedCategory.scope === 'empresa')) {
+      // Limpa campos de agendamento se mudar para categoria que não é entrada
+      if (selectedCategory.type !== 'entrada') {
+        setLinkToAppointment(false);
         setSelectedClientId(null);
         setSelectedAppointment(null);
         setClientName('');
@@ -106,6 +103,15 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setScope('');
     }
   }, [selectedCategory]);
+
+  // Quando desmarca o checkbox, limpa os campos de agendamento
+  useEffect(() => {
+    if (!linkToAppointment) {
+      setSelectedClientId(null);
+      setSelectedAppointment(null);
+      setClientName('');
+    }
+  }, [linkToAppointment]);
 
   useEffect(() => {
     if (transaction) {
@@ -121,6 +127,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setAmount(transaction.amount.toString());
       setDescription(transaction.description || '');
       setPaymentType(transaction.paymentType || 'pagamento');
+      setLinkToAppointment(false);
     } else if (prefilledAppointment) {
       // Pre-preenche com dados do agendamento
       resetForm();
@@ -134,6 +141,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
         setType('entrada');
         setScope('empresa');
       }
+      setLinkToAppointment(true);
       setClientName(prefilledAppointment.clientName);
       setSelectedClientId(prefilledAppointment.clientId || null);
       setSelectedAppointment(prefilledAppointment);
@@ -141,22 +149,10 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setAmount(balance.toFixed(2));
       setDescription(`${prefilledAppointment.service} - ${prefilledAppointment.clientName}`);
       setPaymentType('pagamento');
-    } else if (isAvulsoMode) {
-      // Modo avulso: pré-configura categoria Serviços
-      resetForm();
-      setDate(new Date());
-      const serviceCat = categories.find(
-        c => c.name === 'Serviços' && c.type === 'entrada' && c.scope === 'empresa'
-      );
-      if (serviceCat) {
-        setSelectedCategoryId(serviceCat.id);
-        setType('entrada');
-        setScope('empresa');
-      }
     } else {
       resetForm();
     }
-  }, [transaction, prefilledAppointment, open, categories, isAvulsoMode]);
+  }, [transaction, prefilledAppointment, open, categories]);
 
   // Quando selecionar agendamento, sugere o valor do saldo
   useEffect(() => {
@@ -174,22 +170,11 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     setAccount('');
     setAmount('');
     setDescription('');
+    setLinkToAppointment(false);
     setClientName('');
     setSelectedClientId(null);
     setSelectedAppointment(null);
     setPaymentType('pagamento');
-    setServiceName('');
-    setSelectedService(null);
-  };
-
-  const handleServiceSelect = (service: Service | null) => {
-    setSelectedService(service);
-    if (service) {
-      if (service.amount > 0) {
-        setAmount(service.amount.toString());
-      }
-      setDescription(service.description);
-    }
   };
 
   const handleClientSelect = (client: Client | null) => {
@@ -217,16 +202,6 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       return;
     }
 
-    // Validação para modo avulso: serviço obrigatório
-    if (isAvulsoMode && !serviceName.trim()) {
-      toast({
-        title: "Erro",
-        description: "O campo Serviço é obrigatório",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Validação: conta/banco obrigatório
     if (!account) {
       toast({
@@ -248,14 +223,24 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       return;
     }
 
-    // Validação: cliente obrigatório para entrada + empresa (exceto modo avulso)
-    if (!isAvulsoMode && type === 'entrada' && scope === 'empresa' && !selectedClientId && !transaction) {
-      toast({
-        title: "Erro",
-        description: "Para recebimentos da empresa, o campo cliente é obrigatório",
-        variant: "destructive",
-      });
-      return;
+    // Validação: se vincular a agenda, cliente e agendamento são obrigatórios
+    if (linkToAppointment) {
+      if (!selectedClientId) {
+        toast({
+          title: "Erro",
+          description: "Selecione um cliente para vincular à agenda",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!selectedAppointment) {
+        toast({
+          title: "Erro",
+          description: "Selecione um agendamento para vincular",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Validação: valor não pode exceder o saldo disponível do agendamento
@@ -268,9 +253,6 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       return;
     }
     
-    // Para modo avulso, usa o nome do serviço como descrição
-    const finalDescription = isAvulsoMode ? serviceName.trim() : (description || undefined);
-    
     const data: Omit<Transaction, 'id'> = {
       date,
       type: type as TransactionType,
@@ -278,7 +260,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       category: selectedCategory.name,
       account,
       amount: parseFloat(amount) || 0,
-      description: finalDescription,
+      description: description || undefined,
       appointmentId: selectedAppointment?.id,
       paymentType: selectedAppointment ? paymentType : undefined,
     };
@@ -303,7 +285,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       <DialogContent className="max-w-[95%] sm:max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {transaction ? 'Editar Movimentação' : isAvulsoMode ? 'Incluir Avulso' : 'Nova Movimentação'}
+            {transaction ? 'Editar Movimentação' : 'Nova Movimentação'}
           </DialogTitle>
         </DialogHeader>
 
@@ -329,39 +311,28 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             </Popover>
           </div>
 
-          {isAvulsoMode ? (
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Input 
-                value="Serviços (Entrada - Empresa)" 
-                disabled 
-                className="bg-muted"
-              />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label>Categoria <span className="text-destructive">*</span></Label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Empresa</div>
-                  {categories.filter(c => c.scope === 'empresa').map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
-                    </SelectItem>
-                  ))}
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Pessoal</div>
-                  {categories.filter(c => c.scope === 'pessoal').map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>Categoria <span className="text-destructive">*</span></Label>
+            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Empresa</div>
+                {categories.filter(c => c.scope === 'empresa').map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
+                  </SelectItem>
+                ))}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Pessoal</div>
+                {categories.filter(c => c.scope === 'pessoal').map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name} ({cat.type === 'entrada' ? 'Entrada' : 'Saída'})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
@@ -385,20 +356,26 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             </div>
           </div>
 
-          {/* Campo de serviço para modo avulso */}
-          {isAvulsoMode && (
-            <div className="space-y-2">
-              <Label>Serviço <span className="text-destructive">*</span></Label>
-              <ServiceAutocomplete
-                value={serviceName}
-                onChange={setServiceName}
-                onServiceSelect={handleServiceSelect}
+          {/* Checkbox para vincular a agendamento (apenas para entradas e novas transações) */}
+          {showLinkOption && (
+            <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
+              <Checkbox 
+                id="linkAppointment" 
+                checked={linkToAppointment} 
+                onCheckedChange={(checked) => setLinkToAppointment(checked === true)}
+                disabled={!!prefilledAppointment}
               />
+              <Label 
+                htmlFor="linkAppointment" 
+                className="text-sm font-normal cursor-pointer"
+              >
+                Vincular a uma agenda
+              </Label>
             </div>
           )}
 
-          {/* Campos de cliente/agendamento para modo normal */}
-          {showAppointmentFields && !transaction && !isAvulsoMode && (
+          {/* Campos de cliente/agendamento quando vincular está ativo */}
+          {linkToAppointment && (
             <>
               <div className="space-y-2">
                 <Label>Cliente <span className="text-destructive">*</span></Label>
@@ -412,7 +389,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
 
               {selectedClientId && !prefilledAppointment && (
                 <div className="space-y-2">
-                  <Label>Agendamento</Label>
+                  <Label>Agendamento <span className="text-destructive">*</span></Label>
                   <AppointmentSelector
                     appointments={clientAppointments}
                     selectedId={selectedAppointment?.id || null}
@@ -484,17 +461,15 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             />
           </div>
 
-          {!isAvulsoMode && (
-            <div className="space-y-2">
-              <Label>Descrição (opcional)</Label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Detalhes da movimentação..."
-                rows={2}
-              />
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>Descrição (opcional)</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Detalhes da movimentação..."
+              rows={2}
+            />
+          </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
             {transaction && onDelete && (
