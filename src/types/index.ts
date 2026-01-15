@@ -49,6 +49,7 @@ export interface Account {
   id: string;
   name: string;
   type: 'dinheiro' | 'banco' | 'maquininha';
+  feePercentage?: number;
 }
 
 export interface Service {

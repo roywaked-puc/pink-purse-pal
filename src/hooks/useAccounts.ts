@@ -23,6 +23,7 @@ export function useAccounts() {
         id: a.id,
         name: a.name,
         type: a.type as 'dinheiro' | 'banco' | 'maquininha',
+        feePercentage: a.fee_percentage || 0,
       }));
     },
     enabled: !!user,
@@ -43,6 +44,7 @@ export function useAddAccount() {
           user_id: user.id,
           name: account.name,
           type: account.type,
+          fee_percentage: account.feePercentage || 0,
         });
       
       if (error) throw sanitizeDbError(error);
@@ -63,6 +65,7 @@ export function useUpdateAccount() {
         .update({
           name: account.name,
           type: account.type,
+          fee_percentage: account.feePercentage || 0,
         })
         .eq('id', id);
       
