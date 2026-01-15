@@ -32,22 +32,30 @@ export function AccountList() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editType, setEditType] = useState<Account['type']>('banco');
+  const [editFee, setEditFee] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountType, setNewAccountType] = useState<Account['type']>('banco');
+  const [newAccountFee, setNewAccountFee] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleEdit = (account: Account) => {
     setEditingId(account.id);
     setEditName(account.name);
     setEditType(account.type);
+    setEditFee(account.feePercentage?.toString() || '');
   };
 
   const handleSaveEdit = () => {
     if (editingId && editName.trim()) {
-      updateAccount(editingId, { name: editName.trim(), type: editType });
+      updateAccount(editingId, { 
+        name: editName.trim(), 
+        type: editType,
+        feePercentage: parseFloat(editFee) || 0,
+      });
       setEditingId(null);
       setEditName('');
+      setEditFee('');
     }
   };
 
@@ -58,9 +66,14 @@ export function AccountList() {
 
   const handleAdd = () => {
     if (newAccountName.trim()) {
-      addAccount({ name: newAccountName.trim(), type: newAccountType });
+      addAccount({ 
+        name: newAccountName.trim(), 
+        type: newAccountType,
+        feePercentage: parseFloat(newAccountFee) || 0,
+      });
       setNewAccountName('');
       setNewAccountType('banco');
+      setNewAccountFee('');
       setIsAdding(false);
     }
   };
@@ -106,6 +119,16 @@ export function AccountList() {
                   <SelectItem value="maquininha">Maquininha</SelectItem>
                 </SelectContent>
               </Select>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={newAccountFee}
+                onChange={(e) => setNewAccountFee(e.target.value)}
+                placeholder="Taxa %"
+                className="w-24"
+              />
               <Button size="icon" variant="ghost" onClick={handleAdd}>
                 <Check className="w-4 h-4 text-success" />
               </Button>
@@ -144,6 +167,16 @@ export function AccountList() {
                         <SelectItem value="maquininha">Maquininha</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={editFee}
+                      onChange={(e) => setEditFee(e.target.value)}
+                      placeholder="Taxa %"
+                      className="w-24"
+                    />
                     <Button size="icon" variant="ghost" onClick={handleSaveEdit}>
                       <Check className="w-4 h-4 text-success" />
                     </Button>
@@ -159,7 +192,12 @@ export function AccountList() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{account.name}</p>
-                    <p className="text-xs text-muted-foreground">{config.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {config.label}
+                      {account.feePercentage && account.feePercentage > 0 && (
+                        <span className="ml-2 text-warning">• Taxa: {account.feePercentage}%</span>
+                      )}
+                    </p>
                   </div>
                   <p className={cn(
                     "font-semibold",

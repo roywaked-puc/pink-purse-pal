@@ -60,6 +60,10 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   
+  // Valor líquido com desconto de operadora
+  const [netAmount, setNetAmount] = useState('');
+  const [showNetAmount, setShowNetAmount] = useState(false);
+  
   // Checkbox para vincular a agendamento
   const [linkToAppointment, setLinkToAppointment] = useState(false);
   
@@ -84,6 +88,23 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     if (!selectedAppointment) return 0;
     return selectedAppointment.amount - selectedAppointment.paidAmount;
   }, [selectedAppointment]);
+
+  const selectedAccount = useMemo(() => {
+    return accounts.find(a => a.id === account);
+  }, [accounts, account]);
+
+  // Calcula o valor líquido quando muda o valor ou a conta
+  useEffect(() => {
+    if (selectedAccount?.feePercentage && selectedAccount.feePercentage > 0 && amount) {
+      const fee = selectedAccount.feePercentage / 100;
+      const calculated = parseFloat(amount) * (1 - fee);
+      setNetAmount(calculated.toFixed(2));
+      setShowNetAmount(true);
+    } else {
+      setNetAmount('');
+      setShowNetAmount(false);
+    }
+  }, [amount, selectedAccount]);
 
   // Quando seleciona categoria, preenche tipo e origem automaticamente
   useEffect(() => {
@@ -169,6 +190,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     setScope('');
     setAccount('');
     setAmount('');
+    setNetAmount('');
+    setShowNetAmount(false);
     setDescription('');
     setLinkToAppointment(false);
     setClientName('');
@@ -253,13 +276,18 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       return;
     }
     
+    // Se há desconto de operadora, usar o valor líquido
+    const finalAmount = showNetAmount && netAmount 
+      ? parseFloat(netAmount) 
+      : parseFloat(amount) || 0;
+    
     const data: Omit<Transaction, 'id'> = {
       date,
       type: type as TransactionType,
       scope: scope as TransactionScope,
       category: selectedCategory.name,
       account,
-      amount: parseFloat(amount) || 0,
+      amount: finalAmount,
       description: description || undefined,
       appointmentId: selectedAppointment?.id,
       paymentType: selectedAppointment ? paymentType : undefined,
@@ -460,6 +488,29 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
               required
             />
           </div>
+
+          {showNetAmount && (
+            <div className="space-y-2 p-3 bg-muted/50 rounded-lg border border-border">
+              <div className="flex items-center justify-between">
+                <Label>Valor Líquido (com desconto)</Label>
+                <span className="text-xs text-muted-foreground">
+                  Taxa: {selectedAccount?.feePercentage}%
+                </span>
+              </div>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={netAmount}
+                onChange={(e) => setNetAmount(e.target.value)}
+                placeholder="0,00"
+              />
+              <p className="text-xs text-muted-foreground">
+                Valor original: R$ {parseFloat(amount || '0').toFixed(2).replace('.', ',')} • 
+                Desconto: R$ {(parseFloat(amount || '0') - parseFloat(netAmount || '0')).toFixed(2).replace('.', ',')}
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Descrição (opcional)</Label>
