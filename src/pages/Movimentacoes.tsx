@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { TransactionItem } from '@/components/transactions/TransactionItem';
@@ -25,13 +26,16 @@ const Movimentacoes = () => {
   
   const [filterScope, setFilterScope] = useState<TransactionScope | 'todos'>('todos');
   const [filterCategory, setFilterCategory] = useState<string>('todos');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredTransactions = useMemo(() => {
     return transactions
       .filter(t => filterScope === 'todos' || t.scope === filterScope)
       .filter(t => filterCategory === 'todos' || t.category === filterCategory)
+      .filter(t => searchQuery === '' || 
+        (t.description?.toLowerCase().includes(searchQuery.toLowerCase())))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, filterScope, filterCategory]);
+  }, [transactions, filterScope, filterCategory, searchQuery]);
 
   const handleEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
@@ -66,6 +70,19 @@ const Movimentacoes = () => {
           </Button>
         }
       />
+
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar na descrição..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="flex gap-2 mb-4">
