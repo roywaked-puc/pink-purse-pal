@@ -16,9 +16,11 @@ import {
 } from '@/components/ui/select';
 import { useApp } from '@/contexts/AppContext';
 import { Transaction, TransactionScope } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 const Movimentacoes = () => {
   const { transactions, categories, deleteTransaction } = useApp();
+  const { toast } = useToast();
   
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -38,6 +40,14 @@ const Movimentacoes = () => {
   }, [transactions, filterScope, filterCategory, searchQuery]);
 
   const handleEdit = (transaction: Transaction) => {
+    if (transaction.appointmentId) {
+      toast({
+        title: "Edição não permitida",
+        description: "Esta movimentação está vinculada a um agendamento e não pode ser editada. Você pode apenas excluí-la.",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingTransaction(transaction);
     setShowForm(true);
   };
