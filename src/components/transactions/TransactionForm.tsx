@@ -145,7 +145,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setType(transaction.type);
       setScope(transaction.scope);
       setAccount(transaction.account);
-      setAmount(transaction.amount.toString());
+      // Se tem valor bruto (grossAmount), usa ele para evitar duplicação de taxa
+      setAmount(transaction.grossAmount ? transaction.grossAmount.toString() : transaction.amount.toString());
       setDescription(transaction.description || '');
       setPaymentType(transaction.paymentType || 'pagamento');
       setLinkToAppointment(false);
@@ -298,6 +299,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       category: selectedCategory.name,
       account,
       amount: finalAmount,
+      // Salva o valor bruto se houver desconto de operadora
+      grossAmount: showNetAmount ? parseFloat(amount) : undefined,
       description: description || undefined,
       appointmentId: selectedAppointment?.id,
       paymentType: selectedAppointment ? paymentType : undefined,
