@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle } from 'lucide-react';
+import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
@@ -31,30 +32,35 @@ const Index = () => {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [deleteAppointmentId, setDeleteAppointmentId] = useState<string | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Filtra agendamentos futuros que ainda precisam de ação (não concluídos OU não pagos)
   const upcomingAppointments = appointments
     .filter(a => {
+      const matchesSearch = searchQuery === '' || 
+        a.clientName.toLowerCase().includes(searchQuery.toLowerCase());
       const isFuture = new Date(a.date) >= new Date();
       const isCompleted = a.confirmationStatus === 'atendido' || a.confirmationStatus === 'cancelado';
       const isPaid = a.paidAmount >= a.amount;
       // Mostrar se não foi concluído OU não foi pago
-      return isFuture && (!isCompleted || !isPaid);
+      return matchesSearch && isFuture && (!isCompleted || !isPaid);
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 3);
+    .slice(0, 5);
 
   // Filtra agendamentos passados que ainda precisam de ação (não concluídos OU não pagos, exceto cancelados)
   const pendingCompletionAppointments = appointments
     .filter(a => {
+      const matchesSearch = searchQuery === '' || 
+        a.clientName.toLowerCase().includes(searchQuery.toLowerCase());
       const isPast = new Date(a.date) < new Date();
       const isNotCompleted = a.confirmationStatus === 'pendente' || a.confirmationStatus === 'confirmado';
       const isNotPaid = a.paidAmount < a.amount;
       // Mostrar se não foi concluído OU não foi pago (exceto cancelados)
-      return isPast && a.confirmationStatus !== 'cancelado' && (isNotCompleted || isNotPaid);
+      return matchesSearch && isPast && a.confirmationStatus !== 'cancelado' && (isNotCompleted || isNotPaid);
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+    .slice(0, 10);
 
   const handleEditAppointment = (appointment: Appointment) => {
     setEditingAppointment(appointment);
@@ -104,6 +110,19 @@ const Index = () => {
             value={getMonthlyPersonalExpenses()}
             icon={TrendingDown}
             variant="accent"
+          />
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome do cliente..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
           />
         </div>
       </div>

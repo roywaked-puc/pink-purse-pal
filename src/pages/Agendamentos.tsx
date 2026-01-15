@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X, CalendarPlus } from 'lucide-react';
+import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X, CalendarPlus, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { format, isToday, isFuture, isPast, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -91,12 +92,14 @@ const Agendamentos = () => {
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'week'>('week');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const sortedAppointments = useMemo(() => {
-    return [...appointments].sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-  }, [appointments]);
+    return [...appointments]
+      .filter(a => searchQuery === '' || 
+        a.clientName.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [appointments, searchQuery]);
 
   const todayAppointments = sortedAppointments.filter(a => isToday(new Date(a.date)));
   const upcomingAppointments = sortedAppointments.filter(a => 
@@ -341,9 +344,22 @@ const Agendamentos = () => {
         }
       />
 
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome do cliente..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
       {viewMode === 'week' ? (
         <WeeklyCalendar 
-          appointments={appointments} 
+          appointments={sortedAppointments} 
           onAppointmentClick={handleAppointmentClick} 
         />
       ) : (
