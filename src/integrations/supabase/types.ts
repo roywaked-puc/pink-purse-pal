@@ -203,6 +203,7 @@ export type Database = {
           created_at: string
           date: string
           description: string | null
+          gross_amount: number | null
           id: string
           payment_type: string | null
           scope: string
@@ -217,6 +218,7 @@ export type Database = {
           created_at?: string
           date: string
           description?: string | null
+          gross_amount?: number | null
           id?: string
           payment_type?: string | null
           scope: string
@@ -231,6 +233,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string | null
+          gross_amount?: number | null
           id?: string
           payment_type?: string | null
           scope?: string
