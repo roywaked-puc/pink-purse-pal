@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowUpCircle, ArrowDownCircle, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, Pencil, Trash2, CalendarCheck } from 'lucide-react';
 import { Transaction } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
   const config = typeConfig[transaction.type];
   const Icon = config.icon;
   const account = accounts.find(a => a.id === transaction.account);
+  const isLinkedToAppointment = !!transaction.appointmentId;
 
   return (
     <div className="p-4 rounded-xl bg-card border border-border shadow-soft animate-fade-in">
@@ -60,19 +61,27 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
           {transaction.description && (
             <p className="text-xs text-muted-foreground mt-0.5">{transaction.description}</p>
           )}
+          {isLinkedToAppointment && (
+            <div className="flex items-center gap-1 text-xs text-primary mt-1">
+              <CalendarCheck className="w-3 h-3" />
+              <span>Vinculado a agendamento (só pode excluir)</span>
+            </div>
+          )}
           <p className={cn("font-semibold mt-1", config.color)}>
             {transaction.type === 'saida' ? '-' : ''}{formatCurrency(transaction.amount)}
           </p>
         </div>
         <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(transaction)}
-            className="h-8 w-8"
-          >
-            <Pencil className="w-4 h-4" />
-          </Button>
+          {!isLinkedToAppointment && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(transaction)}
+              className="h-8 w-8"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
