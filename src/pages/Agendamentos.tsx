@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X, CalendarPlus, Search } from 'lucide-react';
+import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X, CalendarPlus, Search, Grid3X3 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format, isToday, isFuture, isPast, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -9,6 +9,7 @@ import { AppointmentForm } from '@/components/appointments/AppointmentForm';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { WeeklyCalendar } from '@/components/appointments/WeeklyCalendar';
+import { MonthlyCalendar } from '@/components/appointments/MonthlyCalendar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -91,7 +92,7 @@ const Agendamentos = () => {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'week'>('week');
+  const [viewMode, setViewMode] = useState<'list' | 'week' | 'month'>('month');
   const [searchQuery, setSearchQuery] = useState('');
 
   const sortedAppointments = useMemo(() => {
@@ -321,13 +322,16 @@ const Agendamentos = () => {
         subtitle="Gerencie sua agenda"
         action={
           <div className="flex items-center gap-2">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'week')}>
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'week' | 'month')}>
               <TabsList className="h-9">
                 <TabsTrigger value="list" className="px-2">
                   <List className="w-4 h-4" />
                 </TabsTrigger>
                 <TabsTrigger value="week" className="px-2">
                   <CalendarDays className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="month" className="px-2">
+                  <Grid3X3 className="w-4 h-4" />
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -357,7 +361,12 @@ const Agendamentos = () => {
         </div>
       </div>
 
-      {viewMode === 'week' ? (
+      {viewMode === 'month' ? (
+        <MonthlyCalendar 
+          appointments={sortedAppointments} 
+          onAppointmentClick={handleAppointmentClick} 
+        />
+      ) : viewMode === 'week' ? (
         <WeeklyCalendar 
           appointments={sortedAppointments} 
           onAppointmentClick={handleAppointmentClick} 
