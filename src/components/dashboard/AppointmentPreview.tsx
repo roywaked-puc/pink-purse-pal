@@ -69,7 +69,7 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
     return format(date, "yyyyMMdd'T'HHmmss");
   };
   
-  const title = encodeURIComponent(`${appointment.service} - ${appointment.clientName}`);
+  const title = encodeURIComponent(`${appointment.clientName} - ${appointment.service}`);
   const details = encodeURIComponent(`Cliente: ${appointment.clientName}\nServiço: ${appointment.service}\nValor: ${formatCurrency(appointment.amount)}`);
   const dates = `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`;
   
