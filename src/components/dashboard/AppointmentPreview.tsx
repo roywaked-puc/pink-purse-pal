@@ -14,6 +14,7 @@ const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.Element
 
 interface AppointmentPreviewProps {
   appointment: Appointment;
+  serviceColor?: string;
   onEdit: (appointment: Appointment) => void;
   onDelete: (id: string) => void;
   onReceive?: (appointment: Appointment) => void;
@@ -75,7 +76,7 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
 };
 
-export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
+export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
@@ -90,10 +91,18 @@ export function AppointmentPreview({ appointment, onEdit, onDelete, onReceive, g
   const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment)}`;
 
   return (
-    <div className={cn(
-      "p-4 rounded-xl bg-card border border-border shadow-soft animate-fade-in",
-      isAppointmentToday && "ring-2 ring-primary/30"
-    )}>
+    <div 
+      style={{
+        ...(serviceColor && {
+          backgroundColor: `${serviceColor}20`,
+          borderLeftColor: serviceColor,
+          borderLeftWidth: '4px'
+        })
+      }}
+      className={cn(
+        "p-4 rounded-xl bg-card border border-border shadow-soft animate-fade-in",
+        isAppointmentToday && "ring-2 ring-primary/30"
+      )}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className={cn(

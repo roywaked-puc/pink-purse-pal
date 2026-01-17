@@ -10,6 +10,7 @@ import { AppointmentForm } from '@/components/appointments/AppointmentForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
+import { useServices } from '@/hooks/useServices';
 import { Appointment } from '@/types';
 
 const Index = () => {
@@ -22,9 +23,16 @@ const Index = () => {
     getClientById
   } = useApp();
 
+  const { data: services } = useServices();
+
   const getClientPhone = (clientId: string) => {
     const client = getClientById(clientId);
     return client?.phone;
+  };
+
+  const getServiceColor = (serviceId?: string) => {
+    if (!serviceId) return undefined;
+    return services?.find(s => s.id === serviceId)?.color || undefined;
   };
 
   const [showTransactionForm, setShowTransactionForm] = useState(false);
@@ -166,6 +174,7 @@ const Index = () => {
               >
                 <AppointmentPreview
                   appointment={appointment}
+                  serviceColor={getServiceColor(appointment.serviceId)}
                   onEdit={handleEditAppointment}
                   onDelete={handleDeleteAppointment}
                   onReceive={handleReceiveAppointment}
@@ -199,6 +208,7 @@ const Index = () => {
               >
                 <AppointmentPreview
                   appointment={appointment}
+                  serviceColor={getServiceColor(appointment.serviceId)}
                   onEdit={handleEditAppointment}
                   onDelete={handleDeleteAppointment}
                   onReceive={handleReceiveAppointment}
