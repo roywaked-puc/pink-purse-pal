@@ -167,11 +167,11 @@ export function MonthlyCalendar({ appointments, onAppointmentClick }: MonthlyCal
                       >
                         <div className="flex items-center gap-1 min-w-0">
                           <ConfirmationIcon className={cn("w-2.5 h-2.5 flex-shrink-0", confirmationColor)} />
-                          <span className="text-[11px] font-medium truncate">
-                            {format(aptDate, "HH:mm")}
-                          </span>
                           <span className="text-[11px] truncate flex-1">
                             {appointment.clientName}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                            {format(aptDate, "HH:mm")}
                           </span>
                         </div>
                       </button>
