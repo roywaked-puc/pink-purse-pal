@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Plus, Filter, Search } from 'lucide-react';
+import { Plus, Filter, Search, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -19,6 +20,7 @@ import { Transaction, TransactionScope } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 const Movimentacoes = () => {
+  const navigate = useNavigate();
   const { transactions, categories, deleteTransaction } = useApp();
   const { toast } = useToast();
   
@@ -69,15 +71,25 @@ const Movimentacoes = () => {
         title="Movimentações"
         subtitle="Controle suas entradas e saídas"
         action={
-          <Button 
-            size="icon" 
-            onClick={() => {
-              setEditingTransaction(null);
-              setShowForm(true);
-            }}
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/relatorio-movimentacoes')}
+            >
+              <FileText className="w-4 h-4 mr-1" />
+              Relatório
+            </Button>
+            <Button 
+              size="icon" 
+              onClick={() => {
+                setEditingTransaction(null);
+                setShowForm(true);
+              }}
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          </div>
         }
       />
 

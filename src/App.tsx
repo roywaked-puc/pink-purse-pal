@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Movimentacoes from "./pages/Movimentacoes";
 import Agendamentos from "./pages/Agendamentos";
 import Relatorios from "./pages/Relatorios";
+import RelatorioMovimentacoes from "./pages/RelatorioMovimentacoes";
 import Configuracoes from "./pages/Configuracoes";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -56,6 +57,11 @@ function AppRoutes() {
       <Route path="/relatorios" element={
         <ProtectedRoute>
           <Relatorios />
+        </ProtectedRoute>
+      } />
+      <Route path="/relatorio-movimentacoes" element={
+        <ProtectedRoute>
+          <RelatorioMovimentacoes />
         </ProtectedRoute>
       } />
       <Route path="/configuracoes" element={
