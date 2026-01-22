@@ -61,6 +61,12 @@ const downloadCSV = (content: string, filename: string) => {
 
 const getDateSuffix = () => format(new Date(), 'yyyy-MM-dd');
 
+// Helper function to get account name from ID
+const getAccountName = (accountId: string, accounts: { id: string; name: string }[]): string => {
+  const account = accounts.find(a => a.id === accountId);
+  return account?.name || accountId;
+};
+
 export default function RelatorioMovimentacoes() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -203,26 +209,27 @@ export default function RelatorioMovimentacoes() {
     }
 
     const headers = [
-      'Data/Hora Agenda', 'Data Movimentação', 'Categoria', 
+      'Data/Hora Agenda', 'Cliente', 'Data Movimentação', 'Categoria', 
       'Tipo', 'Origem', 'Banco', 'Valor', 'Descrição', 'Obs. Agenda'
     ];
     
     const rows = enrichedTransactions.map(t => [
       t.appointmentDate ? format(new Date(t.appointmentDate), 'dd/MM/yyyy HH:mm') : '-',
+      t.clientName || '-',
       format(new Date(t.date), 'dd/MM/yyyy'),
-      t.category,
+      categories.find(c => c.name === t.category)?.name || t.category || '-',
       t.type === 'entrada' ? 'Entrada' : 'Saída',
       t.scope === 'empresa' ? 'Empresa' : 'Pessoal',
-      t.account,
+      getAccountName(t.account, accounts),
       t.amount.toFixed(2).replace('.', ','),
       t.description || '',
       t.appointmentNotes || ''
     ]);
 
     // Add empty row
-    rows.push(['', '', '', '', '', '', '', '', '']);
-    rows.push(['RESUMO POR ORIGEM', '', '', '', '', '', '', '', '']);
-    rows.push(['Origem', 'Saldo Inicial', 'Entradas', 'Saídas', 'Saldo Final', '', '', '', '']);
+    rows.push(['', '', '', '', '', '', '', '', '', '']);
+    rows.push(['RESUMO POR ORIGEM', '', '', '', '', '', '', '', '', '']);
+    rows.push(['Origem', 'Saldo Inicial', 'Entradas', 'Saídas', 'Saldo Final', '', '', '', '', '']);
     
     scopeSummary.forEach(s => {
       rows.push([
@@ -231,22 +238,22 @@ export default function RelatorioMovimentacoes() {
         s.entries.toFixed(2).replace('.', ','),
         s.exits.toFixed(2).replace('.', ','),
         s.finalBalance.toFixed(2).replace('.', ','),
-        '', '', '', ''
+        '', '', '', '', ''
       ]);
     });
 
-    rows.push(['', '', '', '', '', '', '', '', '']);
-    rows.push(['RESUMO POR BANCO', '', '', '', '', '', '', '', '']);
-    rows.push(['Banco', 'Saldo Inicial', 'Entradas', 'Saídas', 'Saldo Final', '', '', '', '']);
+    rows.push(['', '', '', '', '', '', '', '', '', '']);
+    rows.push(['RESUMO POR BANCO', '', '', '', '', '', '', '', '', '']);
+    rows.push(['Banco', 'Saldo Inicial', 'Entradas', 'Saídas', 'Saldo Final', '', '', '', '', '']);
     
     accountSummary.forEach(s => {
       rows.push([
-        s.account,
+        s.account === 'Total' ? 'Total' : getAccountName(s.account, accounts),
         s.initialBalance.toFixed(2).replace('.', ','),
         s.entries.toFixed(2).replace('.', ','),
         s.exits.toFixed(2).replace('.', ','),
         s.finalBalance.toFixed(2).replace('.', ','),
-        '', '', '', ''
+        '', '', '', '', ''
       ]);
     });
 
@@ -278,7 +285,10 @@ export default function RelatorioMovimentacoes() {
       const client = clients.find(c => c.id === selectedClient);
       filters.push(`Cliente: ${client?.name || selectedClient}`);
     }
-    if (selectedAccount !== 'todos') filters.push(`Banco: ${selectedAccount}`);
+    if (selectedAccount !== 'todos') {
+      const acc = accounts.find(a => a.id === selectedAccount || a.name === selectedAccount);
+      filters.push(`Banco: ${acc?.name || selectedAccount}`);
+    }
     if (selectedType !== 'todos') filters.push(`Tipo: ${selectedType === 'entrada' ? 'Entrada' : 'Saída'}`);
     if (selectedScope !== 'todos') filters.push(`Origem: ${selectedScope === 'empresa' ? 'Empresa' : 'Pessoal'}`);
     
@@ -289,32 +299,34 @@ export default function RelatorioMovimentacoes() {
     // Main table
     const tableData = enrichedTransactions.map(t => [
       t.appointmentDate ? format(new Date(t.appointmentDate), 'dd/MM/yy HH:mm') : '-',
-      format(new Date(t.date), 'dd/MM/yyyy'),
-      t.category,
+      t.clientName || '-',
+      format(new Date(t.date), 'dd/MM/yy'),
+      t.category || '-',
       t.type === 'entrada' ? 'Entrada' : 'Saída',
       t.scope === 'empresa' ? 'Empresa' : 'Pessoal',
-      t.account,
+      getAccountName(t.account, accounts),
       formatCurrency(t.amount),
-      t.description || '-',
-      t.appointmentNotes || '-'
+      (t.description || '-').substring(0, 20),
+      (t.appointmentNotes || '-').substring(0, 20)
     ]);
 
     autoTable(doc, {
-      head: [['Data Agenda', 'Data Mov.', 'Categoria', 'Tipo', 'Origem', 'Banco', 'Valor', 'Descrição', 'Obs. Agenda']],
+      head: [['Data Agenda', 'Cliente', 'Data Mov.', 'Categoria', 'Tipo', 'Origem', 'Banco', 'Valor', 'Descrição', 'Obs. Agenda']],
       body: tableData,
       startY: filters.length > 0 ? 34 : 28,
-      styles: { fontSize: 7, cellPadding: 1 },
+      styles: { fontSize: 6.5, cellPadding: 1 },
       headStyles: { fillColor: [59, 130, 246] },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 22 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 18 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 25 },
-        6: { cellWidth: 22, halign: 'right' },
-        7: { cellWidth: 40 },
-        8: { cellWidth: 40 },
+        0: { cellWidth: 22 },  // Data Agenda
+        1: { cellWidth: 26 },  // Cliente
+        2: { cellWidth: 18 },  // Data Mov
+        3: { cellWidth: 22 },  // Categoria
+        4: { cellWidth: 14 },  // Tipo
+        5: { cellWidth: 16 },  // Origem
+        6: { cellWidth: 22 },  // Banco
+        7: { cellWidth: 20, halign: 'right' },  // Valor
+        8: { cellWidth: 32 },  // Descrição
+        9: { cellWidth: 32 },  // Obs. Agenda
       },
     });
 
@@ -343,7 +355,7 @@ export default function RelatorioMovimentacoes() {
 
     // Account summary
     const accountTableData = accountSummary.map(s => [
-      s.account,
+      s.account === 'Total' ? 'Total' : getAccountName(s.account, accounts),
       formatCurrency(s.initialBalance),
       formatCurrency(s.entries),
       formatCurrency(s.exits),
@@ -536,21 +548,22 @@ export default function RelatorioMovimentacoes() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs whitespace-nowrap">Data/Hora Agenda</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap">Data Mov.</TableHead>
-                    <TableHead className="text-xs">Categoria</TableHead>
-                    <TableHead className="text-xs">Tipo</TableHead>
-                    <TableHead className="text-xs">Origem</TableHead>
-                    <TableHead className="text-xs">Banco</TableHead>
-                    <TableHead className="text-xs text-right">Valor</TableHead>
-                    <TableHead className="text-xs">Descrição</TableHead>
-                    <TableHead className="text-xs">Obs. Agenda</TableHead>
+                  <TableHead className="text-xs whitespace-nowrap">Data/Hora Agenda</TableHead>
+                  <TableHead className="text-xs">Cliente</TableHead>
+                  <TableHead className="text-xs whitespace-nowrap">Data Mov.</TableHead>
+                  <TableHead className="text-xs">Categoria</TableHead>
+                  <TableHead className="text-xs">Tipo</TableHead>
+                  <TableHead className="text-xs">Origem</TableHead>
+                  <TableHead className="text-xs">Banco</TableHead>
+                  <TableHead className="text-xs text-right">Valor</TableHead>
+                  <TableHead className="text-xs">Descrição</TableHead>
+                  <TableHead className="text-xs">Obs. Agenda</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {enrichedTransactions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                         Nenhuma movimentação encontrada para os filtros selecionados.
                       </TableCell>
                     </TableRow>
@@ -560,10 +573,15 @@ export default function RelatorioMovimentacoes() {
                         <TableCell className="text-xs whitespace-nowrap">
                           {t.appointmentDate ? format(new Date(t.appointmentDate), 'dd/MM/yy HH:mm') : '-'}
                         </TableCell>
+                        <TableCell className="text-xs">
+                          {t.clientName || '-'}
+                        </TableCell>
                         <TableCell className="text-xs whitespace-nowrap">
                           {format(new Date(t.date), 'dd/MM/yyyy')}
                         </TableCell>
-                        <TableCell className="text-xs">{t.category}</TableCell>
+                        <TableCell className="text-xs">
+                          {t.category || '-'}
+                        </TableCell>
                         <TableCell className="text-xs">
                           <span className={cn(
                             "px-1.5 py-0.5 rounded text-xs",
@@ -577,7 +595,7 @@ export default function RelatorioMovimentacoes() {
                         <TableCell className="text-xs">
                           {t.scope === 'empresa' ? 'Empresa' : 'Pessoal'}
                         </TableCell>
-                        <TableCell className="text-xs">{t.account}</TableCell>
+                        <TableCell className="text-xs">{getAccountName(t.account, accounts)}</TableCell>
                         <TableCell className="text-xs text-right font-medium">
                           {formatCurrency(t.amount)}
                         </TableCell>
@@ -653,7 +671,7 @@ export default function RelatorioMovimentacoes() {
                 ) : (
                   accountSummary.map(s => (
                     <TableRow key={s.account} className={s.account === 'Total' ? 'font-bold bg-muted/50' : ''}>
-                      <TableCell className="text-xs">{s.account}</TableCell>
+                      <TableCell className="text-xs">{s.account === 'Total' ? 'Total' : getAccountName(s.account, accounts)}</TableCell>
                       <TableCell className="text-xs text-right">{formatCurrency(s.initialBalance)}</TableCell>
                       <TableCell className="text-xs text-right text-green-600">{formatCurrency(s.entries)}</TableCell>
                       <TableCell className="text-xs text-right text-red-600">{formatCurrency(s.exits)}</TableCell>
