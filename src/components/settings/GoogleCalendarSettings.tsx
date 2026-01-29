@@ -10,13 +10,19 @@ import {
   useExchangeGoogleCode,
   useDisconnectGoogle,
 } from '@/hooks/useGoogleCalendar';
-import { Calendar, Check, ExternalLink, Loader2, Unlink, Save, Eye, EyeOff } from 'lucide-react';
+import { Calendar, Check, ExternalLink, Loader2, Unlink, Save, Eye, EyeOff, HelpCircle } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export function GoogleCalendarSettings() {
   const { toast } = useToast();
@@ -176,7 +182,19 @@ export function GoogleCalendarSettings() {
       {/* Credentials Form */}
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="clientId">Client ID</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="clientId">Client ID</Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>Encontrado em Google Cloud Console → APIs e Serviços → Credenciais → OAuth 2.0 Client IDs</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <Input
             id="clientId"
             value={clientId}
@@ -187,7 +205,19 @@ export function GoogleCalendarSettings() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="clientSecret">Client Secret</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="clientSecret">Client Secret</Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>Mostrado ao criar a credencial OAuth 2.0. Se perdeu, crie uma nova credencial no Google Cloud Console.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="relative">
             <Input
               id="clientSecret"
