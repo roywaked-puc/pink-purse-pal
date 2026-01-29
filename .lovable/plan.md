@@ -1,205 +1,36 @@
 
 
-## Plano: Integracao Unidirecional com Google Calendar API (App -> Google)
+## Plano Atualizado: Credenciais Google por Usuário
 
-### Visao Geral
+### Mudança de Arquitetura
 
-Implementar uma opcao para o usuario escolher se deseja integrar automaticamente com o Google Calendar via API. Quando ativada, ao criar ou editar um agendamento no app, o evento sera automaticamente criado/atualizado no Google Calendar do usuario.
-
-**Importante:** A sincronizacao e apenas do App para o Google Calendar. Eventos criados diretamente no Google Calendar NAO serao importados para o app.
+Em vez de usar secrets globais do sistema, cada usuário armazenará suas próprias credenciais do Google Cloud Console (Client ID e Client Secret) na sua configuração pessoal.
 
 ---
 
-### Arquitetura Simplificada
+### 1. Migração do Banco de Dados
 
-```text
-+------------------+       +-----------------+       +------------------+
-|   App Frontend   | ----> |  Edge Function  | ----> | Google Calendar  |
-|  (cria/edita)    |       |  (google-cal)   |       |      API         |
-+------------------+       +-----------------+       +------------------+
-         |
-         v
-+------------------+
-|   Supabase DB    |
-| (appointments +  |
-|  user_settings)  |
-+------------------+
-```
-
----
-
-### Componentes Necessarios
-
-| Componente | Descricao |
-|------------|-----------|
-| Tabela `user_settings` | Armazena preferencia e tokens OAuth do usuario |
-| Coluna `google_event_id` em `appointments` | Rastreia eventos sincronizados |
-| Edge Function `google-calendar` | Gerencia OAuth e operacoes no Google Calendar |
-| Hook `useGoogleCalendar` | Gerencia estado da integracao |
-| Componente `GoogleCalendarSettings` | UI para ativar/desativar e conectar conta |
-
----
-
-### 1. Criar Tabela `user_settings`
+Adicionar novas colunas à tabela `user_settings`:
 
 ```sql
-CREATE TABLE public.user_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL UNIQUE,
-  google_calendar_enabled BOOLEAN DEFAULT false,
-  google_access_token TEXT,
-  google_refresh_token TEXT,
-  google_token_expiry TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- RLS policies
-ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can manage own settings"
-  ON public.user_settings FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+ALTER TABLE public.user_settings 
+ADD COLUMN google_client_id TEXT,
+ADD COLUMN google_client_secret TEXT;
 ```
 
 ---
 
-### 2. Adicionar Coluna em `appointments`
+### 2. Fluxo Atualizado do Usuário
 
-```sql
-ALTER TABLE public.appointments 
-ADD COLUMN google_event_id TEXT;
-```
-
----
-
-### 3. Secrets Necessarios
-
-| Secret | Descricao |
-|--------|-----------|
-| `GOOGLE_CLIENT_ID` | Client ID do projeto Google Cloud |
-| `GOOGLE_CLIENT_SECRET` | Client Secret do projeto Google Cloud |
+1. Acessar Configurações > Integrações > Google Calendar
+2. Inserir **Client ID** e **Client Secret** do Google Cloud Console
+3. Clicar em "Conectar conta Google"
+4. Autorizar acesso no popup do Google
+5. Integração ativada
 
 ---
 
-### 4. Edge Function `google-calendar`
-
-**Arquivo:** `supabase/functions/google-calendar/index.ts`
-
-Endpoints simplificados (sem fetch de eventos):
-
-| Rota | Metodo | Descricao |
-|------|--------|-----------|
-| `/auth-url` | GET | Gera URL de autorizacao OAuth |
-| `/callback` | POST | Troca codigo por tokens |
-| `/disconnect` | POST | Revoga tokens e desconecta |
-| `/sync-event` | POST | Cria/atualiza evento no Google Calendar |
-| `/delete-event` | POST | Remove evento do Google Calendar |
-
-**Fluxo de Sincronizacao:**
-
-Quando usuario cria/edita agendamento:
-1. App envia dados para edge function `/sync-event`
-2. Edge function autentica com tokens do usuario
-3. Cria ou atualiza evento no Google Calendar
-4. Retorna `google_event_id` para salvar no banco
-
----
-
-### 5. Hook `useGoogleCalendar`
-
-**Arquivo:** `src/hooks/useGoogleCalendar.ts`
-
-```typescript
-export function useGoogleCalendar() {
-  // Estado
-  const { data: settings } = useQuery(['user-settings']);
-  
-  // Acoes
-  const connect = () => { /* Inicia OAuth */ };
-  const disconnect = () => { /* Revoga tokens */ };
-  const syncEvent = async (appointment) => { /* Sincroniza evento */ };
-  const deleteEvent = async (googleEventId) => { /* Remove evento */ };
-  
-  return {
-    isEnabled: settings?.google_calendar_enabled,
-    isConnected: !!settings?.google_refresh_token,
-    connect,
-    disconnect,
-    syncEvent,
-    deleteEvent,
-  };
-}
-```
-
----
-
-### 6. Hook `useUserSettings`
-
-**Arquivo:** `src/hooks/useUserSettings.ts`
-
-Gerencia preferencias do usuario:
-
-```typescript
-export function useUserSettings() {
-  const { user } = useAuth();
-  
-  const { data: settings } = useQuery(['user-settings', user?.id], ...);
-  
-  const updateSettings = useMutation({
-    mutationFn: async (updates) => {
-      await supabase.from('user_settings').upsert({ user_id: user.id, ...updates });
-    }
-  });
-  
-  return { settings, updateSettings };
-}
-```
-
----
-
-### 7. Modificar Hooks de Agendamento
-
-**Arquivo:** `src/hooks/useAppointments.ts`
-
-Adicionar sincronizacao ao criar/editar/deletar:
-
-```typescript
-export function useAddAppointment() {
-  const { syncEvent, isEnabled, isConnected } = useGoogleCalendar();
-  
-  return useMutation({
-    mutationFn: async (appointment) => {
-      // 1. Salvar no banco
-      const { data } = await supabase.from('appointments').insert(...).select().single();
-      
-      // 2. Se integracao ativa, sincronizar
-      if (isEnabled && isConnected) {
-        try {
-          const googleEventId = await syncEvent({...appointment, id: data.id});
-          if (googleEventId) {
-            await supabase.from('appointments')
-              .update({ google_event_id: googleEventId })
-              .eq('id', data.id);
-          }
-        } catch (error) {
-          console.error('Erro ao sincronizar com Google Calendar:', error);
-          // Nao falha a operacao principal
-        }
-      }
-    },
-  });
-}
-```
-
-Mesma logica para `useUpdateAppointment` e `useDeleteAppointment`.
-
----
-
-### 8. Componente de Configuracoes
-
-**Arquivo:** `src/components/settings/GoogleCalendarSettings.tsx`
+### 3. UI do Componente GoogleCalendarSettings
 
 ```text
 +-------------------------------------------------------+
@@ -208,95 +39,80 @@ Mesma logica para `useUpdateAppointment` e `useDeleteAppointment`.
 | Sincronizar agendamentos automaticamente              |
 | com seu Google Calendar                               |
 |                                                       |
-| [Switch] Ativar integracao                            |
+| Credenciais do Google Cloud Console:                  |
+| Client ID: [____________________________]             |
+| Client Secret: [________________________]             |
 |                                                       |
-| Status: Conectado como usuario@gmail.com              |
-| [ Desconectar ]                                       |
+| [  Salvar Credenciais  ]                              |
 |                                                       |
-| Quando ativado, novos agendamentos e edicoes          |
-| aparecem automaticamente no seu Google Calendar.      |
+| Status: Desconectado                                  |
+| [  Conectar conta Google  ] (habilitado após salvar)  |
+|                                                       |
+| Instruções:                                           |
+| 1. Acesse console.cloud.google.com                    |
+| 2. Crie um projeto e ative Google Calendar API        |
+| 3. Configure a tela de consentimento OAuth            |
+| 4. Crie credenciais OAuth 2.0 (Web application)       |
+| 5. Copie Client ID e Client Secret aqui               |
 +-------------------------------------------------------+
 ```
 
 ---
 
-### 9. Atualizar Pagina de Configuracoes
+### 4. Arquivos a Criar
 
-**Arquivo:** `src/pages/Configuracoes.tsx`
-
-Adicionar novo AccordionItem para integracoes.
-
----
-
-### 10. Comportamento do Botao Atual
-
-Quando a integracao via API esta **ATIVA**:
-- O botao de calendario no card pode mostrar um icone diferente (check) indicando que ja foi sincronizado
-- Ou continua abrindo o Google Calendar para visualizacao
-
-Quando a integracao via API esta **DESATIVADA**:
-- Comportamento atual permanece (abre URL do Google Calendar)
-
----
-
-### Arquivos a Criar
-
-| Arquivo | Descricao |
+| Arquivo | Descrição |
 |---------|-----------|
-| `supabase/functions/google-calendar/index.ts` | Edge function para OAuth e sincronizacao |
-| `src/hooks/useGoogleCalendar.ts` | Hook para gerenciar integracao |
-| `src/hooks/useUserSettings.ts` | Hook para preferencias do usuario |
-| `src/components/settings/GoogleCalendarSettings.tsx` | UI da integracao |
+| `supabase/functions/google-calendar/index.ts` | Edge function para OAuth e sincronização |
+| `src/hooks/useGoogleCalendar.ts` | Hook para gerenciar integração |
+| `src/hooks/useUserSettings.ts` | Hook para preferências do usuário |
+| `src/components/settings/GoogleCalendarSettings.tsx` | UI da integração com campos de credenciais |
 
 ---
 
-### Arquivos a Modificar
+### 5. Arquivos a Modificar
 
-| Arquivo | Alteracao |
+| Arquivo | Alteração |
 |---------|-----------|
-| `src/types/index.ts` | Adicionar tipo `UserSettings` |
-| `src/hooks/useAppointments.ts` | Adicionar sincronizacao automatica |
-| `src/pages/Configuracoes.tsx` | Adicionar secao de integracoes |
-| `src/pages/Agendamentos.tsx` | Indicador visual de sincronizacao (opcional) |
+| `src/types/index.ts` | Adicionar tipo `UserSettings` com client_id e client_secret |
+| `src/hooks/useAppointments.ts` | Adicionar sincronização automática |
+| `src/pages/Configuracoes.tsx` | Adicionar seção de integrações |
 
 ---
 
-### Requisitos para o Usuario
+### 6. Edge Function `google-calendar`
 
-Para usar a integracao, o usuario precisara:
+A edge function receberá as credenciais do usuário do banco de dados:
 
-1. **Criar projeto no Google Cloud Console**
-   - Ativar Google Calendar API
-   - Configurar tela de consentimento OAuth
-   - Criar credenciais OAuth 2.0 (Web application)
-   - Adicionar URL de redirect autorizado
+```typescript
+// Buscar credenciais do usuário
+const { data: settings } = await supabase
+  .from('user_settings')
+  .select('google_client_id, google_client_secret, google_access_token, google_refresh_token')
+  .eq('user_id', userId)
+  .single();
 
-2. **Configurar secrets no Lovable Cloud**
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-
----
-
-### Fluxo do Usuario
-
-1. Acessar Configuracoes > Integracoes
-2. Ativar switch "Integrar com Google Calendar"
-3. Clicar em "Conectar conta Google"
-4. Autorizar acesso no popup do Google
-5. A partir de agora:
-   - Novos agendamentos aparecem automaticamente no Google Calendar
-   - Edicoes de agendamentos atualizam o evento no Google Calendar
-   - Exclusoes removem o evento do Google Calendar
+// Usar credenciais do usuário para OAuth
+const clientId = settings.google_client_id;
+const clientSecret = settings.google_client_secret;
+```
 
 ---
 
-### Diferencas do Plano Anterior
+### 7. Segurança
 
-| Aspecto | Bidirecional (anterior) | Unidirecional (atual) |
-|---------|------------------------|----------------------|
-| Sincronizacao | App <-> Google | App -> Google apenas |
-| Polling/Webhook | Necessario | Nao necessario |
-| Complexidade | Alta | Moderada |
-| Endpoint `/fetch-events` | Sim | Nao |
-| Conflitos de dados | Possivel | Nenhum |
+- Credenciais armazenadas com RLS (apenas o próprio usuário acessa)
+- Tokens OAuth nunca expostos no frontend
+- Edge function valida autenticação antes de acessar credenciais
+
+---
+
+### Próximos Passos
+
+1. Executar migração para adicionar colunas `google_client_id` e `google_client_secret`
+2. Criar a Edge Function `google-calendar`
+3. Criar hooks `useUserSettings` e `useGoogleCalendar`
+4. Criar componente `GoogleCalendarSettings`
+5. Modificar `useAppointments` para sincronização automática
+6. Atualizar página de Configurações
 
