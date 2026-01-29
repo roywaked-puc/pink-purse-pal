@@ -17,6 +17,27 @@ interface CalendarEvent {
   description?: string;
   start: { dateTime: string; timeZone: string };
   end: { dateTime: string; timeZone: string };
+  colorId?: string;
+}
+
+// Mapeamento das cores do app para colorId do Google Calendar
+const hexToColorId: Record<string, string> = {
+  '#D50000': '11', // Tomate
+  '#E67C73': '4',  // Flamingo
+  '#F4511E': '6',  // Tangerina
+  '#F6BF26': '5',  // Banana
+  '#33B679': '2',  // Salvia
+  '#0B8043': '10', // Manjericão
+  '#039BE5': '7',  // Pavão
+  '#3F51B5': '9',  // Mirtilo
+  '#7986CB': '1',  // Lavanda
+  '#8E24AA': '3',  // Uva
+  '#616161': '8',  // Grafite
+};
+
+function getColorId(hex?: string): string | undefined {
+  if (!hex) return undefined;
+  return hexToColorId[hex.toUpperCase()] || hexToColorId[hex];
 }
 
 Deno.serve(async (req) => {
@@ -207,6 +228,7 @@ Deno.serve(async (req) => {
         // Create or update calendar event
         const startDate = new Date(appointment.date);
         const endDate = new Date(startDate.getTime() + appointment.duration * 60000);
+        const colorId = getColorId(appointment.serviceColor);
 
         const event: CalendarEvent = {
           summary: `${appointment.clientName} - ${appointment.service}`,
@@ -219,7 +241,10 @@ Deno.serve(async (req) => {
             dateTime: endDate.toISOString(),
             timeZone: 'America/Sao_Paulo',
           },
+          ...(colorId && { colorId }),
         };
+
+        console.log('Event color:', appointment.serviceColor, '->', colorId);
 
         let eventId = appointment.googleEventId;
         let response: Response;
