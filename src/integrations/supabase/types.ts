@@ -50,6 +50,7 @@ export type Database = {
           created_at: string
           date: string
           duration: number
+          google_event_id: string | null
           id: string
           notes: string | null
           paid_amount: number
@@ -66,6 +67,7 @@ export type Database = {
           created_at?: string
           date: string
           duration?: number
+          google_event_id?: string | null
           id?: string
           notes?: string | null
           paid_amount?: number
@@ -82,6 +84,7 @@ export type Database = {
           created_at?: string
           date?: string
           duration?: number
+          google_event_id?: string | null
           id?: string
           notes?: string | null
           paid_amount?: number
@@ -249,6 +252,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          google_access_token: string | null
+          google_calendar_enabled: boolean | null
+          google_refresh_token: string | null
+          google_token_expiry: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          google_access_token?: string | null
+          google_calendar_enabled?: boolean | null
+          google_refresh_token?: string | null
+          google_token_expiry?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          google_access_token?: string | null
+          google_calendar_enabled?: boolean | null
+          google_refresh_token?: string | null
+          google_token_expiry?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
