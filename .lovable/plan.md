@@ -1,183 +1,112 @@
 
 
-## Plano: Sincronizacao Automatica com Google Calendar
+## Plano: Atualizar Paleta de Cores para Sincronizar com Google Calendar
 
-### Objetivo
+### Situacao Atual
 
-Adicionar sincronizacao automatica com o Google Calendar **apenas quando a conta estiver conectada**. Se nao estiver conectada, o comportamento permanece exatamente como esta hoje.
+O sistema usa 8 cores personalizadas:
+
+| Cor | Hex |
+|-----|-----|
+| Vermelho | #EF4444 |
+| Rosa | #EC4899 |
+| Roxo | #8B5CF6 |
+| Azul | #3B82F6 |
+| Ciano | #06B6D4 |
+| Verde | #10B981 |
+| Amarelo | #F59E0B |
+| Laranja | #F97316 |
+
+### Nova Paleta (Cores do Google Calendar)
+
+Substituiremos pelas 11 cores oficiais do Google Calendar:
+
+| Nome | Hex | colorId |
+|------|-----|---------|
+| Tomate | #D50000 | 11 |
+| Flamingo | #E67C73 | 4 |
+| Tangerina | #F4511E | 6 |
+| Banana | #F6BF26 | 5 |
+| Salvia | #33B679 | 2 |
+| Manjericao | #0B8043 | 10 |
+| Pavao | #039BE5 | 7 |
+| Mirtilo | #3F51B5 | 9 |
+| Lavanda | #7986CB | 1 |
+| Uva | #8E24AA | 3 |
+| Grafite | #616161 | 8 |
 
 ---
 
-### Logica Condicional
+### Alteracoes Necessarias
 
-```text
-Ao criar/editar/excluir agendamento:
-    │
-    ▼
-┌─────────────────────────────┐
-│ Google Calendar conectado?  │
-│ (isConnected = true)        │
-└─────────┬───────────────────┘
-          │
-     ┌────┴────┐
-     │         │
-   Sim        Nao
-     │         │
-     ▼         ▼
-┌─────────┐  ┌──────────────────┐
-│ Chamar  │  │ Nao fazer nada   │
-│ Edge    │  │ (comportamento   │
-│ Function│  │ atual mantido)   │
-└─────────┘  └──────────────────┘
+#### 1. ServiceList.tsx - Atualizar SERVICE_COLORS
+
+```typescript
+const SERVICE_COLORS = [
+  { name: 'Tomate', value: '#D50000' },
+  { name: 'Flamingo', value: '#E67C73' },
+  { name: 'Tangerina', value: '#F4511E' },
+  { name: 'Banana', value: '#F6BF26' },
+  { name: 'Salvia', value: '#33B679' },
+  { name: 'Manjericao', value: '#0B8043' },
+  { name: 'Pavao', value: '#039BE5' },
+  { name: 'Mirtilo', value: '#3F51B5' },
+  { name: 'Lavanda', value: '#7986CB' },
+  { name: 'Uva', value: '#8E24AA' },
+  { name: 'Grafite', value: '#616161' },
+];
+```
+
+#### 2. Edge Function - Mapeamento direto
+
+Como as cores serao identicas, o mapeamento fica simples:
+
+```typescript
+const hexToColorId: Record<string, string> = {
+  '#D50000': '11', // Tomate
+  '#E67C73': '4',  // Flamingo
+  '#F4511E': '6',  // Tangerina
+  '#F6BF26': '5',  // Banana
+  '#33B679': '2',  // Salvia
+  '#0B8043': '10', // Manjericao
+  '#039BE5': '7',  // Pavao
+  '#3F51B5': '9',  // Mirtilo
+  '#7986CB': '1',  // Lavanda
+  '#8E24AA': '3',  // Uva
+  '#616161': '8',  // Grafite
+};
+
+function getColorId(hex?: string): string | undefined {
+  if (!hex) return undefined;
+  return hexToColorId[hex.toUpperCase()] || hexToColorId[hex];
+}
 ```
 
 ---
 
-### Arquivo a Modificar
+### Arquivos a Modificar
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `src/hooks/useAppointments.ts` | Adicionar sincronizacao condicional nos hooks de CRUD |
+| `src/components/settings/ServiceList.tsx` | Atualizar array SERVICE_COLORS com as 11 cores do Google |
+| `src/hooks/useAppointments.ts` | Buscar cor do servico e incluir na sincronizacao |
+| `supabase/functions/google-calendar/index.ts` | Adicionar mapeamento hex -> colorId e incluir no evento |
 
 ---
 
-### Alteracoes Detalhadas
+### Compatibilidade com Cores Existentes
 
-#### 1. Novos Imports
+Servicos que ja tem cores antigas (como #EF4444) continuarao funcionando localmente. Ao sincronizar com o Google:
+- Se a cor existir no mapeamento: usa o colorId correspondente
+- Se nao existir: evento fica sem cor (usa padrao do Google)
 
-```typescript
-import { useGoogleCalendar, useSyncAppointment, useDeleteGoogleEvent } from '@/hooks/useGoogleCalendar';
-```
-
-#### 2. useAddAppointment
-
-- Modificar `insert` para usar `.select()` e retornar os dados do novo agendamento
-- No `onSuccess`, verificar `isConnected` antes de chamar `syncAppointment`
-
-#### 3. useUpdateAppointment
-
-- Buscar `google_event_id` antes de atualizar
-- No `onSuccess`, verificar `isConnected` antes de chamar `syncAppointment`
-
-#### 4. useDeleteAppointment
-
-- Antes de deletar, buscar `google_event_id`
-- Se tiver `google_event_id` E `isConnected`, chamar `deleteGoogleEvent`
-- Depois deletar o agendamento localmente
+Os usuarios podem editar os servicos para escolher as novas cores quando quiserem.
 
 ---
 
-### Comportamento Final
+### Resultado Esperado
 
-| Cenario | Acao |
-|---------|------|
-| Google **nao conectado** + criar agendamento | Salva apenas localmente (comportamento atual) |
-| Google **conectado** + criar agendamento | Salva localmente + cria evento no Google |
-| Google **nao conectado** + editar agendamento | Atualiza apenas localmente |
-| Google **conectado** + editar agendamento | Atualiza localmente + atualiza evento no Google |
-| Google **nao conectado** + excluir agendamento | Exclui apenas localmente |
-| Google **conectado** + excluir agendamento | Exclui do Google + exclui localmente |
-
----
-
-### Tratamento de Erros
-
-- Sincronizacao com Google sera **silenciosa** (nao bloqueia o fluxo principal)
-- Se a sincronizacao falhar, o agendamento ainda sera salvo/editado/excluido localmente
-- Toast de erro opcional se a sincronizacao falhar
-- Erros serao logados no console para debugging
-
----
-
-### Secao Tecnica
-
-#### Codigo: useAddAppointment (Atualizado)
-
-```typescript
-export function useAddAppointment() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { isConnected } = useGoogleCalendar();
-  const syncAppointment = useSyncAppointment();
-
-  return useMutation({
-    mutationFn: async (appointment: Omit<Appointment, 'id'>) => {
-      if (!user) throw new Error('Not authenticated');
-      
-      const { data, error } = await supabase
-        .from('appointments')
-        .insert({
-          user_id: user.id,
-          date: appointment.date.toISOString(),
-          // ... outros campos ...
-        } as any)
-        .select()
-        .single();
-      
-      if (error) throw sanitizeDbError(error);
-      return data;
-    },
-    onSuccess: (newAppointment) => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      
-      // Sincronizar apenas se Google Calendar estiver conectado
-      if (isConnected && newAppointment) {
-        syncAppointment.mutate({
-          id: newAppointment.id,
-          date: new Date(newAppointment.date),
-          clientName: newAppointment.client_name,
-          service: newAppointment.service,
-          amount: Number(newAppointment.amount),
-          paidAmount: Number(newAppointment.paid_amount),
-          paymentStatus: newAppointment.payment_status,
-          confirmationStatus: newAppointment.confirmation_status,
-          duration: newAppointment.duration,
-          notes: newAppointment.notes,
-        });
-      }
-    },
-  });
-}
-```
-
-#### Codigo: useDeleteAppointment (Atualizado)
-
-```typescript
-export function useDeleteAppointment() {
-  const queryClient = useQueryClient();
-  const { isConnected } = useGoogleCalendar();
-  const deleteGoogleEvent = useDeleteGoogleEvent();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      // Buscar google_event_id antes de deletar
-      const { data: appointment } = await supabase
-        .from('appointments')
-        .select('google_event_id')
-        .eq('id', id)
-        .single();
-      
-      // Se conectado e tem evento no Google, deletar primeiro
-      if (isConnected && appointment?.google_event_id) {
-        try {
-          await deleteGoogleEvent.mutateAsync(appointment.google_event_id);
-        } catch (e) {
-          console.error('Failed to delete Google event:', e);
-        }
-      }
-      
-      // Deletar localmente
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw sanitizeDbError(error);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    },
-  });
-}
-```
+- Paleta de cores no cadastro de servicos tera as mesmas cores do Google Calendar
+- Sincronizacao de cores sera exata (sem aproximacao)
+- Eventos aparecerao com a mesma cor tanto no app quanto no Google Calendar
 
