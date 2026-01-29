@@ -7,14 +7,17 @@ import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { cn } from '@/lib/utils';
 
 const SERVICE_COLORS = [
-  { name: 'Vermelho', value: '#EF4444' },
-  { name: 'Rosa', value: '#EC4899' },
-  { name: 'Roxo', value: '#8B5CF6' },
-  { name: 'Azul', value: '#3B82F6' },
-  { name: 'Ciano', value: '#06B6D4' },
-  { name: 'Verde', value: '#10B981' },
-  { name: 'Amarelo', value: '#F59E0B' },
-  { name: 'Laranja', value: '#F97316' },
+  { name: 'Tomate', value: '#D50000' },
+  { name: 'Flamingo', value: '#E67C73' },
+  { name: 'Tangerina', value: '#F4511E' },
+  { name: 'Banana', value: '#F6BF26' },
+  { name: 'Salvia', value: '#33B679' },
+  { name: 'Manjericão', value: '#0B8043' },
+  { name: 'Pavão', value: '#039BE5' },
+  { name: 'Mirtilo', value: '#3F51B5' },
+  { name: 'Lavanda', value: '#7986CB' },
+  { name: 'Uva', value: '#8E24AA' },
+  { name: 'Grafite', value: '#616161' },
 ];
 
 export function ServiceList() {

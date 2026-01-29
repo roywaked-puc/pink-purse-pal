@@ -25,6 +25,7 @@ async function syncToGoogleCalendar(appointment: {
   duration: number;
   notes?: string;
   googleEventId?: string;
+  serviceColor?: string;
 }): Promise<string | null> {
   try {
     const { data, error } = await supabase.functions.invoke('google-calendar', {
@@ -39,6 +40,7 @@ async function syncToGoogleCalendar(appointment: {
           duration: appointment.duration,
           notes: appointment.notes,
           googleEventId: appointment.googleEventId,
+          serviceColor: appointment.serviceColor,
         },
       },
     });
@@ -135,6 +137,17 @@ export function useAddAppointment() {
       // Check if Google Calendar is connected and sync
       const isConnected = await checkGoogleCalendarConnected(user.id);
       if (isConnected) {
+        // Fetch service color if service_id exists
+        let serviceColor: string | undefined;
+        if (data.service_id) {
+          const { data: serviceData } = await supabase
+            .from('services')
+            .select('color')
+            .eq('id', data.service_id)
+            .single();
+          serviceColor = serviceData?.color || undefined;
+        }
+
         const eventId = await syncToGoogleCalendar({
           id: data.id,
           date: data.date,
@@ -143,6 +156,7 @@ export function useAddAppointment() {
           amount: Number(data.amount),
           duration: data.duration,
           notes: data.notes || undefined,
+          serviceColor,
         });
         
         // Update appointment with Google Event ID if created
@@ -201,6 +215,17 @@ export function useUpdateAppointment() {
       // Check if Google Calendar is connected and sync
       const isConnected = await checkGoogleCalendarConnected(user.id);
       if (isConnected) {
+        // Fetch service color if service_id exists
+        let serviceColor: string | undefined;
+        if (data.service_id) {
+          const { data: serviceData } = await supabase
+            .from('services')
+            .select('color')
+            .eq('id', data.service_id)
+            .single();
+          serviceColor = serviceData?.color || undefined;
+        }
+
         const eventId = await syncToGoogleCalendar({
           id: data.id,
           date: data.date,
@@ -210,6 +235,7 @@ export function useUpdateAppointment() {
           duration: data.duration,
           notes: data.notes || undefined,
           googleEventId: existing?.google_event_id || undefined,
+          serviceColor,
         });
         
         // Update appointment with Google Event ID if newly created
