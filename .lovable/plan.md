@@ -1,118 +1,73 @@
 
 
-## Plano Atualizado: Credenciais Google por Usuário
+## Plano: Adicionar Tooltips de Ajuda nos Campos de Credenciais
 
-### Mudança de Arquitetura
+### Objetivo
 
-Em vez de usar secrets globais do sistema, cada usuário armazenará suas próprias credenciais do Google Cloud Console (Client ID e Client Secret) na sua configuração pessoal.
-
----
-
-### 1. Migração do Banco de Dados
-
-Adicionar novas colunas à tabela `user_settings`:
-
-```sql
-ALTER TABLE public.user_settings 
-ADD COLUMN google_client_id TEXT,
-ADD COLUMN google_client_secret TEXT;
-```
+Adicionar icones de ajuda (?) ao lado dos labels "Client ID" e "Client Secret" com tooltips explicando onde obter cada informacao.
 
 ---
 
-### 2. Fluxo Atualizado do Usuário
+### Alteracao no Componente
 
-1. Acessar Configurações > Integrações > Google Calendar
-2. Inserir **Client ID** e **Client Secret** do Google Cloud Console
-3. Clicar em "Conectar conta Google"
-4. Autorizar acesso no popup do Google
-5. Integração ativada
+**Arquivo:** `src/components/settings/GoogleCalendarSettings.tsx`
+
+#### Mudancas:
+
+1. Importar componente `Tooltip` do shadcn/ui
+2. Importar icone `HelpCircle` do lucide-react
+3. Adicionar tooltip ao lado do label "Client ID"
+4. Adicionar tooltip ao lado do label "Client Secret"
 
 ---
 
-### 3. UI do Componente GoogleCalendarSettings
+### Visual Final
 
 ```text
-+-------------------------------------------------------+
-| Google Calendar                                       |
-|-------------------------------------------------------|
-| Sincronizar agendamentos automaticamente              |
-| com seu Google Calendar                               |
-|                                                       |
-| Credenciais do Google Cloud Console:                  |
-| Client ID: [____________________________]             |
-| Client Secret: [________________________]             |
-|                                                       |
-| [  Salvar Credenciais  ]                              |
-|                                                       |
-| Status: Desconectado                                  |
-| [  Conectar conta Google  ] (habilitado após salvar)  |
-|                                                       |
-| Instruções:                                           |
-| 1. Acesse console.cloud.google.com                    |
-| 2. Crie um projeto e ative Google Calendar API        |
-| 3. Configure a tela de consentimento OAuth            |
-| 4. Crie credenciais OAuth 2.0 (Web application)       |
-| 5. Copie Client ID e Client Secret aqui               |
-+-------------------------------------------------------+
+Client ID [?]  <-- tooltip: "Encontrado em Google Cloud Console > APIs e Servicos > Credenciais > OAuth 2.0 Client IDs"
+[____________________________]
+
+Client Secret [?]  <-- tooltip: "Mostrado ao criar a credencial OAuth 2.0. Se perdeu, crie uma nova credencial."
+[________________________] [eye]
 ```
 
 ---
 
-### 4. Arquivos a Criar
+### Codigo do Tooltip
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `supabase/functions/google-calendar/index.ts` | Edge function para OAuth e sincronização |
-| `src/hooks/useGoogleCalendar.ts` | Hook para gerenciar integração |
-| `src/hooks/useUserSettings.ts` | Hook para preferências do usuário |
-| `src/components/settings/GoogleCalendarSettings.tsx` | UI da integração com campos de credenciais |
-
----
-
-### 5. Arquivos a Modificar
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/types/index.ts` | Adicionar tipo `UserSettings` com client_id e client_secret |
-| `src/hooks/useAppointments.ts` | Adicionar sincronização automática |
-| `src/pages/Configuracoes.tsx` | Adicionar seção de integrações |
-
----
-
-### 6. Edge Function `google-calendar`
-
-A edge function receberá as credenciais do usuário do banco de dados:
-
-```typescript
-// Buscar credenciais do usuário
-const { data: settings } = await supabase
-  .from('user_settings')
-  .select('google_client_id, google_client_secret, google_access_token, google_refresh_token')
-  .eq('user_id', userId)
-  .single();
-
-// Usar credenciais do usuário para OAuth
-const clientId = settings.google_client_id;
-const clientSecret = settings.google_client_secret;
+```tsx
+<div className="flex items-center gap-2">
+  <Label htmlFor="clientId">Client ID</Label>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+    </TooltipTrigger>
+    <TooltipContent className="max-w-xs">
+      <p>Encontrado em Google Cloud Console → APIs e Servicos → Credenciais → OAuth 2.0 Client IDs</p>
+    </TooltipContent>
+  </Tooltip>
+</div>
 ```
 
 ---
 
-### 7. Segurança
+### Imports Adicionais
 
-- Credenciais armazenadas com RLS (apenas o próprio usuário acessa)
-- Tokens OAuth nunca expostos no frontend
-- Edge function valida autenticação antes de acessar credenciais
+```tsx
+import { HelpCircle } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+```
 
 ---
 
-### Próximos Passos
+### Arquivo a Modificar
 
-1. Executar migração para adicionar colunas `google_client_id` e `google_client_secret`
-2. Criar a Edge Function `google-calendar`
-3. Criar hooks `useUserSettings` e `useGoogleCalendar`
-4. Criar componente `GoogleCalendarSettings`
-5. Modificar `useAppointments` para sincronização automática
-6. Atualizar página de Configurações
+| Arquivo | Alteracao |
+|---------|-----------|
+| `src/components/settings/GoogleCalendarSettings.tsx` | Adicionar tooltips de ajuda nos campos Client ID e Client Secret |
 
