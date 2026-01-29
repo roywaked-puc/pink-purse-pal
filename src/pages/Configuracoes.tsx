@@ -6,10 +6,11 @@ import { CategoryList } from '@/components/settings/CategoryList';
 import { AccountList } from '@/components/settings/AccountList';
 import { ExportData } from '@/components/settings/ExportData';
 import { ChangePasswordDialog } from '@/components/settings/ChangePasswordDialog';
+import { GoogleCalendarSettings } from '@/components/settings/GoogleCalendarSettings';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
-import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Download } from 'lucide-react';
+import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Download, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Accordion,
@@ -130,6 +131,23 @@ const Configuracoes = () => {
             </AccordionTrigger>
             <AccordionContent>
               <AccountList />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="google-calendar" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">Google Calendar</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    Sincronização automática
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <GoogleCalendarSettings />
             </AccordionContent>
           </AccordionItem>
 
