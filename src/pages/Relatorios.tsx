@@ -117,6 +117,11 @@ export default function Relatorios() {
     }).format(value);
   };
 
+  const getAccountName = (accountId: string): string => {
+    const account = accounts.find(a => a.id === accountId || a.name === accountId);
+    return account?.name || accountId;
+  };
+
   const exportToPDF = () => {
     if (transactionsWithBalance.length === 0) {
       toast({
@@ -127,7 +132,7 @@ export default function Relatorios() {
       return;
     }
 
-    const doc = new jsPDF();
+    const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
     
     // Title
@@ -165,13 +170,13 @@ export default function Relatorios() {
       styles: { fontSize: 8 },
       headStyles: { fillColor: [59, 130, 246] },
       columnStyles: {
-        0: { cellWidth: 22 },
-        1: { cellWidth: 12 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 25, halign: 'right' },
-        5: { cellWidth: 25, halign: 'right' },
-        6: { cellWidth: 25, halign: 'right' },
+        0: { cellWidth: 25 },
+        1: { cellWidth: 15 },
+        2: { cellWidth: 80 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 30, halign: 'right' },
+        5: { cellWidth: 30, halign: 'right' },
+        6: { cellWidth: 30, halign: 'right' },
       },
     });
 
@@ -234,7 +239,7 @@ export default function Relatorios() {
     const accountData = Object.entries(accountSummary).map(([account, values]) => {
       const balance = values.entradas - values.saidas;
       return [
-        account,
+        getAccountName(account),
         formatCurrency(values.entradas),
         formatCurrency(values.saidas),
         (balance >= 0 ? '+' : '') + formatCurrency(balance),
