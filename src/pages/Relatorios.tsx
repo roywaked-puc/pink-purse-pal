@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Filter, Download } from 'lucide-react';
+import { CalendarIcon, Filter, Download, FileSpreadsheet, CalendarDays } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { cn } from '@/lib/utils';
 type ScopeFilter = 'todos' | 'empresa' | 'pessoal';
 
 export default function Relatorios() {
+  const navigate = useNavigate();
   const { data: transactions = [] } = useTransactions();
   const { data: accounts = [] } = useAccounts();
   const { toast } = useToast();
@@ -374,10 +376,20 @@ export default function Relatorios() {
         title="Relatorios"
         subtitle="Extrato e resumo financeiro"
         action={
-          <Button onClick={exportToPDF} size="sm" variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/relatorio-agendamentos')} size="sm" variant="outline">
+              <CalendarDays className="h-4 w-4 mr-1" />
+              Agendas
+            </Button>
+            <Button onClick={() => navigate('/relatorio-movimentacoes')} size="sm" variant="outline">
+              <FileSpreadsheet className="h-4 w-4 mr-1" />
+              Movim.
+            </Button>
+            <Button onClick={exportToPDF} size="sm" variant="outline">
+              <Download className="h-4 w-4 mr-1" />
+              PDF
+            </Button>
+          </div>
         }
       />
 
