@@ -10,6 +10,7 @@ import Movimentacoes from "./pages/Movimentacoes";
 import Agendamentos from "./pages/Agendamentos";
 import Relatorios from "./pages/Relatorios";
 import RelatorioMovimentacoes from "./pages/RelatorioMovimentacoes";
+import RelatorioAgendamentos from "./pages/RelatorioAgendamentos";
 import Configuracoes from "./pages/Configuracoes";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -62,6 +63,11 @@ function AppRoutes() {
       <Route path="/relatorio-movimentacoes" element={
         <ProtectedRoute>
           <RelatorioMovimentacoes />
+        </ProtectedRoute>
+      } />
+      <Route path="/relatorio-agendamentos" element={
+        <ProtectedRoute>
+          <RelatorioAgendamentos />
         </ProtectedRoute>
       } />
       <Route path="/configuracoes" element={
