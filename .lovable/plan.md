@@ -1,112 +1,83 @@
 
+## Plano: Ajustar PDF do Relatorio Financeiro
 
-## Plano: Atualizar Paleta de Cores para Sincronizar com Google Calendar
+### Problemas Identificados
 
-### Situacao Atual
-
-O sistema usa 8 cores personalizadas:
-
-| Cor | Hex |
-|-----|-----|
-| Vermelho | #EF4444 |
-| Rosa | #EC4899 |
-| Roxo | #8B5CF6 |
-| Azul | #3B82F6 |
-| Ciano | #06B6D4 |
-| Verde | #10B981 |
-| Amarelo | #F59E0B |
-| Laranja | #F97316 |
-
-### Nova Paleta (Cores do Google Calendar)
-
-Substituiremos pelas 11 cores oficiais do Google Calendar:
-
-| Nome | Hex | colorId |
-|------|-----|---------|
-| Tomate | #D50000 | 11 |
-| Flamingo | #E67C73 | 4 |
-| Tangerina | #F4511E | 6 |
-| Banana | #F6BF26 | 5 |
-| Salvia | #33B679 | 2 |
-| Manjericao | #0B8043 | 10 |
-| Pavao | #039BE5 | 7 |
-| Mirtilo | #3F51B5 | 9 |
-| Lavanda | #7986CB | 1 |
-| Uva | #8E24AA | 3 |
-| Grafite | #616161 | 8 |
-
----
+1. **Orientacao**: O PDF atual esta em retrato (portrait), precisa ser paisagem (landscape)
+2. **Descricao**: O campo descricao tem largura de apenas 40 unidades, limitando o texto
+3. **Nomes das Contas**: O resumo por conta esta exibindo o ID (UUID) da conta ao inves do nome
 
 ### Alteracoes Necessarias
 
-#### 1. ServiceList.tsx - Atualizar SERVICE_COLORS
+#### Arquivo: `src/pages/Relatorios.tsx`
 
+**1. Mudar para Paisagem**
 ```typescript
-const SERVICE_COLORS = [
-  { name: 'Tomate', value: '#D50000' },
-  { name: 'Flamingo', value: '#E67C73' },
-  { name: 'Tangerina', value: '#F4511E' },
-  { name: 'Banana', value: '#F6BF26' },
-  { name: 'Salvia', value: '#33B679' },
-  { name: 'Manjericao', value: '#0B8043' },
-  { name: 'Pavao', value: '#039BE5' },
-  { name: 'Mirtilo', value: '#3F51B5' },
-  { name: 'Lavanda', value: '#7986CB' },
-  { name: 'Uva', value: '#8E24AA' },
-  { name: 'Grafite', value: '#616161' },
-];
+// Antes (linha 130)
+const doc = new jsPDF();
+
+// Depois
+const doc = new jsPDF('landscape');
 ```
 
-#### 2. Edge Function - Mapeamento direto
-
-Como as cores serao identicas, o mapeamento fica simples:
-
+**2. Criar Funcao Auxiliar para Nome da Conta**
 ```typescript
-const hexToColorId: Record<string, string> = {
-  '#D50000': '11', // Tomate
-  '#E67C73': '4',  // Flamingo
-  '#F4511E': '6',  // Tangerina
-  '#F6BF26': '5',  // Banana
-  '#33B679': '2',  // Salvia
-  '#0B8043': '10', // Manjericao
-  '#039BE5': '7',  // Pavao
-  '#3F51B5': '9',  // Mirtilo
-  '#7986CB': '1',  // Lavanda
-  '#8E24AA': '3',  // Uva
-  '#616161': '8',  // Grafite
+// Adicionar funcao helper (similar ao RelatorioMovimentacoes.tsx)
+const getAccountName = (accountId: string): string => {
+  const account = accounts.find(a => a.id === accountId || a.name === accountId);
+  return account?.name || accountId;
 };
+```
 
-function getColorId(hex?: string): string | undefined {
-  if (!hex) return undefined;
-  return hexToColorId[hex.toUpperCase()] || hexToColorId[hex];
-}
+**3. Ajustar Larguras das Colunas para Paisagem**
+
+Em modo paisagem, a pagina tem ~277 unidades de largura disponivel. Redistribuir:
+
+```typescript
+// Tabela de Extrato - larguras ajustadas para paisagem
+columnStyles: {
+  0: { cellWidth: 25 },      // Data
+  1: { cellWidth: 15 },      // Tipo (Emp/Pes)
+  2: { cellWidth: 80 },      // Descricao (aumentado de 40 para 80)
+  3: { cellWidth: 35 },      // Categoria
+  4: { cellWidth: 30, halign: 'right' },  // Entrada
+  5: { cellWidth: 30, halign: 'right' },  // Saida
+  6: { cellWidth: 30, halign: 'right' },  // Saldo
+},
+```
+
+**4. Corrigir Resumo por Conta**
+
+Atualizar a geracao dos dados do resumo para usar o nome da conta:
+
+```typescript
+// Linha ~234 - accountData
+const accountData = Object.entries(accountSummary).map(([account, values]) => {
+  const balance = values.entradas - values.saidas;
+  return [
+    getAccountName(account),  // Usar funcao helper ao inves de 'account'
+    formatCurrency(values.entradas),
+    formatCurrency(values.saidas),
+    (balance >= 0 ? '+' : '') + formatCurrency(balance),
+  ];
+});
 ```
 
 ---
 
-### Arquivos a Modificar
+### Resumo das Modificacoes
 
-| Arquivo | Alteracao |
-|---------|-----------|
-| `src/components/settings/ServiceList.tsx` | Atualizar array SERVICE_COLORS com as 11 cores do Google |
-| `src/hooks/useAppointments.ts` | Buscar cor do servico e incluir na sincronizacao |
-| `supabase/functions/google-calendar/index.ts` | Adicionar mapeamento hex -> colorId e incluir no evento |
-
----
-
-### Compatibilidade com Cores Existentes
-
-Servicos que ja tem cores antigas (como #EF4444) continuarao funcionando localmente. Ao sincronizar com o Google:
-- Se a cor existir no mapeamento: usa o colorId correspondente
-- Se nao existir: evento fica sem cor (usa padrao do Google)
-
-Os usuarios podem editar os servicos para escolher as novas cores quando quiserem.
+| Local | Alteracao |
+|-------|-----------|
+| Linha 130 | Mudar `new jsPDF()` para `new jsPDF('landscape')` |
+| Apos imports/funcoes | Adicionar funcao `getAccountName` |
+| Linhas 167-175 | Ajustar columnStyles com larguras maiores para paisagem |
+| Linha 234-241 | Usar `getAccountName(account)` no resumo por conta |
 
 ---
 
 ### Resultado Esperado
 
-- Paleta de cores no cadastro de servicos tera as mesmas cores do Google Calendar
-- Sincronizacao de cores sera exata (sem aproximacao)
-- Eventos aparecerao com a mesma cor tanto no app quanto no Google Calendar
-
+- PDF em formato paisagem com mais espaco horizontal
+- Campo descricao com o dobro do espaco (80 unidades vs 40)
+- Nomes das contas exibidos corretamente (ex: "Nubank", "Dinheiro") ao inves de UUIDs
