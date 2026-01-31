@@ -1,175 +1,84 @@
 
-## Plano: Criar Relatorio de Agendamentos
 
-### Objetivo
+## Plano: Corrigir Filtro de Conta no Relatório Financeiro
 
-Criar uma nova pagina de relatorio de agendamentos com filtros, exibicao em tabela e exportacao para PDF (paisagem) e CSV.
+### Problema Identificado
 
----
+No relatório financeiro, o filtro de conta não funciona porque:
 
-### Informacoes a Exibir
+1. **O que é salvo no select:** O nome da conta (ex: "PAG BANK")
+2. **O que está nas transações:** O ID da conta (ex: "1fb70597-664d-4ebf-a212-f83e223b4b20")
 
-| Coluna | Campo do Appointment |
-|--------|---------------------|
-| Data/Hora | date |
-| Cliente | clientName |
-| Servico | service |
-| Duracao | duration (minutos) |
-| Status Confirmacao | confirmationStatus |
-| Valor Total | amount |
-| Valor Recebido | paidAmount |
-| Valor Pendente | amount - paidAmount |
-| Status Pagamento | paymentStatus |
-| Observacoes | notes |
+Quando o usuário seleciona uma conta, a comparação falha porque está comparando nome com ID.
 
----
-
-### Filtros Disponiveis
-
-| Filtro | Opcoes |
-|--------|--------|
-| Data Inicio | Seletor de data |
-| Data Fim | Seletor de data |
-| Cliente | Todos / Lista de clientes |
-| Servico | Todos / Lista de servicos |
-| Status Confirmacao | Todos / Pendente / Confirmado / Atendido / Cancelado |
-| Status Pagamento | Todos / Pago / Sinal / Nao Pago |
-
----
-
-### Resumo do Periodo
-
-Exibir totalizadores no final:
-- Total de agendamentos
-- Valor total esperado (soma de amount)
-- Valor ja recebido (soma de paidAmount)
-- Valor pendente (diferenca)
-- Quantidade por status de confirmacao
-
----
-
-### Arquivos a Criar/Modificar
-
-#### 1. Criar `src/pages/RelatorioAgendamentos.tsx`
-
-Nova pagina com:
-- Filtros (datas, cliente, servico, status confirmacao, status pagamento)
-- Tabela de agendamentos filtrados
-- Cards de resumo
-- Botoes de exportacao PDF e CSV
-
-```typescript
-// Estrutura principal
-const RelatorioAgendamentos = () => {
-  // States para filtros
-  const [startDate, setStartDate] = useState(startOfMonth(new Date()));
-  const [endDate, setEndDate] = useState(endOfMonth(new Date()));
-  const [selectedClient, setSelectedClient] = useState('todos');
-  const [selectedService, setSelectedService] = useState('todos');
-  const [selectedConfirmation, setSelectedConfirmation] = useState('todos');
-  const [selectedPayment, setSelectedPayment] = useState('todos');
-
-  // Filtrar agendamentos
-  const filteredAppointments = useMemo(() => { ... }, [...]);
-
-  // Calcular resumo
-  const summary = useMemo(() => { ... }, [filteredAppointments]);
-
-  // Exportar PDF (paisagem)
-  const exportToPDF = () => {
-    const doc = new jsPDF('landscape');
-    // ...
-  };
-
-  // Exportar CSV
-  const exportToCSV = () => { ... };
-
-  return ( ... );
-};
-```
-
-#### 2. Modificar `src/App.tsx`
-
-Adicionar rota para o novo relatorio:
-
-```typescript
-import RelatorioAgendamentos from "./pages/RelatorioAgendamentos";
-
-// Na definicao de rotas:
-<Route path="/relatorio-agendamentos" element={
-  <ProtectedRoute>
-    <RelatorioAgendamentos />
-  </ProtectedRoute>
-} />
-```
-
-#### 3. Modificar `src/pages/Relatorios.tsx`
-
-Adicionar link/botao para acessar o novo relatorio de agendamentos (similar ao link para RelatorioMovimentacoes).
-
----
-
-### Estrutura do PDF (Paisagem)
+### Dados de Exemplo
 
 ```text
-+------------------------------------------------------------------+
-| RELATORIO DE AGENDAMENTOS                                         |
-| Periodo: 01/01/2025 a 31/01/2025                                 |
-| Filtros: Cliente: Maria | Status: Confirmado                      |
-+------------------------------------------------------------------+
-| Data/Hora | Cliente | Servico | Dur. | Confirmacao | Total | Rec. | Pend. | Pag. | Obs |
-|-----------|---------|---------|------|-------------|-------|------|-------|------|-----|
-| ...       | ...     | ...     | ...  | ...         | ...   | ...  | ...   | ...  | ... |
-+------------------------------------------------------------------+
-| RESUMO DO PERIODO                                                |
-| Total Agendamentos: 25 | Valor Total: R$ 5.000 | Recebido: R$ 3.500 | Pendente: R$ 1.500 |
-+------------------------------------------------------------------+
+Transação armazenada:
+  account: "1fb70597-664d-4ebf-a212-f83e223b4b20"
+
+Conta PAG BANK:
+  id: "1fb70597-664d-4ebf-a212-f83e223b4b20"
+  name: "PAG BANK"
+
+Filtro selecionado: "PAG BANK"
+Comparação: "1fb70597-664d-4ebf-a212-f83e223b4b20" === "PAG BANK" → false
 ```
 
-### Larguras das Colunas (paisagem = 277 unidades)
+### Solução
 
-| Coluna | Largura |
-|--------|---------|
-| Data/Hora | 28 |
-| Cliente | 35 |
-| Servico | 35 |
-| Duracao | 15 |
-| Confirmacao | 22 |
-| Valor Total | 25 |
-| Recebido | 25 |
-| Pendente | 25 |
-| Pagamento | 18 |
-| Observacoes | 45 |
-| **Total** | ~273 |
+Alterar o valor do SelectItem para usar o **ID** da conta ao invés do nome.
 
 ---
 
-### Estrutura do CSV
+### Arquivo a Modificar
 
-Colunas:
-```
-Data/Hora;Cliente;Servico;Duracao (min);Status Confirmacao;Valor Total;Valor Recebido;Valor Pendente;Status Pagamento;Observacoes
+**`src/pages/Relatorios.tsx`**
+
+#### Alteração 1: Mudar valor do SelectItem (linha 414)
+
+```typescript
+// Antes
+<SelectItem key={account.id} value={account.name}>
+  {account.name}
+</SelectItem>
+
+// Depois
+<SelectItem key={account.id} value={account.id}>
+  {account.name}
+</SelectItem>
 ```
 
-Ao final, adicionar linhas de resumo.
+#### Alteração 2: Corrigir exibição no PDF (linha 147)
+
+```typescript
+// Antes
+const accountText = `Conta: ${selectedAccount === 'todos' ? 'Todas' : selectedAccount}`;
+
+// Depois
+const accountText = `Conta: ${selectedAccount === 'todos' ? 'Todas' : getAccountName(selectedAccount)}`;
+```
 
 ---
 
-### Arquivos Afetados
+### Nota sobre Relatório de Agendamentos
 
-| Arquivo | Acao |
-|---------|------|
-| `src/pages/RelatorioAgendamentos.tsx` | Criar (novo) |
-| `src/App.tsx` | Adicionar rota |
-| `src/pages/Relatorios.tsx` | Adicionar link de navegacao |
+O relatório de agendamentos não possui filtro por conta/banco. Se o usuário deseja adicionar esse filtro, seria uma nova funcionalidade a ser implementada separadamente.
+
+---
+
+### Resumo das Alterações
+
+| Arquivo | Linha | Alteração |
+|---------|-------|-----------|
+| `src/pages/Relatorios.tsx` | 414 | Mudar `value={account.name}` para `value={account.id}` |
+| `src/pages/Relatorios.tsx` | 147 | Usar `getAccountName(selectedAccount)` para exibir nome no PDF |
 
 ---
 
 ### Resultado Esperado
 
-- Nova pagina acessivel via /relatorio-agendamentos
-- Filtros funcionais para data, cliente, servico, status
-- Tabela com todos os agendamentos do periodo
-- Valores recebidos e pendentes claramente visiveis
-- Exportacao PDF em paisagem com resumo
-- Exportacao CSV completa com resumo
+- Filtro de conta funcionará corretamente
+- Transações serão filtradas pelo ID da conta
+- PDF continuará exibindo o nome legível da conta
+
