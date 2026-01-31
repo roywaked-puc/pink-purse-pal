@@ -144,7 +144,7 @@ export default function Relatorios() {
     // Period info
     doc.setFontSize(10);
     const periodText = `Periodo: ${format(startDate, 'dd/MM/yyyy')} a ${format(endDate, 'dd/MM/yyyy')}`;
-    const accountText = `Conta: ${selectedAccount === 'todos' ? 'Todas' : selectedAccount}`;
+    const accountText = `Conta: ${selectedAccount === 'todos' ? 'Todas' : getAccountName(selectedAccount)}`;
     const scopeText = `Escopo: ${selectedScope === 'todos' ? 'Todos' : selectedScope === 'empresa' ? 'Empresa' : 'Pessoal'}`;
     
     doc.text(periodText, 14, 30);
@@ -411,7 +411,7 @@ export default function Relatorios() {
                 <SelectContent>
                   <SelectItem value="todos">Todas as contas</SelectItem>
                   {accounts.map(account => (
-                    <SelectItem key={account.id} value={account.name}>
+                    <SelectItem key={account.id} value={account.id}>
                       {account.name}
                     </SelectItem>
                   ))}
