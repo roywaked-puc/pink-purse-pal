@@ -99,14 +99,14 @@ const Index = () => {
       />
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-1 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <BalanceCard
           title="Saldo da Empresa"
           value={getBusinessBalance()}
           icon={Briefcase}
           variant="primary"
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:contents gap-3">
           <BalanceCard
             title="Saldo Pessoal"
             value={getPersonalBalance()}
@@ -136,7 +136,7 @@ const Index = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <Button
           onClick={() => setShowTransactionForm(true)}
           className="h-12"
@@ -165,7 +165,7 @@ const Index = () => {
         </h2>
         
         {upcomingAppointments.length > 0 ? (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {upcomingAppointments.map((appointment, index) => (
               <div
                 key={appointment.id}
@@ -199,7 +199,7 @@ const Index = () => {
             Pendentes de Conclusão
           </h2>
           
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {pendingCompletionAppointments.map((appointment, index) => (
               <div
                 key={appointment.id}

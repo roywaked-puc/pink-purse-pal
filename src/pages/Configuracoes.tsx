@@ -65,7 +65,7 @@ const Configuracoes = () => {
           </div>
         </div>
 
-        <Accordion type="single" collapsible className="space-y-2">
+        <Accordion type="single" collapsible className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <AccordionItem value="clients" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline py-4">
               <div className="flex items-center gap-3">

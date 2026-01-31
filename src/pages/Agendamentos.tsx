@@ -380,7 +380,7 @@ const Agendamentos = () => {
                 <Calendar className="w-5 h-5" />
                 Hoje
               </h2>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {todayAppointments.map((a, i) => renderAppointment(a, i))}
               </div>
             </section>
@@ -390,7 +390,7 @@ const Agendamentos = () => {
           {upcomingAppointments.length > 0 && (
             <section className="mb-6">
               <h2 className="font-semibold mb-3 text-muted-foreground">Próximos</h2>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {upcomingAppointments.map((a, i) => renderAppointment(a, i))}
               </div>
             </section>
@@ -400,7 +400,7 @@ const Agendamentos = () => {
           {pastAppointments.length > 0 && (
             <section className="mb-6">
               <h2 className="font-semibold mb-3 text-muted-foreground">Anteriores</h2>
-              <div className="space-y-3 opacity-70">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 opacity-70">
                 {pastAppointments.slice(0, 5).map((a, i) => renderAppointment(a, i))}
               </div>
             </section>
