@@ -160,7 +160,7 @@ const Movimentacoes = () => {
       </div>
 
       {/* Transaction List */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filteredTransactions.length > 0 ? (
           filteredTransactions.map((transaction, index) => (
             <div
