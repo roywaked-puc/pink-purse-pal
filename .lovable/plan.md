@@ -1,122 +1,145 @@
 
-## Plano: Expandir Busca na Tela de Movimentações
+## Plano: Tornar o Layout Responsivo para Desktop/Notebook
 
-### Objetivo
+### Problema Identificado
 
-Expandir o campo de busca para pesquisar em múltiplos campos: banco, categoria e descrição, facilitando a localização de movimentações.
+O layout atual está limitado a `max-w-lg` (512px), otimizado apenas para mobile. Isso faz o conteúdo parecer muito pequeno em notebooks e desktops.
 
----
+```text
+Atual:
+┌─────────────────────────────────────────────────────────────┐
+│                         Notebook (1366px)                    │
+│     ┌──────────────────┐                                    │
+│     │   Conteúdo       │  ← Muito espaço vazio              │
+│     │   (max 512px)    │                                    │
+│     └──────────────────┘                                    │
+└─────────────────────────────────────────────────────────────┘
 
-### Situação Atual
-
-O campo de busca atualmente só pesquisa na descrição:
-
-```typescript
-.filter(t => searchQuery === '' || 
-  (t.description?.toLowerCase().includes(searchQuery.toLowerCase())))
+Proposto:
+┌─────────────────────────────────────────────────────────────┐
+│                         Notebook (1366px)                    │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │          Conteúdo expande até 1024px                   │ │
+│  │          Cards em grid de 2 colunas                    │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
 ```
-
----
-
-### Campos para Busca
-
-| Campo | Origem | Exemplo |
-|-------|--------|---------|
-| Descrição | `t.description` (texto direto) | "Pagamento cliente X" |
-| Categoria | `t.category` (texto direto) | "Serviços" |
-| Banco/Conta | `t.account` (ID) → precisa converter para nome | "PAG BANK" |
 
 ---
 
 ### Solução
 
-1. Importar `accounts` do AppContext
-2. Criar função helper para obter nome da conta a partir do ID
-3. Expandir a lógica de filtragem para buscar nos 3 campos
+Criar um layout adaptativo que:
+1. Mantém a experiência mobile atual
+2. Expande o conteúdo em telas maiores
+3. Usa grids de múltiplas colunas quando há espaço
 
 ---
 
-### Arquivo a Modificar
+### Arquivos a Modificar
 
-**`src/pages/Movimentacoes.tsx`**
+#### 1. MainLayout.tsx - Container Principal
 
-#### Alteração 1: Importar accounts do AppContext (linha 24)
-
-```typescript
-// Antes
-const { transactions, categories, deleteTransaction } = useApp();
-
-// Depois
-const { transactions, categories, accounts, deleteTransaction } = useApp();
-```
-
-#### Alteração 2: Criar função helper para nome da conta (após linha 33)
-
-```typescript
-// Helper para obter nome da conta a partir do ID
-const getAccountName = (accountId: string): string => {
-  const account = accounts.find(a => a.id === accountId);
-  return account?.name || '';
-};
-```
-
-#### Alteração 3: Expandir lógica de busca (linhas 39-40)
+Expandir a largura máxima para telas maiores.
 
 ```typescript
 // Antes
-.filter(t => searchQuery === '' || 
-  (t.description?.toLowerCase().includes(searchQuery.toLowerCase())))
+<main className="pb-20 px-4 pt-6 max-w-lg mx-auto">
 
-// Depois
-.filter(t => {
-  if (searchQuery === '') return true;
-  const query = searchQuery.toLowerCase();
-  const accountName = getAccountName(t.account);
-  return (
-    t.description?.toLowerCase().includes(query) ||
-    t.category?.toLowerCase().includes(query) ||
-    accountName.toLowerCase().includes(query)
-  );
-})
+// Depois  
+<main className="pb-20 px-4 pt-6 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
 ```
 
-#### Alteração 4: Atualizar placeholder do input (linha 101)
+Breakpoints Tailwind:
+- `max-w-lg` (512px) - Mobile
+- `md:max-w-2xl` (672px) - Tablet
+- `lg:max-w-4xl` (896px) - Notebook
+- `xl:max-w-6xl` (1152px) - Desktop
+
+---
+
+#### 2. BottomNav.tsx - Navegação Inferior
+
+Expandir a navegação para acompanhar o conteúdo.
 
 ```typescript
 // Antes
-placeholder="Buscar na descrição..."
+<div className="flex items-center justify-around h-16 max-w-lg mx-auto">
 
 // Depois
-placeholder="Buscar por banco, categoria ou descrição..."
+<div className="flex items-center justify-around h-16 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
 ```
 
-#### Alteração 5: Adicionar accounts na dependência do useMemo (linha 42)
+---
+
+#### 3. Index.tsx - Dashboard
+
+Usar grid de múltiplas colunas para os cards.
 
 ```typescript
-// Antes
-}, [transactions, filterScope, filterCategory, searchQuery]);
+// Cards de balanço - grid adaptativo
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-// Depois
-}, [transactions, filterScope, filterCategory, searchQuery, accounts]);
+// Botões de ação
+<div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+
+// Lista de agendamentos em grid
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+```
+
+---
+
+#### 4. Movimentacoes.tsx - Lista de Transações
+
+Usar grid para itens de transação em telas maiores.
+
+```typescript
+// Lista de transações
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+```
+
+---
+
+#### 5. Agendamentos.tsx - Calendário e Lista
+
+Ajustar grid para cards de agendamento.
+
+```typescript
+// Cards de agendamento
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+```
+
+---
+
+#### 6. Configuracoes.tsx - Accordion
+
+Usar grid para melhor distribuição visual.
+
+```typescript
+// Acordeões em grid
+<Accordion type="single" collapsible className="grid grid-cols-1 md:grid-cols-2 gap-2">
 ```
 
 ---
 
 ### Resumo das Alterações
 
-| Local | Alteração |
-|-------|-----------|
-| Linha 24 | Adicionar `accounts` na desestruturação |
-| Após linha 33 | Criar função `getAccountName` |
-| Linhas 39-40 | Expandir filtro para 3 campos |
-| Linha 42 | Adicionar `accounts` nas dependências |
-| Linha 101 | Atualizar placeholder |
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/layout/MainLayout.tsx` | Largura responsiva do container |
+| `src/components/layout/BottomNav.tsx` | Largura responsiva da navegação |
+| `src/pages/Index.tsx` | Grid de cards adaptativo |
+| `src/pages/Movimentacoes.tsx` | Grid de transações |
+| `src/pages/Agendamentos.tsx` | Grid de agendamentos |
+| `src/pages/Configuracoes.tsx` | Grid de acordeões |
 
 ---
 
 ### Resultado Esperado
 
-- Usuário pode digitar nome de banco (ex: "PAG BANK") e encontrar movimentações
-- Usuário pode digitar categoria (ex: "Serviços") e encontrar movimentações
-- Busca por descrição continua funcionando
-- Placeholder indica os campos de busca disponíveis
+- **Mobile**: Mantém layout atual (1 coluna)
+- **Tablet (768px+)**: Conteúdo mais largo, grids de 2 colunas
+- **Notebook (1024px+)**: Área útil maior, melhor aproveitamento do espaço
+- **Desktop (1280px+)**: Layout completo com todos os elementos visíveis
+
+A experiência será mais confortável em notebooks sem perder a usabilidade mobile.
