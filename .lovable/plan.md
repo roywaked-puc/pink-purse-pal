@@ -1,76 +1,122 @@
 
+## Plano: Expandir Busca na Tela de Movimentações
 
-## Plano: Ajustar Filtro de Banco para Usar Nome
+### Objetivo
+
+Expandir o campo de busca para pesquisar em múltiplos campos: banco, categoria e descrição, facilitando a localização de movimentações.
+
+---
 
 ### Situação Atual
 
-As transações armazenam o **ID** (UUID) da conta no campo `account`:
-```text
-Transação: account = "67236522-7922-4075-9cb4-de1cfe528ab6"
-Conta: id = "67236522-7922-4075-9cb4-de1cfe528ab6", name = "Dinheiro"
-```
+O campo de busca atualmente só pesquisa na descrição:
 
-O Select já usa o **nome** como valor (linha 488):
 ```typescript
-<SelectItem key={acc.id} value={acc.name}>{acc.name}</SelectItem>
+.filter(t => searchQuery === '' || 
+  (t.description?.toLowerCase().includes(searchQuery.toLowerCase())))
 ```
 
-### Problema
+---
 
-A comparação atual (linha 94) compara diretamente:
-```typescript
-if (selectedAccount !== 'todos' && t.account !== selectedAccount) return false;
-```
+### Campos para Busca
 
-Isso falha porque `t.account` é um UUID e `selectedAccount` é um nome.
+| Campo | Origem | Exemplo |
+|-------|--------|---------|
+| Descrição | `t.description` (texto direto) | "Pagamento cliente X" |
+| Categoria | `t.category` (texto direto) | "Serviços" |
+| Banco/Conta | `t.account` (ID) → precisa converter para nome | "PAG BANK" |
+
+---
 
 ### Solução
 
-Criar uma função helper para encontrar o ID da conta a partir do nome selecionado e usar esse ID na comparação.
+1. Importar `accounts` do AppContext
+2. Criar função helper para obter nome da conta a partir do ID
+3. Expandir a lógica de filtragem para buscar nos 3 campos
 
 ---
 
 ### Arquivo a Modificar
 
-**`src/pages/RelatorioMovimentacoes.tsx`**
+**`src/pages/Movimentacoes.tsx`**
 
-#### Alteração 1: Adicionar função helper (após linha 68)
-
-```typescript
-// Helper function to get account ID from name
-const getAccountIdByName = (accountName: string, accounts: { id: string; name: string }[]): string | null => {
-  const account = accounts.find(a => a.name === accountName);
-  return account?.id || null;
-};
-```
-
-#### Alteração 2: Ajustar a lógica de filtragem (linha 94)
+#### Alteração 1: Importar accounts do AppContext (linha 24)
 
 ```typescript
 // Antes
-if (selectedAccount !== 'todos' && t.account !== selectedAccount) return false;
+const { transactions, categories, deleteTransaction } = useApp();
 
 // Depois
-if (selectedAccount !== 'todos') {
-  const accountId = getAccountIdByName(selectedAccount, accounts);
-  if (t.account !== accountId) return false;
-}
+const { transactions, categories, accounts, deleteTransaction } = useApp();
+```
+
+#### Alteração 2: Criar função helper para nome da conta (após linha 33)
+
+```typescript
+// Helper para obter nome da conta a partir do ID
+const getAccountName = (accountId: string): string => {
+  const account = accounts.find(a => a.id === accountId);
+  return account?.name || '';
+};
+```
+
+#### Alteração 3: Expandir lógica de busca (linhas 39-40)
+
+```typescript
+// Antes
+.filter(t => searchQuery === '' || 
+  (t.description?.toLowerCase().includes(searchQuery.toLowerCase())))
+
+// Depois
+.filter(t => {
+  if (searchQuery === '') return true;
+  const query = searchQuery.toLowerCase();
+  const accountName = getAccountName(t.account);
+  return (
+    t.description?.toLowerCase().includes(query) ||
+    t.category?.toLowerCase().includes(query) ||
+    accountName.toLowerCase().includes(query)
+  );
+})
+```
+
+#### Alteração 4: Atualizar placeholder do input (linha 101)
+
+```typescript
+// Antes
+placeholder="Buscar na descrição..."
+
+// Depois
+placeholder="Buscar por banco, categoria ou descrição..."
+```
+
+#### Alteração 5: Adicionar accounts na dependência do useMemo (linha 42)
+
+```typescript
+// Antes
+}, [transactions, filterScope, filterCategory, searchQuery]);
+
+// Depois
+}, [transactions, filterScope, filterCategory, searchQuery, accounts]);
 ```
 
 ---
 
 ### Resumo das Alterações
 
-| Arquivo | Local | Alteração |
-|---------|-------|-----------|
-| `src/pages/RelatorioMovimentacoes.tsx` | Após linha 68 | Adicionar função `getAccountIdByName` |
-| `src/pages/RelatorioMovimentacoes.tsx` | Linha 94 | Usar `getAccountIdByName` na comparação |
+| Local | Alteração |
+|-------|-----------|
+| Linha 24 | Adicionar `accounts` na desestruturação |
+| Após linha 33 | Criar função `getAccountName` |
+| Linhas 39-40 | Expandir filtro para 3 campos |
+| Linha 42 | Adicionar `accounts` nas dependências |
+| Linha 101 | Atualizar placeholder |
 
 ---
 
 ### Resultado Esperado
 
-- O filtro de banco continuará exibindo nomes para o usuário
-- A filtragem funcionará corretamente convertendo nome para ID internamente
-- Nenhuma mudança visual para o cliente
-
+- Usuário pode digitar nome de banco (ex: "PAG BANK") e encontrar movimentações
+- Usuário pode digitar categoria (ex: "Serviços") e encontrar movimentações
+- Busca por descrição continua funcionando
+- Placeholder indica os campos de busca disponíveis
