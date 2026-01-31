@@ -67,6 +67,12 @@ const getAccountName = (accountId: string, accounts: { id: string; name: string 
   return account?.name || accountId;
 };
 
+// Helper function to get account ID from name
+const getAccountIdByName = (accountName: string, accounts: { id: string; name: string }[]): string | null => {
+  const account = accounts.find(a => a.name === accountName);
+  return account?.id || null;
+};
+
 export default function RelatorioMovimentacoes() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -91,7 +97,10 @@ export default function RelatorioMovimentacoes() {
         // Category filter
         if (selectedCategory !== 'todos' && t.category !== selectedCategory) return false;
         // Account filter
-        if (selectedAccount !== 'todos' && t.account !== selectedAccount) return false;
+        if (selectedAccount !== 'todos') {
+          const accountId = getAccountIdByName(selectedAccount, accounts);
+          if (t.account !== accountId) return false;
+        }
         // Type filter
         if (selectedType !== 'todos' && t.type !== selectedType) return false;
         // Scope filter
