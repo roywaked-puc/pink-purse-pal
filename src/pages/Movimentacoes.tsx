@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Movimentacoes = () => {
   const navigate = useNavigate();
-  const { transactions, categories, deleteTransaction } = useApp();
+  const { transactions, categories, accounts, deleteTransaction } = useApp();
   const { toast } = useToast();
   
   const [showForm, setShowForm] = useState(false);
@@ -32,14 +32,28 @@ const Movimentacoes = () => {
   const [filterCategory, setFilterCategory] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Helper para obter nome da conta a partir do ID
+  const getAccountName = (accountId: string): string => {
+    const account = accounts.find(a => a.id === accountId);
+    return account?.name || '';
+  };
+
   const filteredTransactions = useMemo(() => {
     return transactions
       .filter(t => filterScope === 'todos' || t.scope === filterScope)
       .filter(t => filterCategory === 'todos' || t.category === filterCategory)
-      .filter(t => searchQuery === '' || 
-        (t.description?.toLowerCase().includes(searchQuery.toLowerCase())))
+      .filter(t => {
+        if (searchQuery === '') return true;
+        const query = searchQuery.toLowerCase();
+        const accountName = getAccountName(t.account);
+        return (
+          t.description?.toLowerCase().includes(query) ||
+          t.category?.toLowerCase().includes(query) ||
+          accountName.toLowerCase().includes(query)
+        );
+      })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, filterScope, filterCategory, searchQuery]);
+  }, [transactions, filterScope, filterCategory, searchQuery, accounts]);
 
   const handleEdit = (transaction: Transaction) => {
     if (transaction.appointmentId) {
@@ -98,7 +112,7 @@ const Movimentacoes = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar na descrição..."
+            placeholder="Buscar por banco, categoria ou descrição..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
