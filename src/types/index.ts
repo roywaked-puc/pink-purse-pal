@@ -37,6 +37,7 @@ export interface Appointment {
   confirmationStatus: ConfirmationStatus;
   duration: number; // em minutos
   notes?: string;
+  googleEventId?: string;
 }
 
 export interface Category {

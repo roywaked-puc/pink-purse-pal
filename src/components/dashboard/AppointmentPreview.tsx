@@ -1,6 +1,6 @@
 import { format, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, FileText, Check, CheckCheck, X } from 'lucide-react';
+import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, Calendar, FileText, Check, CheckCheck, X } from 'lucide-react';
 import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -179,10 +179,25 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
             variant="ghost"
             size="icon"
             asChild
-            className="h-8 w-8 text-blue-600 hover:text-blue-700"
+            className={cn(
+              "h-8 w-8",
+              appointment.googleEventId 
+                ? "text-green-600 hover:text-green-700"
+                : "text-blue-600 hover:text-blue-700"
+            )}
           >
-            <a href={formatGoogleCalendarUrl(appointment, appointment.duration)} target="_blank" rel="noopener noreferrer">
-              <CalendarPlus className="w-4 h-4" />
+            <a 
+              href={appointment.googleEventId 
+                ? 'https://calendar.google.com' 
+                : formatGoogleCalendarUrl(appointment, appointment.duration)
+              } 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              {appointment.googleEventId 
+                ? <Calendar className="w-4 h-4" />
+                : <CalendarPlus className="w-4 h-4" />
+              }
             </a>
           </Button>
           {hasPhone && (

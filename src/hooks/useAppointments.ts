@@ -99,6 +99,7 @@ export function useAppointments() {
         confirmationStatus: a.confirmation_status as 'pendente' | 'confirmado' | 'atendido' | 'cancelado',
         duration: a.duration,
         notes: a.notes || undefined,
+        googleEventId: a.google_event_id || undefined,
       }));
     },
     enabled: !!user,
