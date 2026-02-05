@@ -1,110 +1,221 @@
 
 
-## Plano: Botão Google Calendar - Abrir App quando Sincronizado via API
+## Plano: Adicionar Ícones de Status no Título do Google Calendar
 
-### Comportamento Proposto
+### Objetivo
+
+Quando o status de confirmação de um agendamento mudar para **Confirmado** ou **Atendido**, atualizar o evento no Google Calendar adicionando um ícone/emoji no início do título para indicar visualmente o status.
 
 ```text
+Status Visual no Google Calendar:
 ┌─────────────────────────────────────────────────────────┐
-│  Agendamento SEM sincronização (google_event_id = null) │
-│  [📅+] Azul → Abre formulário para CRIAR novo evento    │
-├─────────────────────────────────────────────────────────┤
-│  Agendamento COM sincronização (google_event_id existe) │
-│  [📅] Verde → Abre o Google Calendar diretamente        │
-│        (o evento já está lá, só precisa visualizar)     │
+│  Pendente    → "Maria - Manicure"                       │
+│  Confirmado  → "✓ Maria - Manicure"     (verde)         │
+│  Atendido    → "✓✓ Maria - Manicure"    (azul)          │
+│  Cancelado   → "✗ Maria - Manicure"     (vermelho)      │
 └─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Arquitetura da Solução
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  useUpdateConfirmationStatus (hook)                             │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │ 1. Atualiza status no banco local                         │  │
+│  │ 2. Busca dados completos do agendamento                   │  │
+│  │ 3. Verifica se Google Calendar está conectado             │  │
+│  │ 4. Se SIM → Chama syncToGoogleCalendar com status         │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Edge Function (google-calendar)                                │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │ Recebe: confirmationStatus                                 │  │
+│  │ Monta título: getStatusPrefix(status) + clientName + ...  │  │
+│  │ Atualiza evento no Google Calendar via API                │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ### Alterações Necessárias
 
-#### 1. Adicionar campo `googleEventId` ao tipo Appointment
+#### 1. Edge Function - Adicionar lógica de prefixo de status
 
-**Arquivo:** `src/types/index.ts`
+**Arquivo:** `supabase/functions/google-calendar/index.ts`
 
-Adicionar o campo opcional ao tipo:
+Adicionar função para gerar prefixo baseado no status:
 
 ```typescript
-export interface Appointment {
-  // ... campos existentes
+// Função para gerar prefixo visual baseado no status
+function getStatusPrefix(status?: string): string {
+  switch (status) {
+    case 'confirmado':
+      return '✓ ';    // Check verde
+    case 'atendido':
+      return '✓✓ ';   // Double check azul
+    case 'cancelado':
+      return '✗ ';    // X vermelho
+    default:
+      return '';      // Pendente - sem prefixo
+  }
+}
+```
+
+Modificar a criação do evento para incluir o prefixo:
+
+```typescript
+// Na action 'sync-appointment'
+const statusPrefix = getStatusPrefix(appointment.confirmationStatus);
+
+const event: CalendarEvent = {
+  summary: `${statusPrefix}${appointment.clientName} - ${appointment.service}`,
+  // ... resto igual
+};
+```
+
+---
+
+#### 2. Helper function - Adicionar confirmationStatus ao sync
+
+**Arquivo:** `src/hooks/useAppointments.ts`
+
+Atualizar a interface do `syncToGoogleCalendar`:
+
+```typescript
+async function syncToGoogleCalendar(appointment: {
+  id: string;
+  date: string;
+  clientName: string;
+  service: string;
+  amount: number;
+  duration: number;
   notes?: string;
-  googleEventId?: string;  // NOVO
+  googleEventId?: string;
+  serviceColor?: string;
+  confirmationStatus?: string;  // NOVO
+}): Promise<string | null> {
+  // ... enviar confirmationStatus no body
 }
 ```
 
 ---
 
-#### 2. Mapear `google_event_id` do banco de dados
+#### 3. Hook useUpdateConfirmationStatus - Sincronizar com Google
 
 **Arquivo:** `src/hooks/useAppointments.ts`
 
-Na função `useAppointments`, adicionar o mapeamento:
+Atualizar o hook para buscar dados completos e sincronizar:
 
 ```typescript
-return data.map(a => ({
+export function useUpdateConfirmationStatus() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();  // ADICIONAR
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: ConfirmationStatus }) => {
+      if (!user) throw new Error('Not authenticated');
+      
+      // 1. Atualizar status no banco
+      const { error } = await supabase
+        .from('appointments')
+        .update({ confirmation_status: status })
+        .eq('id', id);
+      
+      if (error) throw sanitizeDbError(error);
+      
+      // 2. Buscar dados completos do agendamento para sincronização
+      const { data: appointment } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (!appointment) return;
+      
+      // 3. Verificar se Google Calendar está conectado
+      const isConnected = await checkGoogleCalendarConnected(user.id);
+      
+      // 4. Se conectado e tem evento, sincronizar
+      if (isConnected && appointment.google_event_id) {
+        let serviceColor: string | undefined;
+        if (appointment.service_id) {
+          const { data: serviceData } = await supabase
+            .from('services')
+            .select('color')
+            .eq('id', appointment.service_id)
+            .single();
+          serviceColor = serviceData?.color || undefined;
+        }
+
+        await syncToGoogleCalendar({
+          id: appointment.id,
+          date: appointment.date,
+          clientName: appointment.client_name,
+          service: appointment.service,
+          amount: Number(appointment.amount),
+          duration: appointment.duration,
+          notes: appointment.notes || undefined,
+          googleEventId: appointment.google_event_id,
+          serviceColor,
+          confirmationStatus: status,  // NOVO
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+}
+```
+
+---
+
+#### 4. Atualizar useAddAppointment e useUpdateAppointment
+
+**Arquivo:** `src/hooks/useAppointments.ts`
+
+Passar `confirmationStatus` também nas outras sincronizações:
+
+```typescript
+// Em useAddAppointment
+const eventId = await syncToGoogleCalendar({
   // ... outros campos
-  notes: a.notes || undefined,
-  googleEventId: a.google_event_id || undefined,  // NOVO
-}));
+  confirmationStatus: data.confirmation_status,  // ADICIONAR
+});
+
+// Em useUpdateAppointment
+const eventId = await syncToGoogleCalendar({
+  // ... outros campos
+  confirmationStatus: data.confirmation_status,  // ADICIONAR
+});
 ```
 
 ---
 
-#### 3. Atualizar o botão no componente
-
-**Arquivo:** `src/components/dashboard/AppointmentPreview.tsx`
-
-Modificar a lógica do botão:
-
-```typescript
-import { Calendar, CalendarPlus } from 'lucide-react';  // Adicionar Calendar
-
-// Verificar se já está sincronizado
-const hasGoogleEvent = !!appointment.googleEventId;
-
-// URL depende do estado de sincronização
-const googleCalendarUrl = hasGoogleEvent 
-  ? 'https://calendar.google.com'  // Abre o Google Calendar direto
-  : formatGoogleCalendarUrl(appointment, appointment.duration);  // Cria novo evento
-
-// Botão com ícone e cor diferentes
-<Button
-  variant="ghost"
-  size="icon"
-  asChild
-  className={cn(
-    "h-8 w-8",
-    hasGoogleEvent 
-      ? "text-green-600 hover:text-green-700"  // Sincronizado
-      : "text-blue-600 hover:text-blue-700"     // Não sincronizado
-  )}
->
-  <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer">
-    {hasGoogleEvent 
-      ? <Calendar className="w-4 h-4" />      // Ícone de calendário
-      : <CalendarPlus className="w-4 h-4" />  // Ícone de adicionar
-    }
-  </a>
-</Button>
-```
-
----
-
-### Resumo Visual
-
-| Situação | Ícone | Cor | Ação |
-|----------|-------|-----|------|
-| Sem sincronização API | 📅+ (CalendarPlus) | Azul | Abre formulário para criar evento |
-| Com sincronização API | 📅 (Calendar) | Verde | Abre o Google Calendar |
-
----
-
-### Arquivos Modificados
+### Resumo das Alterações
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/types/index.ts` | Adicionar `googleEventId?: string` |
-| `src/hooks/useAppointments.ts` | Mapear `google_event_id` do banco |
-| `src/components/dashboard/AppointmentPreview.tsx` | Lógica condicional do botão |
+| `supabase/functions/google-calendar/index.ts` | Adicionar função `getStatusPrefix()` e usar no título |
+| `src/hooks/useAppointments.ts` | Adicionar `confirmationStatus` à interface e sincronizar no `useUpdateConfirmationStatus` |
+
+---
+
+### Resultado Visual no Google Calendar
+
+| Status | Título no Google Calendar |
+|--------|---------------------------|
+| Pendente | `Maria - Manicure` |
+| Confirmado | `✓ Maria - Manicure` |
+| Atendido | `✓✓ Maria - Manicure` |
+| Cancelado | `✗ Maria - Manicure` |
+
+Isso permite visualizar rapidamente o status dos agendamentos diretamente no Google Calendar, sem precisar abrir o app.
 
