@@ -26,6 +26,7 @@ async function syncToGoogleCalendar(appointment: {
   notes?: string;
   googleEventId?: string;
   serviceColor?: string;
+  confirmationStatus?: string;
 }): Promise<string | null> {
   try {
     const { data, error } = await supabase.functions.invoke('google-calendar', {
@@ -41,6 +42,7 @@ async function syncToGoogleCalendar(appointment: {
           notes: appointment.notes,
           googleEventId: appointment.googleEventId,
           serviceColor: appointment.serviceColor,
+          confirmationStatus: appointment.confirmationStatus,
         },
       },
     });
@@ -158,6 +160,7 @@ export function useAddAppointment() {
           duration: data.duration,
           notes: data.notes || undefined,
           serviceColor,
+          confirmationStatus: data.confirmation_status,
         });
         
         // Update appointment with Google Event ID if created
@@ -237,6 +240,7 @@ export function useUpdateAppointment() {
           notes: data.notes || undefined,
           googleEventId: existing?.google_event_id || undefined,
           serviceColor,
+          confirmationStatus: data.confirmation_status,
         });
         
         // Update appointment with Google Event ID if newly created
@@ -371,15 +375,57 @@ export function useSubtractAppointmentPayment() {
 
 export function useUpdateConfirmationStatus() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: 'pendente' | 'confirmado' | 'atendido' | 'cancelado' }) => {
+      if (!user) throw new Error('Not authenticated');
+      
+      // 1. Update status in database
       const { error } = await supabase
         .from('appointments')
         .update({ confirmation_status: status })
         .eq('id', id);
       
       if (error) throw sanitizeDbError(error);
+      
+      // 2. Fetch complete appointment data for sync
+      const { data: appointment } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (!appointment) return;
+      
+      // 3. Check if Google Calendar is connected
+      const isConnected = await checkGoogleCalendarConnected(user.id);
+      
+      // 4. If connected and has event, sync to update title with status prefix
+      if (isConnected && appointment.google_event_id) {
+        let serviceColor: string | undefined;
+        if (appointment.service_id) {
+          const { data: serviceData } = await supabase
+            .from('services')
+            .select('color')
+            .eq('id', appointment.service_id)
+            .single();
+          serviceColor = serviceData?.color || undefined;
+        }
+
+        await syncToGoogleCalendar({
+          id: appointment.id,
+          date: appointment.date,
+          clientName: appointment.client_name,
+          service: appointment.service,
+          amount: Number(appointment.amount),
+          duration: appointment.duration,
+          notes: appointment.notes || undefined,
+          googleEventId: appointment.google_event_id,
+          serviceColor,
+          confirmationStatus: status,
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
