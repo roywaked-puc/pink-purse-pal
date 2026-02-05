@@ -40,6 +40,20 @@ function getColorId(hex?: string): string | undefined {
   return hexToColorId[hex.toUpperCase()] || hexToColorId[hex];
 }
 
+// Função para gerar prefixo visual baseado no status de confirmação
+function getStatusPrefix(status?: string): string {
+  switch (status) {
+    case 'confirmado':
+      return '✓ ';
+    case 'atendido':
+      return '✓✓ ';
+    case 'cancelado':
+      return '✗ ';
+    default:
+      return '';
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -229,9 +243,10 @@ Deno.serve(async (req) => {
         const startDate = new Date(appointment.date);
         const endDate = new Date(startDate.getTime() + appointment.duration * 60000);
         const colorId = getColorId(appointment.serviceColor);
+        const statusPrefix = getStatusPrefix(appointment.confirmationStatus);
 
         const event: CalendarEvent = {
-          summary: `${appointment.clientName} - ${appointment.service}`,
+          summary: `${statusPrefix}${appointment.clientName} - ${appointment.service}`,
           description: `Valor: R$ ${appointment.amount.toFixed(2)}${appointment.notes ? `\n\nObservações: ${appointment.notes}` : ''}`,
           start: {
             dateTime: startDate.toISOString(),
