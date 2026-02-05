@@ -1,145 +1,110 @@
 
-## Plano: Tornar o Layout Responsivo para Desktop/Notebook
 
-### Problema Identificado
+## Plano: Botão Google Calendar - Abrir App quando Sincronizado via API
 
-O layout atual está limitado a `max-w-lg` (512px), otimizado apenas para mobile. Isso faz o conteúdo parecer muito pequeno em notebooks e desktops.
+### Comportamento Proposto
 
 ```text
-Atual:
-┌─────────────────────────────────────────────────────────────┐
-│                         Notebook (1366px)                    │
-│     ┌──────────────────┐                                    │
-│     │   Conteúdo       │  ← Muito espaço vazio              │
-│     │   (max 512px)    │                                    │
-│     └──────────────────┘                                    │
-└─────────────────────────────────────────────────────────────┘
-
-Proposto:
-┌─────────────────────────────────────────────────────────────┐
-│                         Notebook (1366px)                    │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │          Conteúdo expande até 1024px                   │ │
-│  │          Cards em grid de 2 colunas                    │ │
-│  └────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  Agendamento SEM sincronização (google_event_id = null) │
+│  [📅+] Azul → Abre formulário para CRIAR novo evento    │
+├─────────────────────────────────────────────────────────┤
+│  Agendamento COM sincronização (google_event_id existe) │
+│  [📅] Verde → Abre o Google Calendar diretamente        │
+│        (o evento já está lá, só precisa visualizar)     │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### Solução
+### Alterações Necessárias
 
-Criar um layout adaptativo que:
-1. Mantém a experiência mobile atual
-2. Expande o conteúdo em telas maiores
-3. Usa grids de múltiplas colunas quando há espaço
+#### 1. Adicionar campo `googleEventId` ao tipo Appointment
 
----
+**Arquivo:** `src/types/index.ts`
 
-### Arquivos a Modificar
-
-#### 1. MainLayout.tsx - Container Principal
-
-Expandir a largura máxima para telas maiores.
+Adicionar o campo opcional ao tipo:
 
 ```typescript
-// Antes
-<main className="pb-20 px-4 pt-6 max-w-lg mx-auto">
-
-// Depois  
-<main className="pb-20 px-4 pt-6 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
+export interface Appointment {
+  // ... campos existentes
+  notes?: string;
+  googleEventId?: string;  // NOVO
+}
 ```
-
-Breakpoints Tailwind:
-- `max-w-lg` (512px) - Mobile
-- `md:max-w-2xl` (672px) - Tablet
-- `lg:max-w-4xl` (896px) - Notebook
-- `xl:max-w-6xl` (1152px) - Desktop
 
 ---
 
-#### 2. BottomNav.tsx - Navegação Inferior
+#### 2. Mapear `google_event_id` do banco de dados
 
-Expandir a navegação para acompanhar o conteúdo.
+**Arquivo:** `src/hooks/useAppointments.ts`
+
+Na função `useAppointments`, adicionar o mapeamento:
 
 ```typescript
-// Antes
-<div className="flex items-center justify-around h-16 max-w-lg mx-auto">
-
-// Depois
-<div className="flex items-center justify-around h-16 max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
+return data.map(a => ({
+  // ... outros campos
+  notes: a.notes || undefined,
+  googleEventId: a.google_event_id || undefined,  // NOVO
+}));
 ```
 
 ---
 
-#### 3. Index.tsx - Dashboard
+#### 3. Atualizar o botão no componente
 
-Usar grid de múltiplas colunas para os cards.
+**Arquivo:** `src/components/dashboard/AppointmentPreview.tsx`
+
+Modificar a lógica do botão:
 
 ```typescript
-// Cards de balanço - grid adaptativo
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+import { Calendar, CalendarPlus } from 'lucide-react';  // Adicionar Calendar
 
-// Botões de ação
-<div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+// Verificar se já está sincronizado
+const hasGoogleEvent = !!appointment.googleEventId;
 
-// Lista de agendamentos em grid
-<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+// URL depende do estado de sincronização
+const googleCalendarUrl = hasGoogleEvent 
+  ? 'https://calendar.google.com'  // Abre o Google Calendar direto
+  : formatGoogleCalendarUrl(appointment, appointment.duration);  // Cria novo evento
+
+// Botão com ícone e cor diferentes
+<Button
+  variant="ghost"
+  size="icon"
+  asChild
+  className={cn(
+    "h-8 w-8",
+    hasGoogleEvent 
+      ? "text-green-600 hover:text-green-700"  // Sincronizado
+      : "text-blue-600 hover:text-blue-700"     // Não sincronizado
+  )}
+>
+  <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer">
+    {hasGoogleEvent 
+      ? <Calendar className="w-4 h-4" />      // Ícone de calendário
+      : <CalendarPlus className="w-4 h-4" />  // Ícone de adicionar
+    }
+  </a>
+</Button>
 ```
 
 ---
 
-#### 4. Movimentacoes.tsx - Lista de Transações
+### Resumo Visual
 
-Usar grid para itens de transação em telas maiores.
-
-```typescript
-// Lista de transações
-<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-```
+| Situação | Ícone | Cor | Ação |
+|----------|-------|-----|------|
+| Sem sincronização API | 📅+ (CalendarPlus) | Azul | Abre formulário para criar evento |
+| Com sincronização API | 📅 (Calendar) | Verde | Abre o Google Calendar |
 
 ---
 
-#### 5. Agendamentos.tsx - Calendário e Lista
-
-Ajustar grid para cards de agendamento.
-
-```typescript
-// Cards de agendamento
-<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-```
-
----
-
-#### 6. Configuracoes.tsx - Accordion
-
-Usar grid para melhor distribuição visual.
-
-```typescript
-// Acordeões em grid
-<Accordion type="single" collapsible className="grid grid-cols-1 md:grid-cols-2 gap-2">
-```
-
----
-
-### Resumo das Alterações
+### Arquivos Modificados
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/components/layout/MainLayout.tsx` | Largura responsiva do container |
-| `src/components/layout/BottomNav.tsx` | Largura responsiva da navegação |
-| `src/pages/Index.tsx` | Grid de cards adaptativo |
-| `src/pages/Movimentacoes.tsx` | Grid de transações |
-| `src/pages/Agendamentos.tsx` | Grid de agendamentos |
-| `src/pages/Configuracoes.tsx` | Grid de acordeões |
+| `src/types/index.ts` | Adicionar `googleEventId?: string` |
+| `src/hooks/useAppointments.ts` | Mapear `google_event_id` do banco |
+| `src/components/dashboard/AppointmentPreview.tsx` | Lógica condicional do botão |
 
----
-
-### Resultado Esperado
-
-- **Mobile**: Mantém layout atual (1 coluna)
-- **Tablet (768px+)**: Conteúdo mais largo, grids de 2 colunas
-- **Notebook (1024px+)**: Área útil maior, melhor aproveitamento do espaço
-- **Desktop (1280px+)**: Layout completo com todos os elementos visíveis
-
-A experiência será mais confortável em notebooks sem perder a usabilidade mobile.
