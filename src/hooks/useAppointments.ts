@@ -243,8 +243,8 @@ export function useUpdateAppointment() {
           confirmationStatus: data.confirmation_status,
         });
         
-        // Update appointment with Google Event ID if newly created
-        if (eventId && !existing?.google_event_id) {
+        // Update appointment with Google Event ID if changed (new or recreated after 404 fallback)
+        if (eventId && eventId !== existing?.google_event_id) {
           await supabase
             .from('appointments')
             .update({ google_event_id: eventId })
