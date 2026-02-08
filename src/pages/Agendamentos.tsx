@@ -401,7 +401,7 @@ const Agendamentos = () => {
             <section className="mb-6">
               <h2 className="font-semibold mb-3 text-muted-foreground">Anteriores</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 opacity-70">
-                {pastAppointments.slice(0, 5).map((a, i) => renderAppointment(a, i))}
+                {pastAppointments.map((a, i) => renderAppointment(a, i))}
               </div>
             </section>
           )}
