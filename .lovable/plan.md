@@ -1,221 +1,71 @@
 
 
-## Plano: Adicionar Ícones de Status no Título do Google Calendar
+## Plano: Corrigir Atualização de Eventos no Google Calendar
 
-### Objetivo
+### Problema Identificado
 
-Quando o status de confirmação de um agendamento mudar para **Confirmado** ou **Atendido**, atualizar o evento no Google Calendar adicionando um ícone/emoji no início do título para indicar visualmente o status.
+Ao editar a data/hora de um agendamento, o sistema pode criar um evento novo no Google Calendar em vez de atualizar o existente. Isso resulta em eventos duplicados.
 
-```text
-Status Visual no Google Calendar:
-┌─────────────────────────────────────────────────────────┐
-│  Pendente    → "Maria - Manicure"                       │
-│  Confirmado  → "✓ Maria - Manicure"     (verde)         │
-│  Atendido    → "✓✓ Maria - Manicure"    (azul)          │
-│  Cancelado   → "✗ Maria - Manicure"     (vermelho)      │
-└─────────────────────────────────────────────────────────┘
-```
+### Causa Raiz
 
----
+Analisando o codigo, identifiquei dois problemas no `useUpdateAppointment` (`src/hooks/useAppointments.ts`):
 
-### Arquitetura da Solução
+1. **O `google_event_id` retornado pelo Google nao e salvo apos um PUT bem-sucedido**: Na linha 247, a condicao `if (eventId && !existing?.google_event_id)` so salva o ID quando nao existia previamente. Porem, se por qualquer motivo o evento original for removido do Google e a API retornar 404, o PUT falha silenciosamente, e nenhuma acao corretiva e tomada.
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  useUpdateConfirmationStatus (hook)                             │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ 1. Atualiza status no banco local                         │  │
-│  │ 2. Busca dados completos do agendamento                   │  │
-│  │ 3. Verifica se Google Calendar está conectado             │  │
-│  │ 4. Se SIM → Chama syncToGoogleCalendar com status         │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Edge Function (google-calendar)                                │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ Recebe: confirmationStatus                                 │  │
-│  │ Monta título: getStatusPrefix(status) + clientName + ...  │  │
-│  │ Atualiza evento no Google Calendar via API                │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-```
+2. **Falta de tratamento de falha no PUT com fallback para POST**: Se o evento no Google Calendar foi deletado manualmente pelo usuario, o PUT retorna erro 404. Atualmente, o sistema simplesmente falha silenciosamente, sem criar um novo evento nem limpar o `google_event_id` invalido.
 
----
+3. **O `eventId` retornado apos o update nao e atualizado no banco**: Mesmo em cenarios normais, o Google pode retornar um ID diferente (raro, mas possivel). O codigo atual ignora isso.
 
-### Alterações Necessárias
+### Alteracoes Necessarias
 
-#### 1. Edge Function - Adicionar lógica de prefixo de status
+#### 1. Edge Function - Adicionar fallback de criacao quando PUT falha com 404
 
 **Arquivo:** `supabase/functions/google-calendar/index.ts`
 
-Adicionar função para gerar prefixo baseado no status:
+Quando o PUT retorna 404 (evento nao existe mais no Google), o sistema deve automaticamente criar um novo evento (POST) em vez de simplesmente retornar erro:
 
-```typescript
-// Função para gerar prefixo visual baseado no status
-function getStatusPrefix(status?: string): string {
-  switch (status) {
-    case 'confirmado':
-      return '✓ ';    // Check verde
-    case 'atendido':
-      return '✓✓ ';   // Double check azul
-    case 'cancelado':
-      return '✗ ';    // X vermelho
-    default:
-      return '';      // Pendente - sem prefixo
-  }
-}
+```text
+Fluxo atual:
+  PUT /events/{id} → 404 → retorna erro → nada acontece
+
+Fluxo proposto:
+  PUT /events/{id} → 404 → POST /events → retorna novo eventId
 ```
 
-Modificar a criação do evento para incluir o prefixo:
+Modificacoes:
+- Apos o PUT, verificar se o status e 404
+- Se for 404, fazer um POST automaticamente para criar novo evento
+- Retornar o novo `eventId` para o frontend salvar
+- Adicionar logs para depuracao
 
-```typescript
-// Na action 'sync-appointment'
-const statusPrefix = getStatusPrefix(appointment.confirmationStatus);
-
-const event: CalendarEvent = {
-  summary: `${statusPrefix}${appointment.clientName} - ${appointment.service}`,
-  // ... resto igual
-};
-```
-
----
-
-#### 2. Helper function - Adicionar confirmationStatus ao sync
+#### 2. Hook useUpdateAppointment - Sempre salvar o eventId retornado
 
 **Arquivo:** `src/hooks/useAppointments.ts`
 
-Atualizar a interface do `syncToGoogleCalendar`:
+Alterar a logica para sempre atualizar o `google_event_id` no banco quando o retorno for diferente do existente:
 
-```typescript
-async function syncToGoogleCalendar(appointment: {
-  id: string;
-  date: string;
-  clientName: string;
-  service: string;
-  amount: number;
-  duration: number;
-  notes?: string;
-  googleEventId?: string;
-  serviceColor?: string;
-  confirmationStatus?: string;  // NOVO
-}): Promise<string | null> {
-  // ... enviar confirmationStatus no body
-}
+```text
+Logica atual:
+  if (eventId && !existing?.google_event_id) → salva
+
+Logica proposta:
+  if (eventId && eventId !== existing?.google_event_id) → salva
 ```
 
----
+Isso garante que:
+- Novos eventos sao salvos (quando `existing.google_event_id` e null)
+- Eventos recriados apos fallback 404 tambem sao salvos (quando o ID muda)
 
-#### 3. Hook useUpdateConfirmationStatus - Sincronizar com Google
+### Resumo das Alteracoes
 
-**Arquivo:** `src/hooks/useAppointments.ts`
-
-Atualizar o hook para buscar dados completos e sincronizar:
-
-```typescript
-export function useUpdateConfirmationStatus() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();  // ADICIONAR
-
-  return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: ConfirmationStatus }) => {
-      if (!user) throw new Error('Not authenticated');
-      
-      // 1. Atualizar status no banco
-      const { error } = await supabase
-        .from('appointments')
-        .update({ confirmation_status: status })
-        .eq('id', id);
-      
-      if (error) throw sanitizeDbError(error);
-      
-      // 2. Buscar dados completos do agendamento para sincronização
-      const { data: appointment } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (!appointment) return;
-      
-      // 3. Verificar se Google Calendar está conectado
-      const isConnected = await checkGoogleCalendarConnected(user.id);
-      
-      // 4. Se conectado e tem evento, sincronizar
-      if (isConnected && appointment.google_event_id) {
-        let serviceColor: string | undefined;
-        if (appointment.service_id) {
-          const { data: serviceData } = await supabase
-            .from('services')
-            .select('color')
-            .eq('id', appointment.service_id)
-            .single();
-          serviceColor = serviceData?.color || undefined;
-        }
-
-        await syncToGoogleCalendar({
-          id: appointment.id,
-          date: appointment.date,
-          clientName: appointment.client_name,
-          service: appointment.service,
-          amount: Number(appointment.amount),
-          duration: appointment.duration,
-          notes: appointment.notes || undefined,
-          googleEventId: appointment.google_event_id,
-          serviceColor,
-          confirmationStatus: status,  // NOVO
-        });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    },
-  });
-}
-```
-
----
-
-#### 4. Atualizar useAddAppointment e useUpdateAppointment
-
-**Arquivo:** `src/hooks/useAppointments.ts`
-
-Passar `confirmationStatus` também nas outras sincronizações:
-
-```typescript
-// Em useAddAppointment
-const eventId = await syncToGoogleCalendar({
-  // ... outros campos
-  confirmationStatus: data.confirmation_status,  // ADICIONAR
-});
-
-// Em useUpdateAppointment
-const eventId = await syncToGoogleCalendar({
-  // ... outros campos
-  confirmationStatus: data.confirmation_status,  // ADICIONAR
-});
-```
-
----
-
-### Resumo das Alterações
-
-| Arquivo | Alteração |
+| Arquivo | Alteracao |
 |---------|-----------|
-| `supabase/functions/google-calendar/index.ts` | Adicionar função `getStatusPrefix()` e usar no título |
-| `src/hooks/useAppointments.ts` | Adicionar `confirmationStatus` à interface e sincronizar no `useUpdateConfirmationStatus` |
+| `supabase/functions/google-calendar/index.ts` | Adicionar fallback POST quando PUT retorna 404 |
+| `src/hooks/useAppointments.ts` | Alterar condicao para salvar `eventId` sempre que mudar |
 
----
+### Resultado Esperado
 
-### Resultado Visual no Google Calendar
-
-| Status | Título no Google Calendar |
-|--------|---------------------------|
-| Pendente | `Maria - Manicure` |
-| Confirmado | `✓ Maria - Manicure` |
-| Atendido | `✓✓ Maria - Manicure` |
-| Cancelado | `✗ Maria - Manicure` |
-
-Isso permite visualizar rapidamente o status dos agendamentos diretamente no Google Calendar, sem precisar abrir o app.
-
+- Editar data/hora de um agendamento atualiza o evento existente no Google Calendar (PUT)
+- Se o evento original foi deletado do Google, um novo e criado automaticamente (fallback POST)
+- O `google_event_id` no banco sempre reflete o evento correto no Google Calendar
+- Sem mais eventos duplicados
