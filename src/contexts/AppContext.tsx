@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
+import { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { Transaction, Appointment, Category, Account, Client, Service } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClients, useAddClient, useUpdateClient, useDeleteClient } from '@/hooks/useClients';
