@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle, Search } from 'lucide-react';
+import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -41,6 +41,13 @@ const Index = () => {
   const [deleteAppointmentId, setDeleteAppointmentId] = useState<string | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [balancesVisible, setBalancesVisible] = useState(() => localStorage.getItem('balancesVisible') !== 'false');
+
+  const toggleBalances = () => {
+    const newState = !balancesVisible;
+    setBalancesVisible(newState);
+    localStorage.setItem('balancesVisible', String(newState));
+  };
 
   // Filtra agendamentos futuros que ainda precisam de ação (não concluídos OU não pagos)
   const upcomingAppointments = appointments
@@ -96,31 +103,50 @@ const Index = () => {
       <PageHeader 
         title="Olá! 👋"
         subtitle="Seu resumo financeiro"
+        action={
+          <button
+            onClick={toggleBalances}
+            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            title={balancesVisible ? 'Ocultar saldos' : 'Exibir saldos'}
+          >
+            {balancesVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        }
       />
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <BalanceCard
-          title="Saldo da Empresa"
-          value={getBusinessBalance()}
-          icon={Briefcase}
-          variant="primary"
-        />
-        <div className="grid grid-cols-2 md:contents gap-3">
+      {balancesVisible ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <BalanceCard
-            title="Saldo Pessoal"
-            value={getPersonalBalance()}
-            icon={User}
-            variant="secondary"
+            title="Saldo da Empresa"
+            value={getBusinessBalance()}
+            icon={Briefcase}
+            variant="primary"
           />
-          <BalanceCard
-            title="Gastos do Mês"
-            value={getMonthlyPersonalExpenses()}
-            icon={TrendingDown}
-            variant="accent"
-          />
+          <div className="grid grid-cols-2 md:contents gap-3">
+            <BalanceCard
+              title="Saldo Pessoal"
+              value={getPersonalBalance()}
+              icon={User}
+              variant="secondary"
+            />
+            <BalanceCard
+              title="Gastos do Mês"
+              value={getMonthlyPersonalExpenses()}
+              icon={TrendingDown}
+              variant="accent"
+            />
+          </div>
         </div>
-      </div>
+      ) : (
+        <button
+          onClick={toggleBalances}
+          className="w-full mb-6 p-4 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center gap-2 text-muted-foreground hover:bg-muted transition-colors"
+        >
+          <Eye className="w-4 h-4" />
+          <span className="text-sm">Saldos ocultos — toque para exibir</span>
+        </button>
+      )}
 
       {/* Search */}
       <div className="mb-4">
