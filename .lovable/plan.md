@@ -1,58 +1,42 @@
 
-## Ocultar/Mostrar Cards de Saldo Financeiro
+
+## Adicionar Campo "Cliente" Opcional na Movimentação
 
 ### Problema
-Na tela inicial, os cards com "Saldo da Empresa", "Saldo Pessoal" e "Gastos do Mês" ficam expostos quando a atendente usa o sistema na frente da cliente. Isso expõe informações financeiras confidenciais em momentos inoportunos.
+Quando a movimentação não é vinculada a um agendamento, não há como registrar qual cliente está associada a ela. O campo "Cliente" seria útil como referência opcional.
 
-### Solução
+### Alterações Necessárias
 
-Adicionar um botão de olho (ícone `Eye` / `EyeOff`) próximo ao título da seção de saldos. Ao clicar, os cards somem e são substituídos por uma barra discreta indicando que os saldos estão ocultos. A preferência é salva no `localStorage` para persistir entre sessões.
+#### 1. Banco de Dados
+Adicionar coluna `client_name` (texto, nullable) na tabela `transactions` para armazenar o nome do cliente como referência.
 
-### Comportamento
-
-- Estado padrão: cards visíveis (comportamento atual)
-- Ao clicar no olho: cards desaparecem, substituídos por faixa com texto "Saldos ocultos" e ícone de olho para reexibir
-- A preferência é lembrada (localStorage) — se a atendente ocultou, fica oculto mesmo após recarregar
-- Transição suave com animação CSS
-
-### Alterações
-
-#### `src/pages/Index.tsx`
-- Importar `Eye`, `EyeOff` do `lucide-react`
-- Adicionar estado `const [balancesVisible, setBalancesVisible] = useState(() => localStorage.getItem('balancesVisible') !== 'false')`
-- Ao alternar, salvar em `localStorage`
-- No `PageHeader`, adicionar botão de olho via prop `action`
-- Envolver os cards em bloco condicional: se visível → mostra os cards; se oculto → mostra barra discreta "Saldos ocultos — clique para exibir"
-
-#### `src/components/dashboard/BalanceCard.tsx`
-- Nenhuma alteração necessária
-
-### Resultado Visual
-
-```text
-┌─────────────────────────────────────┐
-│ Olá! 👋                        [👁] │  ← botão de olho no canto
-│ Seu resumo financeiro               │
-├─────────────────────────────────────┤
-│  [Saldo da Empresa]  [R$ 1.200,00]  │  ← visível (padrão)
-│  [Saldo Pessoal]     [R$   800,00]  │
-│  [Gastos do Mês]     [R$   300,00]  │
-└─────────────────────────────────────┘
-
-Após clicar no olho:
-
-┌─────────────────────────────────────┐
-│ Olá! 👋                        [👁] │
-│ Seu resumo financeiro               │
-├─────────────────────────────────────┤
-│  👁 Saldos ocultos — toque para exibir │
-└─────────────────────────────────────┘
+```sql
+ALTER TABLE public.transactions ADD COLUMN client_name text;
 ```
+
+#### 2. Tipo `Transaction` (`src/types/index.ts`)
+Adicionar campo opcional `clientName?: string` na interface Transaction.
+
+#### 3. Hook `useTransactions.ts`
+- No mapeamento de leitura: mapear `client_name` para `clientName`
+- No insert/update: enviar `client_name` ao banco
+
+#### 4. Formulário `TransactionForm.tsx`
+- Adicionar estado `referenceClientName` para o campo de cliente avulso
+- Quando `linkToAppointment` estiver **desmarcado** e for uma nova transação (ou edição), mostrar o campo `ClientAutocomplete` com label "Cliente (opcional)" -- sem asterisco vermelho
+- Ao salvar, incluir `clientName` nos dados da transação
+- Ao carregar transação para edição, popular o campo com o valor salvo
+
+#### 5. Exibição `TransactionItem.tsx`
+- Se a transação tiver `clientName` (e não estiver vinculada a agendamento), exibir o nome do cliente abaixo da categoria/conta
 
 ### Seção Técnica
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/Index.tsx` | Estado `balancesVisible` + toggle com localStorage + UI condicional + botão no PageHeader |
+| Migration SQL | `ALTER TABLE public.transactions ADD COLUMN client_name text;` |
+| `src/types/index.ts` | Adicionar `clientName?: string` na interface `Transaction` |
+| `src/hooks/useTransactions.ts` | Mapear `client_name` no select e no insert/update |
+| `src/components/transactions/TransactionForm.tsx` | Campo `ClientAutocomplete` visível quando não vinculado a agenda, estado + lógica de reset/load |
+| `src/components/transactions/TransactionItem.tsx` | Exibir nome do cliente quando presente |
 
-Apenas um arquivo precisa ser modificado. Nenhuma alteração de banco de dados é necessária.
