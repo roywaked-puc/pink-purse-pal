@@ -29,6 +29,7 @@ export function useTransactions() {
         amount: Number(t.amount),
         grossAmount: t.gross_amount ? Number(t.gross_amount) : undefined,
         description: t.description || undefined,
+        clientName: t.client_name || undefined,
         appointmentId: t.appointment_id || undefined,
         paymentType: t.payment_type as 'sinal' | 'pagamento' | undefined,
       }));
@@ -57,6 +58,7 @@ export function useAddTransaction() {
           amount: transaction.amount,
           gross_amount: transaction.grossAmount || null,
           description: transaction.description,
+          client_name: transaction.clientName || null,
           appointment_id: transaction.appointmentId,
           payment_type: transaction.paymentType,
         });
@@ -85,6 +87,7 @@ export function useUpdateTransaction() {
           amount: transaction.amount,
           gross_amount: transaction.grossAmount || null,
           description: transaction.description,
+          client_name: transaction.clientName || null,
           appointment_id: transaction.appointmentId,
           payment_type: transaction.paymentType,
         })

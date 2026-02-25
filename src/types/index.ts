@@ -13,6 +13,7 @@ export interface Transaction {
   amount: number;
   grossAmount?: number; // Valor bruto (antes da taxa de operadora)
   description?: string;
+  clientName?: string;
   appointmentId?: string;
   paymentType?: 'sinal' | 'pagamento';
 }

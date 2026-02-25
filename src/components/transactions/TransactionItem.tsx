@@ -61,6 +61,9 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
           {transaction.description && (
             <p className="text-xs text-muted-foreground mt-0.5">{transaction.description}</p>
           )}
+          {transaction.clientName && !isLinkedToAppointment && (
+            <p className="text-xs text-muted-foreground mt-0.5">Cliente: {transaction.clientName}</p>
+          )}
           {isLinkedToAppointment && (
             <div className="flex items-center gap-1 text-xs text-primary mt-1">
               <CalendarCheck className="w-3 h-3" />
