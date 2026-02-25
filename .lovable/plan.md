@@ -1,42 +1,17 @@
 
 
-## Adicionar Campo "Cliente" Opcional na Movimentação
+## Incluir Cliente na Busca de Movimentações
 
-### Problema
-Quando a movimentação não é vinculada a um agendamento, não há como registrar qual cliente está associada a ela. O campo "Cliente" seria útil como referência opcional.
+### Alteração
 
-### Alterações Necessárias
+Adicionar o campo `clientName` ao filtro de busca existente na página de Movimentações, e atualizar o placeholder do campo de busca para refletir a nova opção.
 
-#### 1. Banco de Dados
-Adicionar coluna `client_name` (texto, nullable) na tabela `transactions` para armazenar o nome do cliente como referência.
+### Detalhes Técnicos
 
-```sql
-ALTER TABLE public.transactions ADD COLUMN client_name text;
-```
+**Arquivo: `src/pages/Movimentacoes.tsx`**
 
-#### 2. Tipo `Transaction` (`src/types/index.ts`)
-Adicionar campo opcional `clientName?: string` na interface Transaction.
+1. No filtro de busca (linha 49-53), adicionar `t.clientName?.toLowerCase().includes(query)` como mais uma condição OR
+2. Atualizar o placeholder do input de busca de "Buscar por banco, categoria ou descrição..." para "Buscar por banco, categoria, descrição ou cliente..."
 
-#### 3. Hook `useTransactions.ts`
-- No mapeamento de leitura: mapear `client_name` para `clientName`
-- No insert/update: enviar `client_name` ao banco
-
-#### 4. Formulário `TransactionForm.tsx`
-- Adicionar estado `referenceClientName` para o campo de cliente avulso
-- Quando `linkToAppointment` estiver **desmarcado** e for uma nova transação (ou edição), mostrar o campo `ClientAutocomplete` com label "Cliente (opcional)" -- sem asterisco vermelho
-- Ao salvar, incluir `clientName` nos dados da transação
-- Ao carregar transação para edição, popular o campo com o valor salvo
-
-#### 5. Exibição `TransactionItem.tsx`
-- Se a transação tiver `clientName` (e não estiver vinculada a agendamento), exibir o nome do cliente abaixo da categoria/conta
-
-### Seção Técnica
-
-| Arquivo | Alteração |
-|---------|-----------|
-| Migration SQL | `ALTER TABLE public.transactions ADD COLUMN client_name text;` |
-| `src/types/index.ts` | Adicionar `clientName?: string` na interface `Transaction` |
-| `src/hooks/useTransactions.ts` | Mapear `client_name` no select e no insert/update |
-| `src/components/transactions/TransactionForm.tsx` | Campo `ClientAutocomplete` visível quando não vinculado a agenda, estado + lógica de reset/load |
-| `src/components/transactions/TransactionItem.tsx` | Exibir nome do cliente quando presente |
+Apenas duas linhas precisam ser alteradas. Nenhuma mudança de banco de dados necessária.
 
