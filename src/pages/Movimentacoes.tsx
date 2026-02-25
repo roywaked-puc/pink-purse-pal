@@ -49,7 +49,8 @@ const Movimentacoes = () => {
         return (
           t.description?.toLowerCase().includes(query) ||
           t.category?.toLowerCase().includes(query) ||
-          accountName.toLowerCase().includes(query)
+          accountName.toLowerCase().includes(query) ||
+          t.clientName?.toLowerCase().includes(query)
         );
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -112,7 +113,7 @@ const Movimentacoes = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por banco, categoria ou descrição..."
+            placeholder="Buscar por banco, categoria, descrição ou cliente..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
