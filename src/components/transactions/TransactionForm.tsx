@@ -73,6 +73,9 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [paymentType, setPaymentType] = useState<'sinal' | 'pagamento'>('pagamento');
 
+  // Campo de cliente avulso (quando não vinculado a agendamento)
+  const [referenceClientName, setReferenceClientName] = useState('');
+
   const selectedCategory = useMemo(() => {
     return categories.find(c => c.id === selectedCategoryId);
   }, [categories, selectedCategoryId]);
@@ -150,6 +153,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setDescription(transaction.description || '');
       setPaymentType(transaction.paymentType || 'pagamento');
       setLinkToAppointment(false);
+      setReferenceClientName(transaction.clientName || '');
     } else if (prefilledAppointment) {
       // Pre-preenche com dados do agendamento
       resetForm();
@@ -199,6 +203,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     setSelectedClientId(null);
     setSelectedAppointment(null);
     setPaymentType('pagamento');
+    setReferenceClientName('');
   };
 
   const handleClientSelect = (client: Client | null) => {
@@ -302,6 +307,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       // Salva o valor bruto se houver desconto de operadora
       grossAmount: showNetAmount ? parseFloat(amount) : undefined,
       description: description || undefined,
+      clientName: linkToAppointment ? undefined : (referenceClientName || undefined),
       appointmentId: selectedAppointment?.id,
       paymentType: selectedAppointment ? paymentType : undefined,
     };
@@ -471,6 +477,18 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
                 </>
               )}
             </>
+          )}
+
+          {/* Campo de cliente avulso (quando NÃO vinculado a agendamento) */}
+          {!linkToAppointment && (
+            <div className="space-y-2">
+              <Label>Cliente (opcional)</Label>
+              <ClientAutocomplete
+                value={referenceClientName}
+                onChange={setReferenceClientName}
+                onClientSelect={() => {}}
+              />
+            </div>
           )}
 
           <div className="space-y-2">

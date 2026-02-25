@@ -1,0 +1,1 @@
+ALTER TABLE public.transactions ADD COLUMN client_name text;
