@@ -61,7 +61,7 @@ const Index = () => {
       return matchesSearch && isFuture && (!isCompleted || !isPaid);
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 5);
+    ;
 
   // Filtra agendamentos passados que ainda precisam de ação (não concluídos OU não pagos, exceto cancelados)
   const pendingCompletionAppointments = appointments
@@ -75,7 +75,7 @@ const Index = () => {
       return matchesSearch && isPast && a.confirmationStatus !== 'cancelado' && (isNotCompleted || isNotPaid);
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 10);
+    ;
 
   const handleEditAppointment = (appointment: Appointment) => {
     setEditingAppointment(appointment);
