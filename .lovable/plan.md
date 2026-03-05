@@ -1,17 +1,23 @@
 
 
-## Incluir Cliente na Busca de Movimentações
+## Remover Limites de Exibição de Agendamentos na Tela Principal
+
+### Problema
+A tela principal limita artificialmente a quantidade de agendamentos exibidos:
+- "Próximos Agendamentos": mostra no máximo **5** (`.slice(0, 5)`)
+- "Pendentes de Conclusão": mostra no máximo **10** (`.slice(0, 10)`)
+
+Isso faz com que agendamentos pendentes de ação fiquem invisíveis.
+
+### Solução
+
+Remover os `.slice()` de ambas as listas para exibir **todos** os agendamentos que ainda precisam de ação.
 
 ### Alteração
 
-Adicionar o campo `clientName` ao filtro de busca existente na página de Movimentações, e atualizar o placeholder do campo de busca para refletir a nova opção.
+**Arquivo: `src/pages/Index.tsx`**
+- Linha ~60: remover `.slice(0, 5)` da lista `upcomingAppointments`
+- Linha ~72: remover `.slice(0, 10)` da lista `pendingCompletionAppointments`
 
-### Detalhes Técnicos
-
-**Arquivo: `src/pages/Movimentacoes.tsx`**
-
-1. No filtro de busca (linha 49-53), adicionar `t.clientName?.toLowerCase().includes(query)` como mais uma condição OR
-2. Atualizar o placeholder do input de busca de "Buscar por banco, categoria ou descrição..." para "Buscar por banco, categoria, descrição ou cliente..."
-
-Apenas duas linhas precisam ser alteradas. Nenhuma mudança de banco de dados necessária.
+Apenas duas linhas precisam ser alteradas.
 
