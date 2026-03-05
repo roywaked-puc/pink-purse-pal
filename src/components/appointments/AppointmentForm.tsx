@@ -291,6 +291,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
               value={clientName}
               onChange={setClientName}
               onClientSelect={handleClientSelect}
+              required
             />
           </div>
 
