@@ -431,6 +431,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
                   onChange={setClientName}
                   onClientSelect={handleClientSelect}
                   disabled={!!prefilledAppointment}
+                  required
                 />
               </div>
 

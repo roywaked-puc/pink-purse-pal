@@ -10,6 +10,7 @@ interface ClientAutocompleteProps {
   onClientSelect: (client: Client | null) => void;
   className?: string;
   disabled?: boolean;
+  required?: boolean;
 }
 
 export function ClientAutocomplete({ 
@@ -17,7 +18,8 @@ export function ClientAutocomplete({
   onChange, 
   onClientSelect,
   className,
-  disabled = false
+  disabled = false,
+  required = false
 }: ClientAutocompleteProps) {
   const { searchClients } = useApp();
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +66,7 @@ export function ClientAutocomplete({
         onChange={handleInputChange}
         onFocus={() => !disabled && value.length >= 2 && suggestions.length > 0 && setIsOpen(true)}
         placeholder="Digite o nome da cliente"
-        required
+        required={required}
         disabled={disabled}
         className={disabled ? "bg-muted" : ""}
       />
