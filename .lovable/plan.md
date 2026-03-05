@@ -1,23 +1,17 @@
 
 
-## Remover Limites de Exibição de Agendamentos na Tela Principal
+## Corrigir Campo Cliente Opcional no Formulário de Movimentação
 
 ### Problema
-A tela principal limita artificialmente a quantidade de agendamentos exibidos:
-- "Próximos Agendamentos": mostra no máximo **5** (`.slice(0, 5)`)
-- "Pendentes de Conclusão": mostra no máximo **10** (`.slice(0, 10)`)
-
-Isso faz com que agendamentos pendentes de ação fiquem invisíveis.
+O componente `ClientAutocomplete` tem `required` fixo no `<Input>` (linha 67), tornando o campo sempre obrigatório — mesmo quando usado como campo opcional na movimentação avulsa.
 
 ### Solução
 
-Remover os `.slice()` de ambas as listas para exibir **todos** os agendamentos que ainda precisam de ação.
+**Arquivo: `src/components/appointments/ClientAutocomplete.tsx`**
+- Adicionar prop `required?: boolean` (default `false`) na interface
+- Passar essa prop ao `<Input>` interno
 
-### Alteração
-
-**Arquivo: `src/pages/Index.tsx`**
-- Linha ~60: remover `.slice(0, 5)` da lista `upcomingAppointments`
-- Linha ~72: remover `.slice(0, 10)` da lista `pendingCompletionAppointments`
-
-Apenas duas linhas precisam ser alteradas.
+**Arquivo: `src/components/transactions/TransactionForm.tsx`**
+- No uso do `ClientAutocomplete` para o campo de cliente avulso (quando `!linkToAppointment`), **não** passar `required` (ficará `false`)
+- No uso para vincular a agendamento, passar `required={true}` para manter obrigatório
 
