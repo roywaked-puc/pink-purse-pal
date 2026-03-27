@@ -163,12 +163,15 @@ export function useAddAppointment() {
           confirmationStatus: data.confirmation_status,
         });
         
-        // Update appointment with Google Event ID if created
+        // Update appointment with Google Event ID if created and await completion
         if (eventId) {
-          await supabase
+          const { data: updated } = await supabase
             .from('appointments')
             .update({ google_event_id: eventId })
-            .eq('id', data.id);
+            .eq('id', data.id)
+            .select()
+            .single();
+          if (updated) return updated;
         }
       }
       
@@ -188,13 +191,6 @@ export function useUpdateAppointment() {
     mutationFn: async ({ id, appointment }: { id: string; appointment: Omit<Appointment, 'id'> }) => {
       if (!user) throw new Error('Not authenticated');
       
-      // Get existing google_event_id
-      const { data: existing } = await supabase
-        .from('appointments')
-        .select('google_event_id')
-        .eq('id', id)
-        .single();
-
       const { data, error } = await supabase
         .from('appointments')
         .update({
@@ -219,6 +215,13 @@ export function useUpdateAppointment() {
       // Check if Google Calendar is connected and sync
       const isConnected = await checkGoogleCalendarConnected(user.id);
       if (isConnected) {
+        // Re-fetch google_event_id right before sync to get the most up-to-date value
+        const { data: freshData } = await supabase
+          .from('appointments')
+          .select('google_event_id')
+          .eq('id', id)
+          .single();
+
         // Fetch service color if service_id exists
         let serviceColor: string | undefined;
         if (data.service_id) {
@@ -238,13 +241,13 @@ export function useUpdateAppointment() {
           amount: Number(data.amount),
           duration: data.duration,
           notes: data.notes || undefined,
-          googleEventId: existing?.google_event_id || undefined,
+          googleEventId: freshData?.google_event_id || undefined,
           serviceColor,
           confirmationStatus: data.confirmation_status,
         });
         
-        // Update appointment with Google Event ID if changed (new or recreated after 404 fallback)
-        if (eventId && eventId !== existing?.google_event_id) {
+        // Update appointment with Google Event ID if changed
+        if (eventId && eventId !== freshData?.google_event_id) {
           await supabase
             .from('appointments')
             .update({ google_event_id: eventId })
