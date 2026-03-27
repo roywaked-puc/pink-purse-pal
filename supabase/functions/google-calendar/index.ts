@@ -261,8 +261,36 @@ Deno.serve(async (req) => {
 
         console.log('Event color:', appointment.serviceColor, '->', colorId);
 
+        // Add extendedProperties with appointmentId for idempotency
+        const eventWithProps = {
+          ...event,
+          extendedProperties: {
+            private: {
+              appointmentId: appointment.id,
+            },
+          },
+        };
+
         let eventId = appointment.googleEventId;
         let response: Response;
+
+        // If no googleEventId, search for existing event by appointmentId to prevent duplicates
+        if (!eventId) {
+          console.log('No googleEventId, searching for existing event by appointmentId:', appointment.id);
+          const searchResponse = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/primary/events?privateExtendedProperty=appointmentId%3D${appointment.id}&showDeleted=false`,
+            {
+              headers: { 'Authorization': `Bearer ${accessToken}` },
+            }
+          );
+          if (searchResponse.ok) {
+            const searchData = await searchResponse.json();
+            if (searchData.items && searchData.items.length > 0) {
+              eventId = searchData.items[0].id;
+              console.log('Found existing event by appointmentId:', eventId);
+            }
+          }
+        }
 
         if (eventId) {
           // Update existing event
@@ -275,7 +303,7 @@ Deno.serve(async (req) => {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify(event),
+              body: JSON.stringify(eventWithProps),
             }
           );
         } else {
@@ -289,7 +317,7 @@ Deno.serve(async (req) => {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify(event),
+              body: JSON.stringify(eventWithProps),
             }
           );
         }
@@ -305,7 +333,7 @@ Deno.serve(async (req) => {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify(event),
+              body: JSON.stringify(eventWithProps),
             }
           );
         }
