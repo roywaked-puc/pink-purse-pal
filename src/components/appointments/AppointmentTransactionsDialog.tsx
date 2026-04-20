@@ -94,10 +94,20 @@ export function AppointmentTransactionsDialog({
                       <span className="text-sm font-medium">
                         {format(new Date(t.date), 'dd/MM/yyyy')}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-success">
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-semibold text-success mr-1">
                           {formatCurrency(t.amount)}
                         </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setTransactionToEdit(t)}
+                          aria-label="Editar movimento"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
                         <Button
                           type="button"
                           variant="ghost"
