@@ -304,7 +304,7 @@ export function useUpdateAppointmentPayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, paidAmount }: { id: string; paidAmount: number }) => {
+    mutationFn: async ({ id, paidAmount, mode = 'add' }: { id: string; paidAmount: number; mode?: 'add' | 'set' }) => {
       const { data: current, error: fetchError } = await supabase
         .from('appointments')
         .select('paid_amount, amount')
@@ -313,7 +313,9 @@ export function useUpdateAppointmentPayment() {
       
       if (fetchError) throw sanitizeDbError(fetchError);
       
-      const newPaidAmount = Number(current.paid_amount) + paidAmount;
+      const newPaidAmount = mode === 'set'
+        ? paidAmount
+        : Number(current.paid_amount) + paidAmount;
       let newStatus: 'nao_pago' | 'sinal' | 'pago' = 'nao_pago';
       
       if (newPaidAmount >= Number(current.amount)) {

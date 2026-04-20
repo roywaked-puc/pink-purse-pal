@@ -52,7 +52,7 @@ export function AppointmentTransactionsDialog({
     `R$ ${v.toFixed(2).replace('.', ',')}`;
 
   const handleRecalculate = () => {
-    updateAppointmentPayment(appointmentId, sumTransactions);
+    updateAppointmentPayment(appointmentId, sumTransactions, 'set');
     toast.success('Valor recebido recalculado', {
       description: `Atualizado para ${formatCurrency(sumTransactions)}`,
     });

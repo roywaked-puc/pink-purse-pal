@@ -46,7 +46,7 @@ interface AppContextType {
   getAccountBalance: (accountId: string) => number;
   getAppointmentsWithBalance: (clientId?: string) => Appointment[];
   getAppointmentById: (id: string) => Appointment | undefined;
-  updateAppointmentPayment: (id: string, paidAmount: number) => void;
+  updateAppointmentPayment: (id: string, paidAmount: number, mode?: 'add' | 'set') => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -203,8 +203,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return appointments.find(a => a.id === id);
   }, [appointments]);
 
-  const updateAppointmentPayment = useCallback((id: string, paidAmount: number) => {
-    updateAppointmentPaymentMutation.mutate({ id, paidAmount });
+  const updateAppointmentPayment = useCallback((id: string, paidAmount: number, mode: 'add' | 'set' = 'add') => {
+    updateAppointmentPaymentMutation.mutate({ id, paidAmount, mode });
   }, [updateAppointmentPaymentMutation]);
 
   // Transaction functions
