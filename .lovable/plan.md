@@ -1,58 +1,65 @@
 
+## Análise do Problema do "Valor Recebido"
 
-## Corrigir Duplicação de Eventos no Google Calendar
+### Investigação
 
-### Problema Identificado
+O campo `paidAmount` da agenda é atualizado em vários pontos:
+1. **`useAddTransaction`** — quando uma transação é vinculada à agenda, soma ao `paidAmount`
+2. **`useDeleteTransaction` / `subtractAppointmentPayment`** — subtrai ao excluir
+3. **`updateAppointmentPayment`** — usado pelo botão "Receber"
 
-Ao analisar o código, encontrei **duas causas principais** de duplicação:
+### Causas Prováveis da Divergência
 
-1. **Race condition na criação**: Em `useAddAppointment` (linha 154-172), o fluxo é:
-   - Insere agendamento no banco (sem `google_event_id`)
-   - Chama `syncToGoogleCalendar` (sem `googleEventId` → cria evento novo via POST)
-   - Recebe o `eventId` e atualiza o banco com `google_event_id`
-   - `onSuccess` dispara `invalidateQueries` → re-fetch dos agendamentos
+1. **Dessincronia entre soma de transações vinculadas e `paid_amount`**: Como o `paid_amount` é mantido manualmente (incrementado/decrementado), qualquer falha de rede, erro de mutation, ou edição direta pode deixar o valor fora de sincronia com a soma real das transações com `appointment_id` daquela agenda.
 
-   Se o usuário salva e rapidamente interage (ex: muda status, edita), a segunda operação pode pegar o agendamento **antes** do `google_event_id` ser salvo, criando um segundo POST.
+2. **Edição de transação vinculada**: Se uma transação vinculada tem o valor alterado (mesmo que a regra atual bloqueie isso na UI), o `paid_amount` não é recalculado.
 
-2. **Race condition na atualização**: Em `useUpdateAppointment` (linha 192-252), busca o `google_event_id` existente, mas se duas atualizações rápidas ocorrerem em sequência, a segunda pode iniciar antes que a primeira tenha completado o sync e salvo o `eventId`.
+3. **Taxas de conta (gross/net)**: Transações com conta que tem `feePercentage` salvam o valor líquido, mas a soma pode não bater com o que o usuário espera ver.
 
-3. **`invalidateQueries` durante sync**: O `onSuccess` invalida queries imediatamente, mas o `google_event_id` pode ainda não ter sido salvo no banco, fazendo com que um re-render com dados stale dispare outro sync sem o ID.
+4. **Múltiplas operações concorrentes**: Race conditions entre criar/excluir transações podem causar somas incorretas.
 
-### Solução
+### Solução Proposta
 
-Aplicar **idempotência** no edge function usando o `appointment.id` como identificador único, evitando criar eventos duplicados mesmo que o POST seja chamado múltiplas vezes.
+**Parte 1 — Botão para visualizar movimentos da agenda**
 
-### Alterações
+Adicionar no card de edição de agendamento (`AppointmentForm.tsx`) um botão "Ver Movimentos" que:
+- Aparece apenas no modo edição (quando há `appointment.id`)
+- Abre um Dialog listando todas as transações com `appointment_id` igual ao da agenda
+- Mostra: data, valor, conta, descrição
+- Exibe no rodapé: **Soma das transações** vs **paid_amount registrado**, destacando em vermelho se houver divergência
+- Inclui botão "Recalcular paid_amount" que atualiza o `paid_amount` da agenda para igualar à soma real das transações vinculadas (correção manual)
 
-**1. Edge Function `supabase/functions/google-calendar/index.ts`**
+**Parte 2 — Arquivos a alterar**
 
-No action `sync-appointment`, antes de criar um novo evento (POST):
-- Buscar no Google Calendar se já existe um evento com o `appointment.id` no `extendedProperties.private.appointmentId`
-- Se encontrar, fazer UPDATE (PUT) em vez de criar novo
-- Ao criar eventos, sempre incluir `extendedProperties.private.appointmentId` com o ID do agendamento
+1. **Novo componente** `src/components/appointments/AppointmentTransactionsDialog.tsx`
+   - Recebe `appointmentId`, `open`, `onOpenChange`
+   - Busca transações filtrando `transactions` do contexto por `appointmentId`
+   - Renderiza lista + totalizador + botão recalcular
 
-Isso garante que mesmo que o POST seja chamado duas vezes sem `googleEventId`, o segundo chamado encontra o evento existente e atualiza em vez de duplicar.
+2. **`src/components/appointments/AppointmentForm.tsx`**
+   - Importar o novo dialog
+   - Adicionar botão "Ver Movimentos" (ícone `Receipt` ou `ListOrdered`) próximo ao campo "Valor Recebido", visível apenas em edição
+   - Estado local para abrir/fechar o dialog
 
-**2. `src/hooks/useAppointments.ts`**
+3. **`src/contexts/AppContext.tsx`**
+   - Já existe `updateAppointmentPayment(id, paidAmount)` — usar essa função para o "Recalcular"
 
-Na função `useAddAppointment`:
-- Mover a atualização do `google_event_id` no banco para **antes** do retorno, e aguardar a conclusão
-- Retornar o dado atualizado (com `google_event_id`) para evitar stale data
-
-Na função `useUpdateAppointment`:
-- Re-buscar o `google_event_id` logo antes do sync (em vez de usar o valor lido no início da mutation) para pegar o ID mais atualizado
-
-### Detalhes da Busca por Idempotência (Edge Function)
+### Diagrama do Fluxo
 
 ```text
-Fluxo atual (pode duplicar):
-  POST /events → novo evento (sem verificação)
-
-Fluxo corrigido:
-  1. GET /events?privateExtendedProperty=appointmentId=<uuid>
-  2. Se encontrou → PUT /events/<id> (atualiza)
-  3. Se não encontrou → POST /events (cria com extendedProperties)
+[Editar Agenda] 
+     │
+     ▼
+[Botão "Ver Movimentos"] ──► [Dialog]
+                                │
+                                ├─ Lista transações vinculadas
+                                ├─ Soma real: R$ X
+                                ├─ paid_amount: R$ Y
+                                └─ [Recalcular] (se X ≠ Y)
+                                       │
+                                       ▼
+                              updateAppointmentPayment(id, X)
 ```
 
-Isso é a solução mais robusta pois funciona independente de timing ou race conditions no cliente.
-
+### Observação
+Esta abordagem dá ao usuário **visibilidade e controle** sobre a divergência, sem mudar a lógica atual de soma/subtração (que pode ser refatorada depois para calcular `paidAmount` derivado em tempo real, mas isso é mudança maior).
