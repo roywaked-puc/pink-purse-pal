@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { Receipt, AlertTriangle, Trash2 } from 'lucide-react';
+import { Receipt, AlertTriangle, Trash2, Pencil } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { Transaction } from '@/types';
 import { toast } from 'sonner';
 
