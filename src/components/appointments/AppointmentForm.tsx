@@ -465,6 +465,13 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
           </DialogFooter>
         </form>
       </DialogContent>
+      {appointment && (
+        <AppointmentTransactionsDialog
+          appointmentId={appointment.id}
+          open={showTransactions}
+          onOpenChange={setShowTransactions}
+        />
+      )}
     </Dialog>
   );
 }
