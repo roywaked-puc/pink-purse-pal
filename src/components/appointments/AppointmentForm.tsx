@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
-import { CalendarIcon, HelpCircle } from 'lucide-react';
+import { CalendarIcon, HelpCircle, Receipt } from 'lucide-react';
+import { AppointmentTransactionsDialog } from './AppointmentTransactionsDialog';
 import {
   Tooltip,
   TooltipContent,
