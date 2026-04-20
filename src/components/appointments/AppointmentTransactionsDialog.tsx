@@ -194,6 +194,14 @@ export function AppointmentTransactionsDialog({
         title="Excluir movimento?"
         description="Esta ação não pode ser desfeita. O valor será subtraído do recebido neste agendamento."
       />
+
+      {transactionToEdit && (
+        <TransactionForm
+          open={!!transactionToEdit}
+          onOpenChange={(o) => !o && setTransactionToEdit(null)}
+          transaction={transactionToEdit}
+        />
+      )}
     </>
   );
 }
