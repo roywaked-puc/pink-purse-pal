@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
-import { CalendarIcon, HelpCircle } from 'lucide-react';
+import { CalendarIcon, HelpCircle, Receipt } from 'lucide-react';
+import { AppointmentTransactionsDialog } from './AppointmentTransactionsDialog';
 import {
   Tooltip,
   TooltipContent,
@@ -61,6 +62,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
   const [confirmationStatus, setConfirmationStatus] = useState<ConfirmationStatus>('pendente');
   const [notes, setNotes] = useState('');
+  const [showTransactions, setShowTransactions] = useState(false);
 
   useEffect(() => {
     if (appointment) {
@@ -422,6 +424,16 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
                     Recebido: R$ {appointment.paidAmount.toFixed(2).replace('.', ',')} de R$ {appointment.amount.toFixed(2).replace('.', ',')}
                   </p>
                 )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTransactions(true)}
+                  className="w-full"
+                >
+                  <Receipt className="w-4 h-4" />
+                  Ver Movimentos
+                </Button>
               </div>
             </>
           )}
@@ -453,6 +465,13 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
           </DialogFooter>
         </form>
       </DialogContent>
+      {appointment && (
+        <AppointmentTransactionsDialog
+          appointmentId={appointment.id}
+          open={showTransactions}
+          onOpenChange={setShowTransactions}
+        />
+      )}
     </Dialog>
   );
 }
