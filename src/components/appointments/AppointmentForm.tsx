@@ -424,6 +424,16 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
                     Recebido: R$ {appointment.paidAmount.toFixed(2).replace('.', ',')} de R$ {appointment.amount.toFixed(2).replace('.', ',')}
                   </p>
                 )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTransactions(true)}
+                  className="w-full"
+                >
+                  <Receipt className="w-4 h-4" />
+                  Ver Movimentos
+                </Button>
               </div>
             </>
           )}
