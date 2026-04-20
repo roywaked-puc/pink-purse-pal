@@ -222,16 +222,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Proteção: bloquear edição de transação vinculada a agendamento
-    if (transaction && transaction.appointmentId) {
-      toast({
-        title: "Erro",
-        description: "Transações vinculadas a agendamentos não podem ser editadas, apenas excluídas.",
-        variant: "destructive",
-      });
-      return;
-    }
     
+
     if (!selectedCategory || !type || !scope) {
       toast({
         title: "Erro",

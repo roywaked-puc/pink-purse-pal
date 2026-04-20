@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { Receipt, AlertTriangle, Trash2 } from 'lucide-react';
+import { Receipt, AlertTriangle, Trash2, Pencil } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { Transaction } from '@/types';
 import { toast } from 'sonner';
 
@@ -27,6 +28,7 @@ export function AppointmentTransactionsDialog({
 }: AppointmentTransactionsDialogProps) {
   const { transactions, getAppointmentById, updateAppointmentPayment, deleteTransaction } = useApp();
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
 
   const appointment = getAppointmentById(appointmentId);
 
@@ -92,10 +94,20 @@ export function AppointmentTransactionsDialog({
                       <span className="text-sm font-medium">
                         {format(new Date(t.date), 'dd/MM/yyyy')}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-success">
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-semibold text-success mr-1">
                           {formatCurrency(t.amount)}
                         </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setTransactionToEdit(t)}
+                          aria-label="Editar movimento"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
                         <Button
                           type="button"
                           variant="ghost"
@@ -182,6 +194,14 @@ export function AppointmentTransactionsDialog({
         title="Excluir movimento?"
         description="Esta ação não pode ser desfeita. O valor será subtraído do recebido neste agendamento."
       />
+
+      {transactionToEdit && (
+        <TransactionForm
+          open={!!transactionToEdit}
+          onOpenChange={(o) => !o && setTransactionToEdit(null)}
+          transaction={transactionToEdit}
+        />
+      )}
     </>
   );
 }
