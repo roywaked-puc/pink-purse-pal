@@ -28,6 +28,7 @@ export function AppointmentTransactionsDialog({
 }: AppointmentTransactionsDialogProps) {
   const { transactions, getAppointmentById, updateAppointmentPayment, deleteTransaction } = useApp();
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
 
   const appointment = getAppointmentById(appointmentId);
 
