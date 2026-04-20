@@ -62,6 +62,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
   const [confirmationStatus, setConfirmationStatus] = useState<ConfirmationStatus>('pendente');
   const [notes, setNotes] = useState('');
+  const [showTransactions, setShowTransactions] = useState(false);
 
   useEffect(() => {
     if (appointment) {
