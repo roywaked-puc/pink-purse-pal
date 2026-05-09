@@ -1,65 +1,64 @@
+## Novo Dashboard de Indicadores
 
-## Análise do Problema do "Valor Recebido"
+Adicionar um novo relatório visual ("Indicadores") dentro da seção **Relatórios**, mostrando a evolução de clientes e faturamento ao longo do **ano corrente** (Jan → mês atual).
 
-### Investigação
+### Onde fica
+- Nova rota `/relatorio-indicadores`
+- Novo card na página **Relatórios** (`src/pages/Relatorios.tsx`), ao lado dos relatórios existentes
 
-O campo `paidAmount` da agenda é atualizado em vários pontos:
-1. **`useAddTransaction`** — quando uma transação é vinculada à agenda, soma ao `paidAmount`
-2. **`useDeleteTransaction` / `subtractAppointmentPayment`** — subtrai ao excluir
-3. **`updateAppointmentPayment`** — usado pelo botão "Receber"
+### O que será exibido
 
-### Causas Prováveis da Divergência
+**1. Cards de resumo (topo)**
+- Total de clientes únicos atendidos no ano
+- Faturamento total do ano
+- Variação % vs. mês anterior (clientes e faturamento)
 
-1. **Dessincronia entre soma de transações vinculadas e `paid_amount`**: Como o `paid_amount` é mantido manualmente (incrementado/decrementado), qualquer falha de rede, erro de mutation, ou edição direta pode deixar o valor fora de sincronia com a soma real das transações com `appointment_id` daquela agenda.
+**2. Gráfico — Clientes atendidos por mês**
+- Gráfico de barras (Jan a mês atual)
+- Eixo Y: nº de clientes únicos com recebimento no mês
+- Tooltip mostra quantidade exata + variação vs. mês anterior
 
-2. **Edição de transação vinculada**: Se uma transação vinculada tem o valor alterado (mesmo que a regra atual bloqueie isso na UI), o `paid_amount` não é recalculado.
+**3. Gráfico — Clientes por tipo de serviço**
+- Gráfico de linhas (uma linha por serviço) ou barras empilhadas, mês a mês
+- Cada serviço usa sua cor cadastrada (paleta Google Calendar já existente)
+- Legenda com nome do serviço
 
-3. **Taxas de conta (gross/net)**: Transações com conta que tem `feePercentage` salvam o valor líquido, mas a soma pode não bater com o que o usuário espera ver.
+**4. Gráfico — Faturamento mês a mês**
+- Gráfico de barras ou área
+- Soma dos recebimentos (transações de entrada da empresa) por mês
+- Linha de tendência/média opcional
 
-4. **Múltiplas operações concorrentes**: Race conditions entre criar/excluir transações podem causar somas incorretas.
+### Base de cálculo (regra acordada)
+"Cliente atendido no mês" = cliente que teve **transação de recebimento** (`transactions` com `type='entrada'`, `scope='empresa'`) no mês.
+- Para o gráfico **por serviço**, usa-se o `appointment_id` da transação para resolver o serviço; transações sem agendamento vinculado entram em "Sem serviço".
+- Cliente único: deduplica por `client_id` (ou `client_name` quando não houver id) dentro do mês.
 
-### Solução Proposta
+### Layout
+- Mobile-first, paleta rosa/branco do app
+- Usa `recharts` (já presente em `src/components/ui/chart.tsx`)
+- Header com botão voltar para Relatórios
+- Cards e gráficos em grid responsivo (1 coluna mobile, 2 colunas desktop para os gráficos menores)
 
-**Parte 1 — Botão para visualizar movimentos da agenda**
-
-Adicionar no card de edição de agendamento (`AppointmentForm.tsx`) um botão "Ver Movimentos" que:
-- Aparece apenas no modo edição (quando há `appointment.id`)
-- Abre um Dialog listando todas as transações com `appointment_id` igual ao da agenda
-- Mostra: data, valor, conta, descrição
-- Exibe no rodapé: **Soma das transações** vs **paid_amount registrado**, destacando em vermelho se houver divergência
-- Inclui botão "Recalcular paid_amount" que atualiza o `paid_amount` da agenda para igualar à soma real das transações vinculadas (correção manual)
-
-**Parte 2 — Arquivos a alterar**
-
-1. **Novo componente** `src/components/appointments/AppointmentTransactionsDialog.tsx`
-   - Recebe `appointmentId`, `open`, `onOpenChange`
-   - Busca transações filtrando `transactions` do contexto por `appointmentId`
-   - Renderiza lista + totalizador + botão recalcular
-
-2. **`src/components/appointments/AppointmentForm.tsx`**
-   - Importar o novo dialog
-   - Adicionar botão "Ver Movimentos" (ícone `Receipt` ou `ListOrdered`) próximo ao campo "Valor Recebido", visível apenas em edição
-   - Estado local para abrir/fechar o dialog
-
-3. **`src/contexts/AppContext.tsx`**
-   - Já existe `updateAppointmentPayment(id, paidAmount)` — usar essa função para o "Recalcular"
-
-### Diagrama do Fluxo
+### Detalhes técnicos
 
 ```text
-[Editar Agenda] 
-     │
-     ▼
-[Botão "Ver Movimentos"] ──► [Dialog]
-                                │
-                                ├─ Lista transações vinculadas
-                                ├─ Soma real: R$ X
-                                ├─ paid_amount: R$ Y
-                                └─ [Recalcular] (se X ≠ Y)
-                                       │
-                                       ▼
-                              updateAppointmentPayment(id, X)
+Arquivos a criar:
+- src/pages/RelatorioIndicadores.tsx       (página principal)
+- src/components/relatorios/IndicadoresCharts.tsx (3 gráficos)
+
+Arquivos a editar:
+- src/App.tsx                 → registrar rota protegida
+- src/pages/Relatorios.tsx    → adicionar card "Indicadores"
 ```
 
-### Observação
-Esta abordagem dá ao usuário **visibilidade e controle** sobre a divergência, sem mudar a lógica atual de soma/subtração (que pode ser refatorada depois para calcular `paidAmount` derivado em tempo real, mas isso é mudança maior).
+Fontes de dados (hooks já existentes):
+- `useTransactions()` — base para clientes atendidos e faturamento
+- `useAppointments()` — para resolver `service_id` via `appointment_id`
+- `useServices()` — nome e cor de cada serviço
+
+Cálculos feitos no cliente com `useMemo`, agrupando por mês (`date-fns` já disponível). Sem novas tabelas nem migrations.
+
+### Fora do escopo
+- Exportação CSV/PDF deste relatório (pode ser adicionada depois)
+- Comparativo entre anos
+- Filtros avançados por serviço/cliente
