@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Legend,
+  Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, Legend, ComposedChart,
 } from 'recharts';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -37,41 +37,50 @@ export default function RelatorioIndicadores() {
     return m;
   }, [appointments]);
 
-  // Filter: business income transactions in current year up to current month
-  const incomeTx = useMemo(() => {
-    return transactions.filter(t => {
+  // Filter: business income transactions for a given year up to current month index
+  const filterIncome = (yr: number) =>
+    transactions.filter(t => {
       const d = new Date(t.date);
       return (
         t.type === 'entrada' &&
         t.scope === 'empresa' &&
-        d.getFullYear() === year &&
+        d.getFullYear() === yr &&
         d.getMonth() <= currentMonth
       );
     });
-  }, [transactions, year, currentMonth]);
 
-  // Per-month aggregates
-  const monthsData = useMemo(() => {
+  const incomeTx = useMemo(() => filterIncome(year), [transactions, year, currentMonth]);
+  const incomeTxPrev = useMemo(() => filterIncome(year - 1), [transactions, year, currentMonth]);
+
+  const aggregateByMonth = (txs: typeof transactions) => {
     const arr = Array.from({ length: currentMonth + 1 }, (_, i) => ({
-      monthIdx: i,
-      label: MONTH_LABELS[i],
       revenue: 0,
       clientsSet: new Set<string>(),
     }));
-    incomeTx.forEach(t => {
+    txs.forEach(t => {
       const m = new Date(t.date).getMonth();
       if (!arr[m]) return;
       arr[m].revenue += t.amount;
       const key = t.clientName?.trim().toLowerCase() || t.appointmentId || t.id;
       arr[m].clientsSet.add(key);
     });
-    return arr.map(x => ({
-      monthIdx: x.monthIdx,
-      label: x.label,
+    return arr;
+  };
+
+  // Per-month aggregates (current + previous year combined)
+  const monthsData = useMemo(() => {
+    const cur = aggregateByMonth(incomeTx);
+    const prev = aggregateByMonth(incomeTxPrev);
+    return cur.map((x, i) => ({
+      monthIdx: i,
+      label: MONTH_LABELS[i],
       revenue: Number(x.revenue.toFixed(2)),
       clients: x.clientsSet.size,
+      revenuePrev: Number(prev[i].revenue.toFixed(2)),
+      clientsPrev: prev[i].clientsSet.size,
     }));
-  }, [incomeTx, currentMonth]);
+  }, [incomeTx, incomeTxPrev, currentMonth]);
+
 
   // Per service per month
   const serviceMonthData = useMemo(() => {
@@ -210,16 +219,18 @@ export default function RelatorioIndicadores() {
           <CardContent>
             <div className="w-full h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthsData}>
+                <ComposedChart data={monthsData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="label" className="text-xs" />
                   <YAxis allowDecimals={false} className="text-xs" />
                   <Tooltip
                     contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
-                    formatter={(v: number) => [`${v} cliente(s)`, 'Atendidos']}
+                    formatter={(v: number, name: string) => [`${v} cliente(s)`, name]}
                   />
-                  <Bar dataKey="clients" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="clients" name={`${year}`} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Line type="monotone" dataKey="clientsPrev" name={`${year - 1}`} stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3 }} />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -271,7 +282,7 @@ export default function RelatorioIndicadores() {
           <CardContent>
             <div className="w-full h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthsData}>
+                <ComposedChart data={monthsData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="label" className="text-xs" />
                   <YAxis
@@ -280,10 +291,12 @@ export default function RelatorioIndicadores() {
                   />
                   <Tooltip
                     contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
-                    formatter={(v: number) => [formatCurrency(v), 'Faturamento']}
+                    formatter={(v: number, name: string) => [formatCurrency(v), name]}
                   />
-                  <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="revenue" name={`${year}`} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Line type="monotone" dataKey="revenuePrev" name={`${year - 1}`} stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3 }} />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
