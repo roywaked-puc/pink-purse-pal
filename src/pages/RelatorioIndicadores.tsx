@@ -37,41 +37,50 @@ export default function RelatorioIndicadores() {
     return m;
   }, [appointments]);
 
-  // Filter: business income transactions in current year up to current month
-  const incomeTx = useMemo(() => {
-    return transactions.filter(t => {
+  // Filter: business income transactions for a given year up to current month index
+  const filterIncome = (yr: number) =>
+    transactions.filter(t => {
       const d = new Date(t.date);
       return (
         t.type === 'entrada' &&
         t.scope === 'empresa' &&
-        d.getFullYear() === year &&
+        d.getFullYear() === yr &&
         d.getMonth() <= currentMonth
       );
     });
-  }, [transactions, year, currentMonth]);
 
-  // Per-month aggregates
-  const monthsData = useMemo(() => {
+  const incomeTx = useMemo(() => filterIncome(year), [transactions, year, currentMonth]);
+  const incomeTxPrev = useMemo(() => filterIncome(year - 1), [transactions, year, currentMonth]);
+
+  const aggregateByMonth = (txs: typeof transactions) => {
     const arr = Array.from({ length: currentMonth + 1 }, (_, i) => ({
-      monthIdx: i,
-      label: MONTH_LABELS[i],
       revenue: 0,
       clientsSet: new Set<string>(),
     }));
-    incomeTx.forEach(t => {
+    txs.forEach(t => {
       const m = new Date(t.date).getMonth();
       if (!arr[m]) return;
       arr[m].revenue += t.amount;
       const key = t.clientName?.trim().toLowerCase() || t.appointmentId || t.id;
       arr[m].clientsSet.add(key);
     });
-    return arr.map(x => ({
-      monthIdx: x.monthIdx,
-      label: x.label,
+    return arr;
+  };
+
+  // Per-month aggregates (current + previous year combined)
+  const monthsData = useMemo(() => {
+    const cur = aggregateByMonth(incomeTx);
+    const prev = aggregateByMonth(incomeTxPrev);
+    return cur.map((x, i) => ({
+      monthIdx: i,
+      label: MONTH_LABELS[i],
       revenue: Number(x.revenue.toFixed(2)),
       clients: x.clientsSet.size,
+      revenuePrev: Number(prev[i].revenue.toFixed(2)),
+      clientsPrev: prev[i].clientsSet.size,
     }));
-  }, [incomeTx, currentMonth]);
+  }, [incomeTx, incomeTxPrev, currentMonth]);
+
 
   // Per service per month
   const serviceMonthData = useMemo(() => {
