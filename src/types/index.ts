@@ -70,7 +70,5 @@ export interface UserSettings {
   google_calendar_enabled: boolean;
   google_client_id: string | null;
   google_client_secret: string | null;
-  google_access_token: string | null;
-  google_refresh_token: string | null;
   google_token_expiry: string | null;
 }
