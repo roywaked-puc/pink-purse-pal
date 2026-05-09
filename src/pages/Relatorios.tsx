@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Filter, Download, FileSpreadsheet, CalendarDays } from 'lucide-react';
+import { CalendarIcon, Filter, Download, FileSpreadsheet, CalendarDays, BarChart3 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
@@ -376,7 +376,11 @@ export default function Relatorios() {
         title="Relatorios"
         subtitle="Extrato e resumo financeiro"
         action={
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={() => navigate('/relatorio-indicadores')} size="sm" variant="outline">
+              <BarChart3 className="h-4 w-4 mr-1" />
+              Indicadores
+            </Button>
             <Button onClick={() => navigate('/relatorio-agendamentos')} size="sm" variant="outline">
               <CalendarDays className="h-4 w-4 mr-1" />
               Agendas
