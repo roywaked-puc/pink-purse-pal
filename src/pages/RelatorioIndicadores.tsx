@@ -219,16 +219,18 @@ export default function RelatorioIndicadores() {
           <CardContent>
             <div className="w-full h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthsData}>
+                <ComposedChart data={monthsData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="label" className="text-xs" />
                   <YAxis allowDecimals={false} className="text-xs" />
                   <Tooltip
                     contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
-                    formatter={(v: number) => [`${v} cliente(s)`, 'Atendidos']}
+                    formatter={(v: number, name: string) => [`${v} cliente(s)`, name]}
                   />
-                  <Bar dataKey="clients" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="clients" name={`${year}`} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Line type="monotone" dataKey="clientsPrev" name={`${year - 1}`} stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3 }} />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
