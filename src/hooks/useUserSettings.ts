@@ -9,10 +9,12 @@ export interface UserSettings {
   google_calendar_enabled: boolean;
   google_client_id: string | null;
   google_client_secret: string | null;
-  google_access_token: string | null;
-  google_refresh_token: string | null;
   google_token_expiry: string | null;
 }
+
+// Safe column list — never select OAuth access/refresh tokens client-side.
+const SAFE_COLUMNS =
+  'id, user_id, google_calendar_enabled, google_client_id, google_client_secret, google_token_expiry';
 
 export function useUserSettings() {
   const { user } = useAuth();
@@ -24,15 +26,12 @@ export function useUserSettings() {
 
       const { data, error } = await supabase
         .from('user_settings')
-        .select('*')
+        .select(SAFE_COLUMNS)
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (error) throw sanitizeDbError(error);
-
-      if (!data) {
-        return null;
-      }
+      if (!data) return null;
 
       return {
         id: data.id,
@@ -40,8 +39,6 @@ export function useUserSettings() {
         google_calendar_enabled: data.google_calendar_enabled ?? false,
         google_client_id: (data as any).google_client_id ?? null,
         google_client_secret: (data as any).google_client_secret ?? null,
-        google_access_token: data.google_access_token ?? null,
-        google_refresh_token: data.google_refresh_token ?? null,
         google_token_expiry: data.google_token_expiry ?? null,
       };
     },

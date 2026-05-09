@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
         const tokenData: GoogleTokenResponse = await tokenResponse.json();
         
         if (!tokenResponse.ok) {
-          console.error('Token exchange error:', tokenData);
+          console.error('Token exchange failed for user:', userId, 'status:', tokenResponse.status);
           return new Response(
             JSON.stringify({ error: 'Erro ao trocar código por token' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -339,8 +339,7 @@ Deno.serve(async (req) => {
         }
 
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Calendar API error:', errorData);
+          console.error('Calendar API error for user:', userId, 'status:', response.status);
           return new Response(
             JSON.stringify({ error: 'Erro ao sincronizar com Google Calendar' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -396,7 +395,7 @@ Deno.serve(async (req) => {
         );
     }
   } catch (error: unknown) {
-    console.error('Function error:', error);
+    console.error('Function error type:', error instanceof Error ? error.name : 'unknown');
     const message = error instanceof Error ? error.message : 'Erro interno';
     return new Response(
       JSON.stringify({ error: message }),
@@ -424,7 +423,7 @@ async function refreshAccessToken(supabase: any, userId: string, settings: any):
   const tokenData: GoogleTokenResponse = await tokenResponse.json();
   
   if (!tokenResponse.ok) {
-    console.error('Token refresh error:', tokenData);
+    console.error('Token refresh failed for user:', userId, 'status:', tokenResponse.status);
     throw new Error('Erro ao renovar token de acesso');
   }
 

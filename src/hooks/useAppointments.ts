@@ -8,11 +8,11 @@ import { sanitizeDbError } from '@/lib/sanitizeError';
 async function checkGoogleCalendarConnected(userId: string): Promise<boolean> {
   const { data } = await supabase
     .from('user_settings')
-    .select('google_calendar_enabled, google_access_token')
+    .select('google_calendar_enabled')
     .eq('user_id', userId)
     .single();
   
-  return !!(data?.google_calendar_enabled && data?.google_access_token);
+  return !!data?.google_calendar_enabled;
 }
 
 // Helper function to sync appointment to Google Calendar

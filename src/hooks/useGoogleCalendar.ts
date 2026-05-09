@@ -7,10 +7,7 @@ export function useGoogleCalendar() {
   const { data: settings } = useUserSettings();
   const queryClient = useQueryClient();
 
-  const isConnected = !!(
-    settings?.google_calendar_enabled &&
-    settings?.google_access_token
-  );
+  const isConnected = !!settings?.google_calendar_enabled;
 
   const hasCredentials = !!(
     settings?.google_client_id &&
