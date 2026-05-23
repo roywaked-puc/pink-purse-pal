@@ -14,6 +14,7 @@ import RelatorioAgendamentos from "./pages/RelatorioAgendamentos";
 import RelatorioIndicadores from "./pages/RelatorioIndicadores";
 import Configuracoes from "./pages/Configuracoes";
 import Auth from "./pages/Auth";
+import RecuperarSenha from "./pages/RecuperarSenha";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -41,6 +42,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
+      <Route path="/recuperar-senha" element={<RecuperarSenha />} />
       <Route path="/" element={
         <ProtectedRoute>
           <Index />
