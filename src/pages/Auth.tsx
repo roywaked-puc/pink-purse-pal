@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { passwordSchema, getPasswordStrength } from '@/lib/passwordValidation';
 import { Progress } from '@/components/ui/progress';
 
