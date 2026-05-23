@@ -19,21 +19,10 @@ const formatCurrency = (v: number) =>
 export default function RelatorioIndicadores() {
   const navigate = useNavigate();
   const { data: transactions = [] } = useTransactions();
-  const { appointments } = useApp();
-  const { data: services = [] } = useServices();
 
   const now = new Date();
   const year = now.getFullYear();
   const currentMonth = now.getMonth(); // 0-based
-
-  // Map appointmentId -> serviceId/name
-  const appointmentMap = useMemo(() => {
-    const m = new Map<string, { serviceId?: string; serviceName: string }>();
-    appointments.forEach(a => {
-      m.set(a.id, { serviceId: a.serviceId, serviceName: a.service || 'Sem serviço' });
-    });
-    return m;
-  }, [appointments]);
 
   // Filter: business income transactions for a given year up to current month index
   const filterIncome = (yr: number) =>
@@ -79,56 +68,6 @@ export default function RelatorioIndicadores() {
     }));
   }, [incomeTx, incomeTxPrev, currentMonth]);
 
-
-  // Per service per month
-  const serviceMonthData = useMemo(() => {
-    // Build map serviceName -> color
-    const serviceMeta = new Map<string, { color: string }>();
-    services.forEach(s => {
-      serviceMeta.set(s.description, { color: s.color || 'hsl(var(--primary))' });
-    });
-    const fallbackPalette = [
-      '#7986CB', '#33B679', '#8E24AA', '#E67C73', '#F6BF26',
-      '#F4511E', '#039BE5', '#616161', '#3F51B5', '#0B8043', '#D50000',
-    ];
-
-    // monthIdx -> serviceName -> count(unique clients)
-    const matrix: Record<number, Record<string, Set<string>>> = {};
-    for (let i = 0; i <= currentMonth; i++) matrix[i] = {};
-
-    incomeTx.forEach(t => {
-      const m = new Date(t.date).getMonth();
-      if (m > currentMonth) return;
-      let serviceName = 'Sem serviço';
-      if (t.appointmentId && appointmentMap.has(t.appointmentId)) {
-        serviceName = appointmentMap.get(t.appointmentId)!.serviceName || 'Sem serviço';
-      }
-      if (!matrix[m][serviceName]) matrix[m][serviceName] = new Set();
-      const key = t.clientName?.trim().toLowerCase() || t.appointmentId || t.id;
-      matrix[m][serviceName].add(key);
-    });
-
-    const allServices = new Set<string>();
-    Object.values(matrix).forEach(svcMap => {
-      Object.keys(svcMap).forEach(s => allServices.add(s));
-    });
-    const serviceList = Array.from(allServices);
-
-    const data = Array.from({ length: currentMonth + 1 }, (_, i) => {
-      const row: Record<string, number | string> = { label: MONTH_LABELS[i] };
-      serviceList.forEach(s => {
-        row[s] = matrix[i][s]?.size || 0;
-      });
-      return row;
-    });
-
-    const seriesMeta = serviceList.map((name, idx) => ({
-      name,
-      color: serviceMeta.get(name)?.color || fallbackPalette[idx % fallbackPalette.length],
-    }));
-
-    return { data, seriesMeta };
-  }, [incomeTx, currentMonth, appointmentMap, services]);
 
   // Summary KPIs
   const totals = useMemo(() => {
@@ -231,44 +170,6 @@ export default function RelatorioIndicadores() {
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Clients per service per month */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Clientes por tipo de serviço</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {serviceMonthData.seriesMeta.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                Sem recebimentos vinculados a serviços ainda.
-              </p>
-            ) : (
-              <div className="w-full h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={serviceMonthData.data}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="label" className="text-xs" />
-                    <YAxis allowDecimals={false} className="text-xs" />
-                    <Tooltip
-                      contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    {serviceMonthData.seriesMeta.map(s => (
-                      <Line
-                        key={s.name}
-                        type="monotone"
-                        dataKey={s.name}
-                        stroke={s.color}
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                      />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
           </CardContent>
         </Card>
 
