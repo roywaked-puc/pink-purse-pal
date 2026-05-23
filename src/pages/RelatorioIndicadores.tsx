@@ -3,15 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import {
   Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Legend, ComposedChart,
+  Line, Legend, ComposedChart,
 } from 'recharts';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTransactions } from '@/hooks/useTransactions';
-import { useApp } from '@/contexts/AppContext';
-import { useServices } from '@/hooks/useServices';
 
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
