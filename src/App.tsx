@@ -14,6 +14,7 @@ import RelatorioAgendamentos from "./pages/RelatorioAgendamentos";
 import RelatorioIndicadores from "./pages/RelatorioIndicadores";
 import Configuracoes from "./pages/Configuracoes";
 import Auth from "./pages/Auth";
+import RecuperarSenha from "./pages/RecuperarSenha";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
