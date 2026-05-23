@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signOut,
       updatePassword,
+      resetPassword,
     }}>
       {children}
     </AuthContext.Provider>
