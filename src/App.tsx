@@ -42,7 +42,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
-      <Route path="/" element={
+      <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+      <Route path="/" element=
         <ProtectedRoute>
           <Index />
         </ProtectedRoute>
