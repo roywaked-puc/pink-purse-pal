@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff } from 'lucide-react';
+import { isToday } from 'date-fns';
+import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -8,32 +9,27 @@ import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { AppointmentForm } from '@/components/appointments/AppointmentForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { EmptyState } from '@/components/ds/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { useServices } from '@/hooks/useServices';
 import { Appointment } from '@/types';
 
 const Index = () => {
-  const { 
-    appointments, 
-    getBusinessBalance, 
-    getPersonalBalance, 
+  const {
+    appointments,
+    getBusinessBalance,
+    getPersonalBalance,
     getMonthlyPersonalExpenses,
     deleteAppointment,
-    getClientById
+    getClientById,
   } = useApp();
 
   const { data: services } = useServices();
 
-  const getClientPhone = (clientId: string) => {
-    const client = getClientById(clientId);
-    return client?.phone;
-  };
-
-  const getServiceColor = (serviceId?: string) => {
-    if (!serviceId) return undefined;
-    return services?.find(s => s.id === serviceId)?.color || undefined;
-  };
+  const getClientPhone = (clientId: string) => getClientById(clientId)?.phone;
+  const getServiceColor = (serviceId?: string) =>
+    serviceId ? services?.find((s) => s.id === serviceId)?.color || undefined : undefined;
 
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
@@ -41,7 +37,9 @@ const Index = () => {
   const [deleteAppointmentId, setDeleteAppointmentId] = useState<string | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [balancesVisible, setBalancesVisible] = useState(() => localStorage.getItem('balancesVisible') !== 'false');
+  const [balancesVisible, setBalancesVisible] = useState(
+    () => localStorage.getItem('balancesVisible') !== 'false',
+  );
 
   const toggleBalances = () => {
     const newState = !balancesVisible;
@@ -49,48 +47,50 @@ const Index = () => {
     localStorage.setItem('balancesVisible', String(newState));
   };
 
-  // Filtra agendamentos futuros que ainda precisam de ação (não concluídos OU não pagos)
+  const matchesSearch = (a: Appointment) =>
+    searchQuery === '' || a.clientName.toLowerCase().includes(searchQuery.toLowerCase());
+
+  // Agendamentos de HOJE (todos, independente de status)
+  const todayAppointments = appointments
+    .filter((a) => isToday(new Date(a.date)) && a.confirmationStatus !== 'cancelado' && matchesSearch(a))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Futuros (depois de hoje) que ainda precisam de ação
   const upcomingAppointments = appointments
-    .filter(a => {
-      const matchesSearch = searchQuery === '' || 
-        a.clientName.toLowerCase().includes(searchQuery.toLowerCase());
-      const isFuture = new Date(a.date) >= new Date();
+    .filter((a) => {
+      const d = new Date(a.date);
+      const isFuture = d >= new Date() && !isToday(d);
       const isCompleted = a.confirmationStatus === 'atendido' || a.confirmationStatus === 'cancelado';
       const isPaid = a.paidAmount >= a.amount;
-      // Mostrar se não foi concluído OU não foi pago
-      return matchesSearch && isFuture && (!isCompleted || !isPaid);
+      return matchesSearch(a) && isFuture && (!isCompleted || !isPaid);
     })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    ;
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // Filtra agendamentos passados que ainda precisam de ação (não concluídos OU não pagos, exceto cancelados)
+  // Passados pendentes
   const pendingCompletionAppointments = appointments
-    .filter(a => {
-      const matchesSearch = searchQuery === '' || 
-        a.clientName.toLowerCase().includes(searchQuery.toLowerCase());
-      const isPast = new Date(a.date) < new Date();
+    .filter((a) => {
+      const d = new Date(a.date);
+      const isPast = d < new Date() && !isToday(d);
       const isNotCompleted = a.confirmationStatus === 'pendente' || a.confirmationStatus === 'confirmado';
       const isNotPaid = a.paidAmount < a.amount;
-      // Mostrar se não foi concluído OU não foi pago (exceto cancelados)
-      return matchesSearch && isPast && a.confirmationStatus !== 'cancelado' && (isNotCompleted || isNotPaid);
+      return (
+        matchesSearch(a) &&
+        isPast &&
+        a.confirmationStatus !== 'cancelado' &&
+        (isNotCompleted || isNotPaid)
+      );
     })
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    ;
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const handleEditAppointment = (appointment: Appointment) => {
     setEditingAppointment(appointment);
     setShowAppointmentForm(true);
   };
-
-  const handleDeleteAppointment = (id: string) => {
-    setDeleteAppointmentId(id);
-  };
-
+  const handleDeleteAppointment = (id: string) => setDeleteAppointmentId(id);
   const handleReceiveAppointment = (appointment: Appointment) => {
     setReceivingAppointment(appointment);
     setShowTransactionForm(true);
   };
-
   const confirmDeleteAppointment = () => {
     if (deleteAppointmentId) {
       deleteAppointment(deleteAppointmentId);
@@ -98,11 +98,32 @@ const Index = () => {
     }
   };
 
+  const renderAppointmentList = (list: Appointment[]) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {list.map((appointment, index) => (
+        <div
+          key={appointment.id}
+          style={{ animationDelay: `${index * 80}ms` }}
+          className="animate-slide-up"
+        >
+          <AppointmentPreview
+            appointment={appointment}
+            serviceColor={getServiceColor(appointment.serviceId)}
+            onEdit={handleEditAppointment}
+            onDelete={handleDeleteAppointment}
+            onReceive={handleReceiveAppointment}
+            getClientPhone={getClientPhone}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <MainLayout>
-      <PageHeader 
-        title="Olá! 👋"
-        subtitle="Seu resumo financeiro"
+      <PageHeader
+        title="Meu Dia ☀️"
+        subtitle="Sua agenda e seus números"
         action={
           <button
             onClick={toggleBalances}
@@ -114,7 +135,68 @@ const Index = () => {
         }
       />
 
-      {/* Balance Cards */}
+      {/* Busca */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome do cliente..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      {/* Hoje — o foco do dia */}
+      <section className="mb-6">
+        <h2 className="font-semibold mb-3 flex items-center gap-2">
+          <Sun className="w-5 h-5 text-primary" />
+          Hoje
+        </h2>
+        {todayAppointments.length > 0 ? (
+          renderAppointmentList(todayAppointments)
+        ) : (
+          <EmptyState
+            icon={Sun}
+            title="Nenhum atendimento para hoje"
+            description="Aproveite para organizar a semana ou agendar um cliente."
+            action={
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingAppointment(null);
+                  setShowAppointmentForm(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Novo agendamento
+              </Button>
+            }
+          />
+        )}
+      </section>
+
+      {/* Ações rápidas */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <Button onClick={() => setShowTransactionForm(true)} className="h-12">
+          <Plus className="w-5 h-5 mr-2" />
+          Nova Movimentação
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            setEditingAppointment(null);
+            setShowAppointmentForm(true);
+          }}
+          className="h-12"
+        >
+          <Calendar className="w-5 h-5 mr-2" />
+          Novo Agendamento
+        </Button>
+      </div>
+
+      {/* Saldos */}
       {balancesVisible ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <BalanceCard
@@ -148,101 +230,25 @@ const Index = () => {
         </button>
       )}
 
-      {/* Search */}
-      <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome do cliente..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
+      {/* Próximos */}
+      {upcomingAppointments.length > 0 && (
+        <section className="mb-6">
+          <h2 className="font-semibold mb-3 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            Próximos Agendamentos
+          </h2>
+          {renderAppointmentList(upcomingAppointments)}
+        </section>
+      )}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <Button
-          onClick={() => setShowTransactionForm(true)}
-          className="h-12"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Nova Movimentação
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setEditingAppointment(null);
-            setShowAppointmentForm(true);
-          }}
-          className="h-12"
-        >
-          <Calendar className="w-5 h-5 mr-2" />
-          Novo Agendamento
-        </Button>
-      </div>
-
-      {/* Upcoming Appointments */}
-      <section className="mb-6">
-        <h2 className="font-semibold mb-3 flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-primary" />
-          Próximos Agendamentos
-        </h2>
-        
-        {upcomingAppointments.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {upcomingAppointments.map((appointment, index) => (
-              <div
-                key={appointment.id}
-                style={{ animationDelay: `${index * 100}ms` }}
-                className="animate-slide-up"
-              >
-                <AppointmentPreview
-                  appointment={appointment}
-                  serviceColor={getServiceColor(appointment.serviceId)}
-                  onEdit={handleEditAppointment}
-                  onDelete={handleDeleteAppointment}
-                  onReceive={handleReceiveAppointment}
-                  getClientPhone={getClientPhone}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>Nenhum agendamento próximo</p>
-          </div>
-        )}
-      </section>
-
-      {/* Pending Completion Appointments */}
+      {/* Pendentes de conclusão */}
       {pendingCompletionAppointments.length > 0 && (
         <section>
           <h2 className="font-semibold mb-3 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-amber-500" />
             Pendentes de Conclusão
           </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {pendingCompletionAppointments.map((appointment, index) => (
-              <div
-                key={appointment.id}
-                style={{ animationDelay: `${index * 100}ms` }}
-                className="animate-slide-up"
-              >
-                <AppointmentPreview
-                  appointment={appointment}
-                  serviceColor={getServiceColor(appointment.serviceId)}
-                  onEdit={handleEditAppointment}
-                  onDelete={handleDeleteAppointment}
-                  onReceive={handleReceiveAppointment}
-                  getClientPhone={getClientPhone}
-                />
-              </div>
-            ))}
-          </div>
+          {renderAppointmentList(pendingCompletionAppointments)}
         </section>
       )}
 
