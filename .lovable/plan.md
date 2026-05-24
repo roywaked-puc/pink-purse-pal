@@ -1,64 +1,63 @@
-## Novo Dashboard de Indicadores
+# Roadmap Estratégico — Pink Purse Pal
 
-Adicionar um novo relatório visual ("Indicadores") dentro da seção **Relatórios**, mostrando a evolução de clientes e faturamento ao longo do **ano corrente** (Jan → mês atual).
+Audit em 2026-05. Aplicativo tratado como SaaS para designers de cílios / MEIs.
+Princípio: **agenda + recebimento são o CORE**. Tudo o mais é suporte.
 
-### Onde fica
-- Nova rota `/relatorio-indicadores`
-- Novo card na página **Relatórios** (`src/pages/Relatorios.tsx`), ao lado dos relatórios existentes
+---
 
-### O que será exibido
+## Sprint 1 — Base UX (rápido, alto impacto)
 
-**1. Cards de resumo (topo)**
-- Total de clientes únicos atendidos no ano
-- Faturamento total do ano
-- Variação % vs. mês anterior (clientes e faturamento)
+- [ ] Reorganizar Home como "Meu Dia": agenda de hoje no topo, saldos abaixo
+- [ ] Reordenar BottomNav: Agenda como item central de destaque
+- [ ] Criar componentes de DS reutilizáveis: `StatusBadge`, `EmptyState`
+- [ ] Padronizar uso desses componentes nas telas existentes
 
-**2. Gráfico — Clientes atendidos por mês**
-- Gráfico de barras (Jan a mês atual)
-- Eixo Y: nº de clientes únicos com recebimento no mês
-- Tooltip mostra quantidade exata + variação vs. mês anterior
+## Sprint 2 — Velocidade nas ações CORE
 
-**3. Gráfico — Clientes por tipo de serviço**
-- Gráfico de linhas (uma linha por serviço) ou barras empilhadas, mês a mês
-- Cada serviço usa sua cor cadastrada (paleta Google Calendar já existente)
-- Legenda com nome do serviço
+- [ ] "Concluir" em 1 toque direto no card do agendamento (sem abrir form)
+- [ ] "Receber" em 1 toque com transação pré-preenchida (valor, cliente, conta padrão)
+- [ ] Swipe actions no card (concluir / receber / editar)
+- [ ] Conta padrão configurável em Configurações
 
-**4. Gráfico — Faturamento mês a mês**
-- Gráfico de barras ou área
-- Soma dos recebimentos (transações de entrada da empresa) por mês
-- Linha de tendência/média opcional
+## Sprint 3 — Cliente como ativo
 
-### Base de cálculo (regra acordada)
-"Cliente atendido no mês" = cliente que teve **transação de recebimento** (`transactions` com `type='entrada'`, `scope='empresa'`) no mês.
-- Para o gráfico **por serviço**, usa-se o `appointment_id` da transação para resolver o serviço; transações sem agendamento vinculado entram em "Sem serviço".
-- Cliente único: deduplica por `client_id` (ou `client_name` quando não houver id) dentro do mês.
+- [ ] Ficha do cliente: timeline de atendimentos + total gasto + frequência média
+- [ ] Recorrência sugerida (ex.: manutenção a cada 21 dias) com botão "Reagendar"
+- [ ] Lembrete WhatsApp 1-clique (link `wa.me` com mensagem pré-pronta)
+- [ ] Campo "última visita" e "próxima sugerida" no card do cliente
 
-### Layout
-- Mobile-first, paleta rosa/branco do app
-- Usa `recharts` (já presente em `src/components/ui/chart.tsx`)
-- Header com botão voltar para Relatórios
-- Cards e gráficos em grid responsivo (1 coluna mobile, 2 colunas desktop para os gráficos menores)
+## Sprint 4 — Consolidação técnica
 
-### Detalhes técnicos
+- [ ] Unificar as 3 telas de Relatórios em uma com abas
+- [ ] Migrar `transactions.account` e `transactions.category` para FK
+- [ ] Converter `confirmation_status` e `payment_status` em enums
+- [ ] Quebrar `AppContext` (god context) em contexts menores por domínio
+- [ ] Quebrar `TransactionForm` e `AppointmentForm` (>470 linhas cada)
+- [ ] Tabela `appointment_payments` para pagamento parcial limpo
 
-```text
-Arquivos a criar:
-- src/pages/RelatorioIndicadores.tsx       (página principal)
-- src/components/relatorios/IndicadoresCharts.tsx (3 gráficos)
+## Sprint 5 — Design System maduro
 
-Arquivos a editar:
-- src/App.tsx                 → registrar rota protegida
-- src/pages/Relatorios.tsx    → adicionar card "Indicadores"
-```
+- [ ] Pasta `src/components/ds/` com `FormSheet`, `MoneyDisplay`, `StatusBadge`, `EmptyState`, `SectionHeader`
+- [ ] Loader/skeleton unificado por contexto (lista, card, form)
+- [ ] Tokens de espaçamento e tipografia revisados no `index.css`
 
-Fontes de dados (hooks já existentes):
-- `useTransactions()` — base para clientes atendidos e faturamento
-- `useAppointments()` — para resolver `service_id` via `appointment_id`
-- `useServices()` — nome e cor de cada serviço
+## Sprint 6 — Crescimento
 
-Cálculos feitos no cliente com `useMemo`, agrupando por mês (`date-fns` já disponível). Sem novas tabelas nem migrations.
+- [ ] Onboarding em 3 passos (conta padrão, primeiro serviço, primeiro cliente)
+- [ ] Programa de fidelidade simples (selo a cada X atendimentos)
+- [ ] Exportação PDF de relatórios
+- [ ] Backup/restauração de dados do usuário
 
-### Fora do escopo
-- Exportação CSV/PDF deste relatório (pode ser adicionada depois)
-- Comparativo entre anos
-- Filtros avançados por serviço/cliente
+---
+
+## MVP v1.0 (corte mínimo para "produto vendável")
+
+Home "Meu Dia" · Ficha de cliente · Recorrência · Lembrete WhatsApp ·
+Pagamento parcial · Relatórios unificados · Onboarding · Fidelidade simples.
+
+---
+
+## Histórico
+
+- v0: Dashboard de Indicadores entregue (`/relatorio-indicadores`)
+- v0: Autenticação com mostrar senha + recuperação de senha
