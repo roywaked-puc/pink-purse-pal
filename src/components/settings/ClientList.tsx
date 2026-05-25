@@ -210,6 +210,20 @@ export function ClientList() {
             </div>
 
             <div className="space-y-2">
+              <Label>Retorno sugerido (dias)</Label>
+              <Input
+                value={recurrenceDays}
+                onChange={(e) => setRecurrenceDays(e.target.value.replace(/\D/g, ''))}
+                placeholder="Ex: 21"
+                type="text"
+                inputMode="numeric"
+              />
+              <p className="text-xs text-muted-foreground">
+                Usado para sugerir o próximo agendamento na ficha do cliente.
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label>Observação</Label>
               <Textarea
                 value={notes}
