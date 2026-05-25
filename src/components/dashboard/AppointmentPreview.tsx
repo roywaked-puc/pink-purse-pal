@@ -223,6 +223,17 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
               </a>
             </Button>
           )}
+          {canComplete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleQuickComplete}
+              className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
+              title={hasBalance ? 'Concluir e receber' : 'Marcar como atendido'}
+            >
+              <CheckCheck className="w-4 h-4" />
+            </Button>
+          )}
           {hasBalance && onReceive && (
             <Button
               variant="ghost"
