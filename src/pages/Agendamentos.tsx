@@ -288,10 +288,27 @@ const Agendamentos = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleReceive(appointment)}
-                className="h-8 w-8 text-green-600 hover:text-green-700"
+                onClick={() => {
+                  if (appointment.confirmationStatus !== 'atendido') {
+                    updateConfirmationStatus({ id: appointment.id, status: 'atendido' });
+                  }
+                  handleReceive(appointment);
+                }}
+                className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
+                title="Concluir e receber"
               >
                 <DollarSign className="w-4 h-4" />
+              </Button>
+            )}
+            {!hasBalance && appointment.confirmationStatus !== 'atendido' && appointment.confirmationStatus !== 'cancelado' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => updateConfirmationStatus({ id: appointment.id, status: 'atendido' })}
+                className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
+                title="Marcar como atendido"
+              >
+                <CheckCheck className="w-4 h-4" />
               </Button>
             )}
             {canDelete && (
