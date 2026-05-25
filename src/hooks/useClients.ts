@@ -11,19 +11,20 @@ export function useClients() {
     queryKey: ['clients', user?.id],
     queryFn: async (): Promise<Client[]> => {
       if (!user) return [];
-      
+
       const { data, error } = await supabase
         .from('clients')
         .select('*')
         .order('name');
-      
+
       if (error) throw sanitizeDbError(error);
-      
-      return data.map(c => ({
+
+      return data.map((c: any) => ({
         id: c.id,
         name: c.name,
         phone: c.phone,
         notes: c.notes || undefined,
+        recurrenceDays: c.recurrence_days ?? undefined,
       }));
     },
     enabled: !!user,
@@ -37,7 +38,7 @@ export function useAddClient() {
   return useMutation({
     mutationFn: async (client: Omit<Client, 'id'>): Promise<string> => {
       if (!user) throw new Error('Not authenticated');
-      
+
       const { data, error } = await supabase
         .from('clients')
         .insert({
@@ -45,10 +46,11 @@ export function useAddClient() {
           name: client.name,
           phone: client.phone,
           notes: client.notes,
-        })
+          recurrence_days: client.recurrenceDays ?? null,
+        } as any)
         .select('id')
         .single();
-      
+
       if (error) throw sanitizeDbError(error);
       return data.id;
     },
@@ -69,9 +71,10 @@ export function useUpdateClient() {
           name: client.name,
           phone: client.phone,
           notes: client.notes,
-        })
+          recurrence_days: client.recurrenceDays ?? null,
+        } as any)
         .eq('id', id);
-      
+
       if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {
@@ -89,7 +92,7 @@ export function useDeleteClient() {
         .from('clients')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw sanitizeDbError(error);
     },
     onSuccess: () => {

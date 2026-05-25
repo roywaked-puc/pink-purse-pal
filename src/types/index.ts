@@ -23,6 +23,7 @@ export interface Client {
   name: string;
   phone: string;
   notes?: string;
+  recurrenceDays?: number;
 }
 
 export interface Appointment {

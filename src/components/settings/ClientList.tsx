@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, User, Phone, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Pencil, Trash2, User, Phone, FileText, Repeat, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,11 +31,13 @@ export function ClientList() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
+  const [recurrenceDays, setRecurrenceDays] = useState<string>('');
 
   const resetForm = () => {
     setName('');
     setPhone('');
     setNotes('');
+    setRecurrenceDays('');
     setEditingClient(null);
   };
 
@@ -48,6 +51,7 @@ export function ClientList() {
     setName(client.name);
     setPhone(client.phone);
     setNotes(client.notes || '');
+    setRecurrenceDays(client.recurrenceDays ? String(client.recurrenceDays) : '');
     setFormOpen(true);
   };
 
@@ -64,19 +68,20 @@ export function ClientList() {
       return;
     }
 
+    const recurrence = recurrenceDays.trim() ? parseInt(recurrenceDays, 10) : undefined;
+    const payload = {
+      name: name.trim(),
+      phone,
+      notes: notes.trim() || undefined,
+      recurrenceDays: recurrence && recurrence > 0 ? recurrence : undefined,
+    };
+
     try {
       if (editingClient) {
-        await updateClient.mutateAsync({
-          id: editingClient.id,
-          client: { name: name.trim(), phone, notes: notes.trim() || undefined },
-        });
+        await updateClient.mutateAsync({ id: editingClient.id, client: payload });
         toast.success('Cliente atualizado');
       } else {
-        await addClient.mutateAsync({
-          name: name.trim(),
-          phone,
-          notes: notes.trim() || undefined,
-        });
+        await addClient.mutateAsync(payload);
         toast.success('Cliente adicionado');
       }
       setFormOpen(false);
@@ -119,15 +124,27 @@ export function ClientList() {
               key={client.id}
               className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
             >
-              <div className="flex-1 min-w-0">
+              <Link
+                to={`/cliente/${client.id}`}
+                className="flex-1 min-w-0 group"
+              >
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium truncate">{client.name}</span>
+                  <span className="font-medium truncate group-hover:text-primary transition-colors">{client.name}</span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 {client.phone && (
                   <div className="flex items-center gap-2 mt-1">
                     <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                     <span className="text-sm text-muted-foreground">{client.phone}</span>
+                  </div>
+                )}
+                {client.recurrenceDays && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Repeat className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground">
+                      Retorno a cada {client.recurrenceDays} dias
+                    </span>
                   </div>
                 )}
                 {client.notes && (
@@ -138,7 +155,7 @@ export function ClientList() {
                     </span>
                   </div>
                 )}
-              </div>
+              </Link>
               <div className="flex gap-1 ml-2">
                 <Button
                   variant="ghost"
@@ -190,6 +207,20 @@ export function ClientList() {
                 placeholder="(11) 99999-9999"
                 type="tel"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Retorno sugerido (dias)</Label>
+              <Input
+                value={recurrenceDays}
+                onChange={(e) => setRecurrenceDays(e.target.value.replace(/\D/g, ''))}
+                placeholder="Ex: 21"
+                type="text"
+                inputMode="numeric"
+              />
+              <p className="text-xs text-muted-foreground">
+                Usado para sugerir o próximo agendamento na ficha do cliente.
+              </p>
             </div>
 
             <div className="space-y-2">
