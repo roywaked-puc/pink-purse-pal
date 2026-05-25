@@ -68,19 +68,20 @@ export function ClientList() {
       return;
     }
 
+    const recurrence = recurrenceDays.trim() ? parseInt(recurrenceDays, 10) : undefined;
+    const payload = {
+      name: name.trim(),
+      phone,
+      notes: notes.trim() || undefined,
+      recurrenceDays: recurrence && recurrence > 0 ? recurrence : undefined,
+    };
+
     try {
       if (editingClient) {
-        await updateClient.mutateAsync({
-          id: editingClient.id,
-          client: { name: name.trim(), phone, notes: notes.trim() || undefined },
-        });
+        await updateClient.mutateAsync({ id: editingClient.id, client: payload });
         toast.success('Cliente atualizado');
       } else {
-        await addClient.mutateAsync({
-          name: name.trim(),
-          phone,
-          notes: notes.trim() || undefined,
-        });
+        await addClient.mutateAsync(payload);
         toast.success('Cliente adicionado');
       }
       setFormOpen(false);
