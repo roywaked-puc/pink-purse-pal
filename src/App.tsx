@@ -84,6 +84,11 @@ function AppRoutes() {
           <Configuracoes />
         </ProtectedRoute>
       } />
+      <Route path="/cliente/:id" element={
+        <ProtectedRoute>
+          <ClienteFicha />
+        </ProtectedRoute>
+      } />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
