@@ -156,7 +156,16 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
 
       <div className="flex items-center gap-2 mb-2">
         <User className="w-4 h-4 text-muted-foreground" />
-        <span className="font-medium">{appointment.clientName}</span>
+        {appointment.clientId ? (
+          <Link
+            to={`/cliente/${appointment.clientId}`}
+            className="font-medium hover:text-primary hover:underline transition-colors"
+          >
+            {appointment.clientName}
+          </Link>
+        ) : (
+          <span className="font-medium">{appointment.clientName}</span>
+        )}
       </div>
 
       {appointment.notes && (
