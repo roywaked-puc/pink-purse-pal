@@ -4,6 +4,7 @@ import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, C
 import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
   pendente: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Pendente' },
