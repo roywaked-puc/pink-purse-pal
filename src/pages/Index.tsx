@@ -38,7 +38,7 @@ const Index = () => {
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [balancesVisible, setBalancesVisible] = useState(
-    () => localStorage.getItem('balancesVisible') !== 'false',
+    () => localStorage.getItem('balancesVisible') === 'true',
   );
 
   const toggleBalances = () => {
