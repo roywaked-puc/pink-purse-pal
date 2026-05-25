@@ -124,15 +124,27 @@ export function ClientList() {
               key={client.id}
               className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
             >
-              <div className="flex-1 min-w-0">
+              <Link
+                to={`/cliente/${client.id}`}
+                className="flex-1 min-w-0 group"
+              >
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium truncate">{client.name}</span>
+                  <span className="font-medium truncate group-hover:text-primary transition-colors">{client.name}</span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 {client.phone && (
                   <div className="flex items-center gap-2 mt-1">
                     <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                     <span className="text-sm text-muted-foreground">{client.phone}</span>
+                  </div>
+                )}
+                {client.recurrenceDays && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Repeat className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground">
+                      Retorno a cada {client.recurrenceDays} dias
+                    </span>
                   </div>
                 )}
                 {client.notes && (
@@ -143,7 +155,7 @@ export function ClientList() {
                     </span>
                   </div>
                 )}
-              </div>
+              </Link>
               <div className="flex gap-1 ml-2">
                 <Button
                   variant="ghost"
