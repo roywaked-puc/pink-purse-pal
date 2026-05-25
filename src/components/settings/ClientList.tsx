@@ -51,6 +51,7 @@ export function ClientList() {
     setName(client.name);
     setPhone(client.phone);
     setNotes(client.notes || '');
+    setRecurrenceDays(client.recurrenceDays ? String(client.recurrenceDays) : '');
     setFormOpen(true);
   };
 
