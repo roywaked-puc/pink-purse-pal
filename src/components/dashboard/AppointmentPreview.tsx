@@ -4,6 +4,7 @@ import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, C
 import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
   pendente: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Pendente' },
@@ -77,11 +78,13 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
 };
 
 export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
+  const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
   const hasBalance = appointment.paidAmount < appointment.amount;
   const canDelete = appointment.paidAmount === 0;
+  const canComplete = appointment.confirmationStatus !== 'atendido' && appointment.confirmationStatus !== 'cancelado';
   const confirmationConfig = confirmationStatusConfig[appointment.confirmationStatus];
   const ConfirmationIcon = confirmationConfig.icon;
 
@@ -89,6 +92,14 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const hasPhone = clientPhone && clientPhone.length > 0;
   const cleanPhone = clientPhone?.replace(/\D/g, '') || '';
   const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment)}`;
+
+  const handleQuickComplete = () => {
+    updateStatus({ id: appointment.id, status: 'atendido' });
+    if (hasBalance && onReceive) {
+      // abre o form de recebimento já pré-preenchido
+      onReceive(appointment);
+    }
+  };
 
   return (
     <div 
@@ -210,6 +221,17 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
               <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="w-4 h-4" />
               </a>
+            </Button>
+          )}
+          {canComplete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleQuickComplete}
+              className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
+              title={hasBalance ? 'Concluir e receber' : 'Marcar como atendido'}
+            >
+              <CheckCheck className="w-4 h-4" />
             </Button>
           )}
           {hasBalance && onReceive && (
