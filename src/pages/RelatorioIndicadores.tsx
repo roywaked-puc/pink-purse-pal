@@ -16,7 +16,9 @@ const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'S
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-export default function RelatorioIndicadores() {
+interface Props { embedded?: boolean }
+
+export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
   const navigate = useNavigate();
   const { data: transactions = [] } = useTransactions();
 
