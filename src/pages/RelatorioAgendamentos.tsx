@@ -560,6 +560,6 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </Wrapper>
   );
 }
