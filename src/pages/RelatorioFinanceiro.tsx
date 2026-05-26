@@ -629,6 +629,6 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </Wrapper>
   );
 }
