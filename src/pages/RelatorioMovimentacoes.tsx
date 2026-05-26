@@ -391,18 +391,26 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
     toast({ title: 'Exportação concluída', description: 'PDF gerado com sucesso.' });
   };
 
+  const Wrapper = embedded
+    ? ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+    : ({ children }: { children: React.ReactNode }) => (
+        <MainLayout>
+          <PageHeader
+            title="Relatório de Movimentações"
+            subtitle="Relatório detalhado com dados de agendamentos"
+            action={
+              <Button variant="ghost" size="sm" onClick={() => navigate('/movimentacoes')}>
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Voltar
+              </Button>
+            }
+          />
+          {children}
+        </MainLayout>
+      );
+
   return (
-    <MainLayout>
-      <PageHeader 
-        title="Relatório de Movimentações"
-        subtitle="Relatório detalhado com dados de agendamentos"
-        action={
-          <Button variant="ghost" size="sm" onClick={() => navigate('/movimentacoes')}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Voltar
-          </Button>
-        }
-      />
+    <Wrapper>
 
       <div className="space-y-4">
         {/* Filters */}
