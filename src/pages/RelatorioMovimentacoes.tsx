@@ -73,7 +73,9 @@ const getAccountIdByName = (accountName: string, accounts: { id: string; name: s
   return account?.id || null;
 };
 
-export default function RelatorioMovimentacoes() {
+interface Props { embedded?: boolean }
+
+export default function RelatorioMovimentacoes({ embedded = false }: Props = {}) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { transactions, appointments, categories, accounts, clients } = useApp();
