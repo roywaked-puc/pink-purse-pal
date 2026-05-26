@@ -109,17 +109,8 @@ export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
 
   return (
     <MainLayout>
-      <PageHeader
-        title="Indicadores"
-        subtitle={`Evolução de ${year}`}
-        action={
-          <Button variant="outline" size="sm" onClick={() => navigate('/relatorios')}>
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Voltar
-          </Button>
-        }
-      />
-
+  const body = (
+    <>
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card>
@@ -203,6 +194,24 @@ export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
           </CardContent>
         </Card>
       </div>
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <MainLayout>
+      <PageHeader
+        title="Indicadores"
+        subtitle={`Evolução de ${year}`}
+        action={
+          <Button variant="outline" size="sm" onClick={() => navigate('/relatorios')}>
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Voltar
+          </Button>
+        }
+      />
+      {body}
     </MainLayout>
   );
 }
