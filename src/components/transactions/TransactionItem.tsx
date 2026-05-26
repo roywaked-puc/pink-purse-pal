@@ -5,19 +5,13 @@ import { Transaction } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
+import { MoneyDisplay } from '@/components/ds/MoneyDisplay';
 
 interface TransactionItemProps {
   transaction: Transaction;
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
 }
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
 
 const typeConfig = {
   entrada: { icon: ArrowUpCircle, label: 'Entrada', color: 'text-success' },
@@ -70,9 +64,12 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
               <span>Vinculado a agendamento (só pode excluir)</span>
             </div>
           )}
-          <p className={cn("font-semibold mt-1", config.color)}>
-            {transaction.type === 'saida' ? '-' : ''}{formatCurrency(transaction.amount)}
-          </p>
+          <MoneyDisplay
+            value={transaction.type === 'saida' ? -transaction.amount : transaction.amount}
+            variant={transaction.type === 'saida' ? 'negative' : 'positive'}
+            size="md"
+            className="mt-1 block"
+          />
         </div>
         <div className="flex gap-1">
           {!isLinkedToAppointment && (
