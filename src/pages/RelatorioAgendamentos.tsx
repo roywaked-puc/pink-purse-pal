@@ -286,28 +286,50 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
     });
   };
 
-  return (
-    <MainLayout>
-      <PageHeader
-        title="Relatório de Agendamentos"
-        subtitle="Análise detalhada do período"
-        action={
-          <div className="flex gap-2">
+  const header = (
+    <PageHeader
+      title="Relatório de Agendamentos"
+      subtitle="Análise detalhada do período"
+      action={
+        <div className="flex gap-2">
+          {!embedded && (
             <Button onClick={() => navigate('/relatorios')} size="sm" variant="ghost">
               <ArrowLeft className="h-4 w-4 mr-1" />
               Voltar
             </Button>
-            <Button onClick={exportToCSV} size="sm" variant="outline">
-              <FileText className="h-4 w-4 mr-1" />
-              CSV
-            </Button>
-            <Button onClick={exportToPDF} size="sm" variant="outline">
-              <Download className="h-4 w-4 mr-1" />
-              PDF
-            </Button>
-          </div>
-        }
-      />
+          )}
+          <Button onClick={exportToCSV} size="sm" variant="outline">
+            <FileText className="h-4 w-4 mr-1" />
+            CSV
+          </Button>
+          <Button onClick={exportToPDF} size="sm" variant="outline">
+            <Download className="h-4 w-4 mr-1" />
+            PDF
+          </Button>
+        </div>
+      }
+    />
+  );
+
+  const exportButtons = (
+    <div className="flex gap-2 justify-end">
+      <Button onClick={exportToCSV} size="sm" variant="outline">
+        <FileText className="h-4 w-4 mr-1" /> CSV
+      </Button>
+      <Button onClick={exportToPDF} size="sm" variant="outline">
+        <Download className="h-4 w-4 mr-1" /> PDF
+      </Button>
+    </div>
+  );
+
+  const Wrapper = embedded
+    ? ({ children }: { children: React.ReactNode }) => <div>{embedded && exportButtons}{children}</div>
+    : ({ children }: { children: React.ReactNode }) => (
+        <MainLayout>{header}{children}</MainLayout>
+      );
+
+  return (
+    <Wrapper>
 
       <div className="space-y-4">
         {/* Filters */}
