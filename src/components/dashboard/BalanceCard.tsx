@@ -1,21 +1,16 @@
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
+import { MoneyDisplay } from '@/components/ds/MoneyDisplay';
 
 interface BalanceCardProps {
   title: string;
   value: number;
   icon: LucideIcon;
   variant?: 'primary' | 'secondary' | 'accent';
+  hidden?: boolean;
 }
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
-
-export function BalanceCard({ title, value, icon: Icon, variant = 'primary' }: BalanceCardProps) {
+export function BalanceCard({ title, value, icon: Icon, variant = 'primary', hidden }: BalanceCardProps) {
   return (
     <div
       className={cn(
@@ -43,7 +38,7 @@ export function BalanceCard({ title, value, icon: Icon, variant = 'primary' }: B
           {title}
         </span>
       </div>
-      <p className="text-2xl font-bold">{formatCurrency(value)}</p>
+      <MoneyDisplay value={value} hidden={hidden} size="xl" className="font-bold" />
     </div>
   );
 }
