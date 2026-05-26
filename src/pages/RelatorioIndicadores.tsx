@@ -16,7 +16,9 @@ const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'S
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-export default function RelatorioIndicadores() {
+interface Props { embedded?: boolean }
+
+export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
   const navigate = useNavigate();
   const { data: transactions = [] } = useTransactions();
 
@@ -105,19 +107,8 @@ export default function RelatorioIndicadores() {
     );
   };
 
-  return (
-    <MainLayout>
-      <PageHeader
-        title="Indicadores"
-        subtitle={`Evolução de ${year}`}
-        action={
-          <Button variant="outline" size="sm" onClick={() => navigate('/relatorios')}>
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Voltar
-          </Button>
-        }
-      />
-
+  const body = (
+    <>
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card>
@@ -201,6 +192,24 @@ export default function RelatorioIndicadores() {
           </CardContent>
         </Card>
       </div>
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <MainLayout>
+      <PageHeader
+        title="Indicadores"
+        subtitle={`Evolução de ${year}`}
+        action={
+          <Button variant="outline" size="sm" onClick={() => navigate('/relatorios')}>
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Voltar
+          </Button>
+        }
+      />
+      {body}
     </MainLayout>
   );
 }

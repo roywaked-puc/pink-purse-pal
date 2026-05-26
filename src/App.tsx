@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Movimentacoes from "./pages/Movimentacoes";
 import Agendamentos from "./pages/Agendamentos";
 import Relatorios from "./pages/Relatorios";
+import RelatorioFinanceiro from "./pages/RelatorioFinanceiro";
 import RelatorioMovimentacoes from "./pages/RelatorioMovimentacoes";
 import RelatorioAgendamentos from "./pages/RelatorioAgendamentos";
 import RelatorioIndicadores from "./pages/RelatorioIndicadores";

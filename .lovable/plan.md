@@ -28,9 +28,9 @@ Princípio: **agenda + recebimento são o CORE**. Tudo o mais é suporte.
 
 ## Sprint 4 — Consolidação técnica
 
-- [ ] Unificar as 3 telas de Relatórios em uma com abas
-- [ ] Migrar `transactions.account` e `transactions.category` para FK
-- [ ] Converter `confirmation_status` e `payment_status` em enums
+- [x] Unificar as 3 telas de Relatórios em uma com abas
+- [x] Adicionar FK `account_id` e `category_id` em `transactions` (mantidos campos texto para retrocompat)
+- [x] Converter `confirmation_status` e `payment_status` em enums Postgres
 - [ ] Quebrar `AppContext` (god context) em contexts menores por domínio
 - [ ] Quebrar `TransactionForm` e `AppointmentForm` (>470 linhas cada)
 - [ ] Tabela `appointment_payments` para pagamento parcial limpo

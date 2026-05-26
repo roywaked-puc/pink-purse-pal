@@ -46,7 +46,7 @@ export type Database = {
           amount: number
           client_id: string | null
           client_name: string
-          confirmation_status: string
+          confirmation_status: Database["public"]["Enums"]["confirmation_status_enum"]
           created_at: string
           date: string
           duration: number
@@ -54,7 +54,7 @@ export type Database = {
           id: string
           notes: string | null
           paid_amount: number
-          payment_status: string
+          payment_status: Database["public"]["Enums"]["payment_status_enum"]
           service: string
           service_id: string | null
           user_id: string
@@ -63,7 +63,7 @@ export type Database = {
           amount?: number
           client_id?: string | null
           client_name: string
-          confirmation_status?: string
+          confirmation_status?: Database["public"]["Enums"]["confirmation_status_enum"]
           created_at?: string
           date: string
           duration?: number
@@ -71,7 +71,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_amount?: number
-          payment_status?: string
+          payment_status?: Database["public"]["Enums"]["payment_status_enum"]
           service: string
           service_id?: string | null
           user_id: string
@@ -80,7 +80,7 @@ export type Database = {
           amount?: number
           client_id?: string | null
           client_name?: string
-          confirmation_status?: string
+          confirmation_status?: Database["public"]["Enums"]["confirmation_status_enum"]
           created_at?: string
           date?: string
           duration?: number
@@ -88,7 +88,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_amount?: number
-          payment_status?: string
+          payment_status?: Database["public"]["Enums"]["payment_status_enum"]
           service?: string
           service_id?: string | null
           user_id?: string
@@ -203,9 +203,11 @@ export type Database = {
       transactions: {
         Row: {
           account: string
+          account_id: string | null
           amount: number
           appointment_id: string | null
           category: string
+          category_id: string | null
           client_name: string | null
           created_at: string
           date: string
@@ -219,9 +221,11 @@ export type Database = {
         }
         Insert: {
           account: string
+          account_id?: string | null
           amount?: number
           appointment_id?: string | null
           category: string
+          category_id?: string | null
           client_name?: string | null
           created_at?: string
           date: string
@@ -235,9 +239,11 @@ export type Database = {
         }
         Update: {
           account?: string
+          account_id?: string | null
           amount?: number
           appointment_id?: string | null
           category?: string
+          category_id?: string | null
           client_name?: string | null
           created_at?: string
           date?: string
@@ -251,10 +257,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transactions_appointment_id_fkey"
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -306,7 +326,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      confirmation_status_enum:
+        | "pendente"
+        | "confirmado"
+        | "atendido"
+        | "cancelado"
+      payment_status_enum: "pago" | "nao_pago" | "sinal"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -433,6 +458,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      confirmation_status_enum: [
+        "pendente",
+        "confirmado",
+        "atendido",
+        "cancelado",
+      ],
+      payment_status_enum: ["pago", "nao_pago", "sinal"],
+    },
   },
 } as const
