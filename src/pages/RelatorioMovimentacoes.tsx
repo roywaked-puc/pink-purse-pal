@@ -703,6 +703,6 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </Wrapper>
   );
 }
