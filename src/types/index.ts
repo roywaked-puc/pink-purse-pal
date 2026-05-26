@@ -9,7 +9,9 @@ export interface Transaction {
   type: TransactionType;
   scope: TransactionScope;
   category: string;
+  categoryId?: string;
   account: string;
+  accountId?: string;
   amount: number;
   grossAmount?: number; // Valor bruto (antes da taxa de operadora)
   description?: string;
