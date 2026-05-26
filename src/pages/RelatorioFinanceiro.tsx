@@ -22,7 +22,9 @@ import { cn } from '@/lib/utils';
 
 type ScopeFilter = 'todos' | 'empresa' | 'pessoal';
 
-export default function Relatorios() {
+interface Props { embedded?: boolean }
+
+export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
   const navigate = useNavigate();
   const { data: transactions = [] } = useTransactions();
   const { data: accounts = [] } = useAccounts();
