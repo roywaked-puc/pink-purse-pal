@@ -372,32 +372,38 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
 
   const totalGeral = (totals.empresa.entradas + totals.pessoal.entradas) - (totals.empresa.saidas + totals.pessoal.saidas);
 
-  return (
-    <MainLayout>
-      <PageHeader
-        title="Relatorios"
-        subtitle="Extrato e resumo financeiro"
-        action={
-          <div className="flex gap-2 flex-wrap">
-            <Button onClick={() => navigate('/relatorio-indicadores')} size="sm" variant="outline">
-              <BarChart3 className="h-4 w-4 mr-1" />
-              Indicadores
-            </Button>
-            <Button onClick={() => navigate('/relatorio-agendamentos')} size="sm" variant="outline">
-              <CalendarDays className="h-4 w-4 mr-1" />
-              Agendas
-            </Button>
-            <Button onClick={() => navigate('/relatorio-movimentacoes')} size="sm" variant="outline">
-              <FileSpreadsheet className="h-4 w-4 mr-1" />
-              Movim.
-            </Button>
+  const header = (
+    <PageHeader
+      title="Relatorios"
+      subtitle="Extrato e resumo financeiro"
+      action={
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={exportToPDF} size="sm" variant="outline">
+            <Download className="h-4 w-4 mr-1" />
+            PDF
+          </Button>
+        </div>
+      }
+    />
+  );
+
+  const Wrapper = embedded
+    ? ({ children }: { children: React.ReactNode }) => (
+        <div>
+          <div className="flex justify-end mb-2">
             <Button onClick={exportToPDF} size="sm" variant="outline">
-              <Download className="h-4 w-4 mr-1" />
-              PDF
+              <Download className="h-4 w-4 mr-1" /> PDF
             </Button>
           </div>
-        }
-      />
+          {children}
+        </div>
+      )
+    : ({ children }: { children: React.ReactNode }) => (
+        <MainLayout>{header}{children}</MainLayout>
+      );
+
+  return (
+    <Wrapper>
 
       <div className="space-y-4">
         {/* Filters */}
