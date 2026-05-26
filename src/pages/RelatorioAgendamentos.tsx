@@ -29,7 +29,9 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ConfirmationStatus, PaymentStatus } from '@/types';
 
-export default function RelatorioAgendamentos() {
+interface Props { embedded?: boolean }
+
+export default function RelatorioAgendamentos({ embedded = false }: Props = {}) {
   const navigate = useNavigate();
   const { data: appointments = [] } = useAppointments();
   const { data: clients = [] } = useClients();
