@@ -107,8 +107,6 @@ export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
     );
   };
 
-  return (
-    <MainLayout>
   const body = (
     <>
       {/* Summary cards */}
