@@ -203,9 +203,11 @@ export type Database = {
       transactions: {
         Row: {
           account: string
+          account_id: string | null
           amount: number
           appointment_id: string | null
           category: string
+          category_id: string | null
           client_name: string | null
           created_at: string
           date: string
@@ -219,9 +221,11 @@ export type Database = {
         }
         Insert: {
           account: string
+          account_id?: string | null
           amount?: number
           appointment_id?: string | null
           category: string
+          category_id?: string | null
           client_name?: string | null
           created_at?: string
           date: string
@@ -235,9 +239,11 @@ export type Database = {
         }
         Update: {
           account?: string
+          account_id?: string | null
           amount?: number
           appointment_id?: string | null
           category?: string
+          category_id?: string | null
           client_name?: string | null
           created_at?: string
           date?: string
@@ -251,10 +257,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transactions_appointment_id_fkey"
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
