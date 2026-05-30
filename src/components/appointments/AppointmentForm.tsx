@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Appointment, PaymentStatus, ConfirmationStatus, Client, Service } from '@/types';
 import { useApp } from '@/contexts/AppContext';
+import { useUpdateAppointment, useAddAppointment } from '@/hooks/useAppointments';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,7 +49,9 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed }: AppointmentFormProps) {
-  const { appointments, addAppointment, updateAppointment, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { appointments, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
+  const { mutateAsync: addAppointmentAsync } = useAddAppointment();
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('10:00');
   const [clientName, setClientName] = useState('');
@@ -235,22 +238,32 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       notes: notes.trim() || undefined,
     };
 
-    if (appointment) {
-      updateAppointment(appointment.id, data);
-      // Se foi mudado para "atendido" e antes não era, dispara callback
-      // NÃO fecha o form aqui - deixa o callback fazer isso
-      if (confirmationStatus === 'atendido' && appointment.confirmationStatus !== 'atendido' && onAttendanceConfirmed) {
-        const updatedAppointment = { ...appointment, ...data, id: appointment.id };
-        onAttendanceConfirmed(updatedAppointment);
-        resetForm();
-        return; // Não fecha o form aqui, deixa o callback fazer
-      }
-    } else {
-      addAppointment(data);
-    }
+    try {
+      if (appointment) {
+        const wasAtendido = appointment.confirmationStatus === 'atendido';
+        const becameAtendido = confirmationStatus === 'atendido' && !wasAtendido;
 
-    onOpenChange(false);
-    resetForm();
+        await updateAppointmentAsync({ id: appointment.id, appointment: data });
+
+        if (becameAtendido && onAttendanceConfirmed) {
+          const updated = { ...appointment, ...data, id: appointment.id };
+          onOpenChange(false);
+          resetForm();
+          // Pequeno delay para garantir que o Dialog feche antes de abrir o prÃ³ximo
+          setTimeout(() => onAttendanceConfirmed(updated), 150);
+          return;
+        }
+      } else {
+        await addAppointmentAsync(data);
+      }
+
+      onOpenChange(false);
+      resetForm();
+    } catch (err: any) {
+      toast.error('Erro ao salvar agendamento', {
+        description: err?.message || 'Tente novamente.',
+      });
+    }
   };
 
   return (

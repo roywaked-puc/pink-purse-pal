@@ -170,6 +170,11 @@ const Agendamentos = () => {
     triggerPostAttendance(apt);
   };
 
+  // Disparado pelo formulÃ¡rio: status jÃ¡ salvo, apenas abrir a sequÃªncia fotos/retorno
+  const handleAttendanceFromForm = (apt: Appointment) => {
+    triggerPostAttendance(apt);
+  };
+
 
 
   const renderAppointment = (appointment: Appointment, index: number) => {
@@ -490,8 +495,7 @@ const Agendamentos = () => {
           }
         }}
         onAttendanceConfirmed={(apt) => {
-          handleMarkAttended(apt);
-          setShowForm(false);
+          handleAttendanceFromForm(apt);
         }}
       />
 
@@ -519,7 +523,7 @@ const Agendamentos = () => {
             if (!o) {
               const src = photoPromptSource;
               setPhotoPromptSource(null);
-              // se não escolheu adicionar foto (didOpenUpload.current é false), segue direto pro retorno
+              // se no escolheu adicionar foto (didOpenUpload.current  false), segue direto pro retorno
               if (src && !didOpenUpload.current) setReturnSource(src);
               didOpenUpload.current = false;
             }

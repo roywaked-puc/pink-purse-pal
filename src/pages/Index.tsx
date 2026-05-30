@@ -105,8 +105,6 @@ const Index = () => {
       setDeleteAppointmentId(null);
     }
   };
-    }
-  };
 
   const triggerPostAttendance = (apt: Appointment) => {
     if (apt.clientId) {
