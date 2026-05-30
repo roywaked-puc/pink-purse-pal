@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Appointment, PaymentStatus, ConfirmationStatus, Client, Service } from '@/types';
 import { useApp } from '@/contexts/AppContext';
+import { useUpdateAppointment, useAddAppointment } from '@/hooks/useAppointments';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
