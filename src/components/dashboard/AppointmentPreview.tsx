@@ -182,6 +182,11 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
         ) : (
           <span className="font-medium">{appointment.clientName}</span>
         )}
+        {appointment.parentAppointmentId && (
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+            🔄 Retorno
+          </span>
+        )}
       </div>
 
       {appointment.notes && (
