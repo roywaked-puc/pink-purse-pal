@@ -1,7 +1,7 @@
 export type TransactionType = 'entrada' | 'saida';
 export type TransactionScope = 'empresa' | 'pessoal';
 export type PaymentStatus = 'pago' | 'nao_pago' | 'sinal';
-export type ConfirmationStatus = 'pendente' | 'confirmado' | 'atendido' | 'cancelado';
+export type ConfirmationStatus = 'pendente' | 'confirmado' | 'atendido' | 'cancelado' | 'retorno_previsto';
 
 export interface Transaction {
   id: string;
@@ -13,7 +13,7 @@ export interface Transaction {
   account: string;
   accountId?: string;
   amount: number;
-  grossAmount?: number; // Valor bruto (antes da taxa de operadora)
+  grossAmount?: number;
   description?: string;
   clientName?: string;
   appointmentId?: string;
@@ -39,9 +39,10 @@ export interface Appointment {
   paidAmount: number;
   paymentStatus: PaymentStatus;
   confirmationStatus: ConfirmationStatus;
-  duration: number; // em minutos
+  duration: number;
   notes?: string;
   googleEventId?: string;
+  parentAppointmentId?: string;
 }
 
 export interface Category {
@@ -62,7 +63,7 @@ export interface Service {
   id: string;
   description: string;
   amount: number;
-  duration: number; // em minutos
+  duration: number;
   notes?: string;
   color?: string;
 }
@@ -74,6 +75,11 @@ export interface UserSettings {
   google_client_id: string | null;
   google_client_secret: string | null;
   google_token_expiry: string | null;
+  retention_intervals: number[];
+  retention_reminder_days: number;
+  retention_color_previsto: string;
+  retention_color_aguardando: string;
+  retention_color_confirmado: string;
 }
 
 export interface ClientPhoto {
@@ -86,4 +92,3 @@ export interface ClientPhoto {
   serviceName?: string;
   createdAt: Date;
 }
-
