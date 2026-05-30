@@ -14,16 +14,20 @@ import {
   User,
   TrendingUp,
   Hash,
+  Images,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { StatusBadge } from '@/components/ds/StatusBadge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ClientPhotosTab } from '@/components/clients/ClientPhotosTab';
 import { useApp } from '@/contexts/AppContext';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
 
 export default function ClienteFicha() {
   const { id } = useParams<{ id: string }>();
@@ -104,122 +108,139 @@ export default function ClienteFicha() {
         }
       />
 
-      {/* Info */}
-      <section className="mb-6 p-4 rounded-xl bg-card border border-border shadow-soft space-y-2">
-        {client.phone && (
-          <div className="flex items-center gap-2 text-sm">
-            <Phone className="w-4 h-4 text-muted-foreground" />
-            <span>{client.phone}</span>
-          </div>
-        )}
-        {client.recurrenceDays && (
-          <div className="flex items-center gap-2 text-sm">
-            <Repeat className="w-4 h-4 text-muted-foreground" />
-            <span>Retorno sugerido a cada {client.recurrenceDays} dias</span>
-          </div>
-        )}
-        {client.notes && (
-          <div className="flex items-start gap-2 text-sm">
-            <FileText className="w-4 h-4 text-muted-foreground mt-0.5" />
-            <span className="italic text-muted-foreground">{client.notes}</span>
-          </div>
-        )}
-        {!client.phone && !client.notes && !client.recurrenceDays && (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma informação adicional cadastrada.
-          </p>
-        )}
-      </section>
+      <Tabs defaultValue="dados" className="w-full">
+        <TabsList className="grid grid-cols-2 w-full max-w-xs mb-4">
+          <TabsTrigger value="dados">Dados</TabsTrigger>
+          <TabsTrigger value="fotos">
+            <Images className="w-4 h-4 mr-1" />
+            Fotos
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Próxima sugestão */}
-      {nextSuggestedDate && (
-        <section className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/30">
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div>
-              <p className="text-xs text-primary font-medium uppercase tracking-wide">
-                Próximo retorno sugerido
+        <TabsContent value="dados" className="space-y-6">
+          {/* Info */}
+          <section className="p-4 rounded-xl bg-card border border-border shadow-soft space-y-2">
+            {client.phone && (
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                <span>{client.phone}</span>
+              </div>
+            )}
+            {client.recurrenceDays && (
+              <div className="flex items-center gap-2 text-sm">
+                <Repeat className="w-4 h-4 text-muted-foreground" />
+                <span>Retorno sugerido a cada {client.recurrenceDays} dias</span>
+              </div>
+            )}
+            {client.notes && (
+              <div className="flex items-start gap-2 text-sm">
+                <FileText className="w-4 h-4 text-muted-foreground mt-0.5" />
+                <span className="italic text-muted-foreground">{client.notes}</span>
+              </div>
+            )}
+            {!client.phone && !client.notes && !client.recurrenceDays && (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma informação adicional cadastrada.
               </p>
-              <p className="text-lg font-semibold mt-1">
-                {format(nextSuggestedDate, "dd 'de' MMMM yyyy", { locale: ptBR })}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {isAfter(nextSuggestedDate, new Date())
-                  ? 'Agende com antecedência'
-                  : 'Já passou — convide para retornar'}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {whatsappLink && (
-                <Button asChild variant="outline" size="sm" className="text-green-600">
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    WhatsApp
-                  </a>
-                </Button>
-              )}
-              <Button asChild size="sm">
-                <Link to={scheduleNextUrl}>
-                  <CalendarPlus className="w-4 h-4 mr-1" />
-                  Agendar
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-      )}
+            )}
+          </section>
 
-      {/* Métricas */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard icon={Calendar} label="Atendimentos" value={String(stats.attended)} />
-        <StatCard icon={Hash} label="Total agendados" value={String(stats.totalAppointments)} />
-        <StatCard
-          icon={DollarSign}
-          label="Total recebido"
-          value={formatCurrency(stats.totalReceived)}
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="Ticket médio"
-          value={formatCurrency(stats.ticketMedio)}
-        />
-      </section>
-
-      {/* Histórico */}
-      <section>
-        <h2 className="font-semibold mb-3">Histórico de atendimentos</h2>
-        {clientAppointments.length === 0 ? (
-          <EmptyState
-            icon={Calendar}
-            title="Nenhum agendamento ainda"
-            description="Quando este cliente tiver um agendamento, aparecerá aqui."
-          />
-        ) : (
-          <div className="space-y-2">
-            {clientAppointments.map((a) => (
-              <div
-                key={a.id}
-                className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-3"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">
-                    {format(new Date(a.date), "dd 'de' MMM yyyy 'às' HH:mm", { locale: ptBR })}
+          {/* Próxima sugestão */}
+          {nextSuggestedDate && (
+            <section className="p-4 rounded-xl bg-primary/10 border border-primary/30">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-xs text-primary font-medium uppercase tracking-wide">
+                    Próximo retorno sugerido
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">{a.service}</p>
+                  <p className="text-lg font-semibold mt-1">
+                    {format(nextSuggestedDate, "dd 'de' MMMM yyyy", { locale: ptBR })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {isAfter(nextSuggestedDate, new Date())
+                      ? 'Agende com antecedência'
+                      : 'Já passou — convide para retornar'}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <StatusBadge status={a.confirmationStatus} />
-                  <span className="text-sm font-semibold text-primary">
-                    {formatCurrency(a.amount)}
-                  </span>
+                <div className="flex gap-2">
+                  {whatsappLink && (
+                    <Button asChild variant="outline" size="sm" className="text-green-600">
+                      <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="w-4 h-4 mr-1" />
+                        WhatsApp
+                      </a>
+                    </Button>
+                  )}
+                  <Button asChild size="sm">
+                    <Link to={scheduleNextUrl}>
+                      <CalendarPlus className="w-4 h-4 mr-1" />
+                      Agendar
+                    </Link>
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            </section>
+          )}
+
+          {/* Métricas */}
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatCard icon={Calendar} label="Atendimentos" value={String(stats.attended)} />
+            <StatCard icon={Hash} label="Total agendados" value={String(stats.totalAppointments)} />
+            <StatCard
+              icon={DollarSign}
+              label="Total recebido"
+              value={formatCurrency(stats.totalReceived)}
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="Ticket médio"
+              value={formatCurrency(stats.ticketMedio)}
+            />
+          </section>
+
+          {/* Histórico */}
+          <section>
+            <h2 className="font-semibold mb-3">Histórico de atendimentos</h2>
+            {clientAppointments.length === 0 ? (
+              <EmptyState
+                icon={Calendar}
+                title="Nenhum agendamento ainda"
+                description="Quando este cliente tiver um agendamento, aparecerá aqui."
+              />
+            ) : (
+              <div className="space-y-2">
+                {clientAppointments.map((a) => (
+                  <div
+                    key={a.id}
+                    className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">
+                        {format(new Date(a.date), "dd 'de' MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{a.service}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <StatusBadge status={a.confirmationStatus} />
+                      <span className="text-sm font-semibold text-primary">
+                        {formatCurrency(a.amount)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </TabsContent>
+
+        <TabsContent value="fotos">
+          <ClientPhotosTab clientId={client.id} />
+        </TabsContent>
+      </Tabs>
     </MainLayout>
   );
 }
+
 
 function StatCard({
   icon: Icon,

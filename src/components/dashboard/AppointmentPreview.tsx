@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, Calendar, FileText, Check, CheckCheck, X } from 'lucide-react';
+import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, Calendar, FileText, Check, CheckCheck, X, Camera } from 'lucide-react';
 import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
+import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
+import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
+import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
+
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
   pendente: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Pendente' },
@@ -80,6 +85,9 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
 
 export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [photoPromptOpen, setPhotoPromptOpen] = useState(false);
+  const [photoUploadOpen, setPhotoUploadOpen] = useState(false);
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
@@ -100,7 +108,11 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
       // abre o form de recebimento já pré-preenchido
       onReceive(appointment);
     }
+    if (appointment.clientId) {
+      setPhotoPromptOpen(true);
+    }
   };
+
 
   return (
     <div 
@@ -233,6 +245,17 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
               </a>
             </Button>
           )}
+          {appointment.clientId && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setHistoryOpen(true)}
+              className="h-8 w-8 text-pink-600 hover:text-pink-700"
+              title="Histórico de fotos"
+            >
+              <Camera className="w-4 h-4" />
+            </Button>
+          )}
           {canComplete && (
             <Button
               variant="ghost"
@@ -266,6 +289,34 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           )}
         </div>
       </div>
+
+      {appointment.clientId && (
+        <>
+          <ClientPhotosDialog
+            open={historyOpen}
+            onOpenChange={setHistoryOpen}
+            clientId={appointment.clientId}
+            clientName={appointment.clientName}
+          />
+          <PostAttendancePhotoPrompt
+            open={photoPromptOpen}
+            onOpenChange={setPhotoPromptOpen}
+            clientName={appointment.clientName}
+            onConfirm={() => {
+              setPhotoPromptOpen(false);
+              setPhotoUploadOpen(true);
+            }}
+          />
+          <PhotoUploadDialog
+            open={photoUploadOpen}
+            onOpenChange={setPhotoUploadOpen}
+            clientId={appointment.clientId}
+            appointmentId={appointment.id}
+            serviceName={appointment.service}
+            defaultDate={appointmentDate}
+          />
+        </>
+      )}
     </div>
   );
 }
