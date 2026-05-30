@@ -519,7 +519,7 @@ const Agendamentos = () => {
             if (!o) {
               const src = photoPromptSource;
               setPhotoPromptSource(null);
-              // se não escolheu adicionar foto (didOpenUpload.current é false), segue direto pro retorno
+              // se no escolheu adicionar foto (didOpenUpload.current  false), segue direto pro retorno
               if (src && !didOpenUpload.current) setReturnSource(src);
               didOpenUpload.current = false;
             }
