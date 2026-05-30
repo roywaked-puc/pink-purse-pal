@@ -506,8 +506,55 @@ const Agendamentos = () => {
         title="Excluir agendamento"
         description="Tem certeza que deseja excluir este agendamento?"
       />
+
+      {photoPromptSource && (
+        <PostAttendancePhotoPrompt
+          open={!!photoPromptSource}
+          onOpenChange={(o) => {
+            if (!o) {
+              const src = photoPromptSource;
+              setPhotoPromptSource(null);
+              // se não escolheu adicionar foto, segue direto pro retorno
+              if (src && !photoUploadSource) setReturnSource(src);
+            }
+          }}
+          clientName={photoPromptSource.clientName}
+          onConfirm={() => {
+            setPhotoUploadSource(photoPromptSource);
+            setPhotoPromptSource(null);
+          }}
+        />
+      )}
+
+      {photoUploadSource && photoUploadSource.clientId && (
+        <PhotoUploadDialog
+          open={!!photoUploadSource}
+          onOpenChange={(o) => {
+            if (!o) {
+              const src = photoUploadSource;
+              setPhotoUploadSource(null);
+              if (src) setReturnSource(src);
+            }
+          }}
+          clientId={photoUploadSource.clientId}
+          appointmentId={photoUploadSource.id}
+          serviceName={photoUploadSource.service}
+          defaultDate={new Date(photoUploadSource.date)}
+        />
+      )}
+
+      {returnSource && (
+        <ScheduleReturnDialog
+          open={!!returnSource}
+          onOpenChange={(o) => {
+            if (!o) setReturnSource(null);
+          }}
+          sourceAppointment={returnSource}
+        />
+      )}
     </MainLayout>
   );
 };
+
 
 export default Agendamentos;
