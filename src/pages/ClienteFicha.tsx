@@ -14,16 +14,20 @@ import {
   User,
   TrendingUp,
   Hash,
+  Images,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { StatusBadge } from '@/components/ds/StatusBadge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ClientPhotosTab } from '@/components/clients/ClientPhotosTab';
 import { useApp } from '@/contexts/AppContext';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
 
 export default function ClienteFicha() {
   const { id } = useParams<{ id: string }>();
