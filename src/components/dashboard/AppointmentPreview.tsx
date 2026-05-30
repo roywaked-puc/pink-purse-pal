@@ -91,6 +91,8 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const [photoPromptOpen, setPhotoPromptOpen] = useState(false);
   const [photoUploadOpen, setPhotoUploadOpen] = useState(false);
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const wantsPhotoUpload = useRef(false);
+
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
