@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X, CalendarPlus, Search, Grid3X3 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format, isToday, isFuture, isPast, addMinutes } from 'date-fns';
@@ -101,6 +101,7 @@ const Agendamentos = () => {
   const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
   const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
   const [returnSource, setReturnSource] = useState<Appointment | null>(null);
+  const didOpenUpload = useRef(false);
 
 
 
@@ -514,12 +515,14 @@ const Agendamentos = () => {
             if (!o) {
               const src = photoPromptSource;
               setPhotoPromptSource(null);
-              // se nÃ£o escolheu adicionar foto, segue direto pro retorno
-              if (src && !photoUploadSource) setReturnSource(src);
+              // se não escolheu adicionar foto (didOpenUpload.current é false), segue direto pro retorno
+              if (src && !didOpenUpload.current) setReturnSource(src);
+              didOpenUpload.current = false;
             }
           }}
           clientName={photoPromptSource.clientName}
           onConfirm={() => {
+            didOpenUpload.current = true;
             setPhotoUploadSource(photoPromptSource);
             setPhotoPromptSource(null);
           }}
@@ -533,6 +536,7 @@ const Agendamentos = () => {
             if (!o) {
               const src = photoUploadSource;
               setPhotoUploadSource(null);
+              didOpenUpload.current = false;
               if (src) setReturnSource(src);
             }
           }}
