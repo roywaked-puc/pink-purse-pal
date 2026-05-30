@@ -54,6 +54,7 @@ export type Database = {
           id: string
           notes: string | null
           paid_amount: number
+          parent_appointment_id: string | null
           payment_status: Database["public"]["Enums"]["payment_status_enum"]
           service: string
           service_id: string | null
@@ -71,6 +72,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_amount?: number
+          parent_appointment_id?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status_enum"]
           service: string
           service_id?: string | null
@@ -88,6 +90,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_amount?: number
+          parent_appointment_id?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status_enum"]
           service?: string
           service_id?: string | null
@@ -325,6 +328,11 @@ export type Database = {
           google_refresh_token: string | null
           google_token_expiry: string | null
           id: string
+          retention_color_aguardando: string
+          retention_color_confirmado: string
+          retention_color_previsto: string
+          retention_intervals: number[]
+          retention_reminder_days: number
           updated_at: string | null
           user_id: string
         }
@@ -337,6 +345,11 @@ export type Database = {
           google_refresh_token?: string | null
           google_token_expiry?: string | null
           id?: string
+          retention_color_aguardando?: string
+          retention_color_confirmado?: string
+          retention_color_previsto?: string
+          retention_intervals?: number[]
+          retention_reminder_days?: number
           updated_at?: string | null
           user_id: string
         }
@@ -349,6 +362,11 @@ export type Database = {
           google_refresh_token?: string | null
           google_token_expiry?: string | null
           id?: string
+          retention_color_aguardando?: string
+          retention_color_confirmado?: string
+          retention_color_previsto?: string
+          retention_intervals?: number[]
+          retention_reminder_days?: number
           updated_at?: string | null
           user_id?: string
         }
@@ -367,6 +385,7 @@ export type Database = {
         | "confirmado"
         | "atendido"
         | "cancelado"
+        | "retorno_previsto"
       payment_status_enum: "pago" | "nao_pago" | "sinal"
     }
     CompositeTypes: {
@@ -500,6 +519,7 @@ export const Constants = {
         "confirmado",
         "atendido",
         "cancelado",
+        "retorno_previsto",
       ],
       payment_status_enum: ["pago", "nao_pago", "sinal"],
     },
