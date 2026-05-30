@@ -49,7 +49,9 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed }: AppointmentFormProps) {
-  const { appointments, addAppointment, updateAppointment, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { appointments, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
+  const { mutateAsync: addAppointmentAsync } = useAddAppointment();
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('10:00');
   const [clientName, setClientName] = useState('');
