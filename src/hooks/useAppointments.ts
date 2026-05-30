@@ -132,6 +132,7 @@ export function useAddAppointment() {
           confirmation_status: appointment.confirmationStatus,
           duration: appointment.duration,
           notes: appointment.notes,
+          parent_appointment_id: appointment.parentAppointmentId,
         })
         .select()
         .single();
@@ -206,6 +207,7 @@ export function useUpdateAppointment() {
           confirmation_status: appointment.confirmationStatus,
           duration: appointment.duration,
           notes: appointment.notes,
+          parent_appointment_id: appointment.parentAppointmentId,
         })
         .eq('id', id)
         .select()
