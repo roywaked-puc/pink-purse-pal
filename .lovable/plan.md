@@ -1,63 +1,94 @@
-# Roadmap Estratégico — Pink Purse Pal
+# Histórico Fotográfico das Clientes
 
-Audit em 2026-05. Aplicativo tratado como SaaS para designers de cílios / MEIs.
-Princípio: **agenda + recebimento são o CORE**. Tudo o mais é suporte.
+Módulo completo de prontuário visual, integrado ao cadastro de clientes, à agenda e ao fluxo pós-atendimento.
 
----
+## O que será entregue
 
-## Sprint 1 — Base UX (rápido, alto impacto)
+### 1. Infraestrutura (backend)
+- Tabela `client_photos` (id, user_id, client_id, appointment_id?, photo_date, photo_url, storage_path, observation, service_name?, created_at)
+- RLS por `user_id` + GRANTs
+- Bucket privado **`client-photos`** no Supabase Storage com policies por usuário (path `userId/clientId/arquivo.jpg`)
+- Índices em `(client_id, photo_date desc)`
 
-- [ ] Reorganizar Home como "Meu Dia": agenda de hoje no topo, saldos abaixo
-- [ ] Reordenar BottomNav: Agenda como item central de destaque
-- [ ] Criar componentes de DS reutilizáveis: `StatusBadge`, `EmptyState`
-- [ ] Padronizar uso desses componentes nas telas existentes
+### 2. Hook `useClientPhotos`
+- `listByClient(clientId)` — fotos ordenadas mais recentes primeiro
+- `upload(file, { clientId, appointmentId?, observation, photoDate })` — envia ao Storage, gera signed URL, insere registro
+- `updateObservation(id, obs)`
+- `delete(id)` — remove do Storage + DB
+- `stats(clientId)` — total, primeira, última, tempo de acompanhamento
 
-## Sprint 2 — Velocidade nas ações CORE
+### 3. Ficha do Cliente (`/cliente/:id`) — nova aba
+Tabs **Dados** | **Histórico de Fotos**
 
-- [ ] "Concluir" em 1 toque direto no card do agendamento (sem abrir form)
-- [ ] "Receber" em 1 toque com transação pré-preenchida (valor, cliente, conta padrão)
-- [ ] Swipe actions no card (concluir / receber / editar)
-- [ ] Conta padrão configurável em Configurações
+Aba Fotos:
+- Cabeçalho com indicadores: total · primeira · última · "Cliente há X meses"
+- Botões: **➕ Adicionar Foto** · **📽 Evolução** (slideshow) · **Comparar** (ativa seleção de 2 fotos)
+- Grade responsiva: 2 col mobile, 3 col tablet, 4 col desktop, com lazy loading
+- Cada card: thumbnail, data, observação curta
+- Click → modal fullscreen com: zoom (pinch/scroll), navegação ◀ ▶, editar observação, excluir
+- Modo comparação: seleção de 2 fotos → view lado a lado (Antes | Depois) com datas
+- Slideshow: avança automaticamente em ordem cronológica crescente
 
-## Sprint 3 — Cliente como ativo
+### 4. Modal "Adicionar Foto"
+- Input file com `capture="environment"` (abre câmera no mobile, galeria no desktop)
+- Múltiplos arquivos permitidos
+- Preview + compressão client-side (máx 1600px, jpeg 0.85) antes do upload
+- Campos: observação (com sugestões rápidas: Primeira aplicação, Manutenção 15 dias, Volume brasileiro, Volume egípcio, Correção de falhas), data (default hoje), serviço (auto se vier de agendamento)
 
-- [ ] Ficha do cliente: timeline de atendimentos + total gasto + frequência média
-- [ ] Recorrência sugerida (ex.: manutenção a cada 21 dias) com botão "Reagendar"
-- [ ] Lembrete WhatsApp 1-clique (link `wa.me` com mensagem pré-pronta)
-- [ ] Campo "última visita" e "próxima sugerida" no card do cliente
+### 5. Integração com a Agenda
+- Em cada card/popover de agendamento, novo botão **📷 Histórico** ao lado de Editar/WhatsApp/Pagamento
+- Click abre o modal de histórico fotográfico (mesmo componente da aba), focado no cliente
 
-## Sprint 4 — Consolidação técnica
+### 6. Pós-atendimento
+- Quando o usuário marca um agendamento como **Atendido**, dispara dialog:
+  > "Deseja adicionar fotos deste atendimento?"
+  > [Adicionar Fotos] [Agora Não]
+- "Adicionar Fotos" abre o modal já pré-preenchido com `appointmentId` + `clientId` + serviço
 
-- [x] Unificar as 3 telas de Relatórios em uma com abas
-- [x] Adicionar FK `account_id` e `category_id` em `transactions` (mantidos campos texto para retrocompat)
-- [x] Converter `confirmation_status` e `payment_status` em enums Postgres
-- [ ] Quebrar `AppContext` (god context) em contexts menores por domínio
-- [ ] Quebrar `TransactionForm` e `AppointmentForm` (>470 linhas cada)
-- [ ] Tabela `appointment_payments` para pagamento parcial limpo
+### 7. Performance & UX
+- Thumbnails carregadas via `transform` do Supabase Storage (`width=400`)
+- `loading="lazy"` em todas as imagens
+- Signed URLs com cache de 1h em memória
+- Mobile first, fluxo "adicionar foto" em < 3 toques
 
-## Sprint 5 — Design System maduro
+## Detalhes técnicos
 
-- [ ] Pasta `src/components/ds/` com `FormSheet`, `MoneyDisplay`, `StatusBadge`, `EmptyState`, `SectionHeader`
-- [ ] Loader/skeleton unificado por contexto (lista, card, form)
-- [ ] Tokens de espaçamento e tipografia revisados no `index.css`
+```text
+client_photos
+├── id uuid pk
+├── user_id uuid (RLS)
+├── client_id uuid → clients
+├── appointment_id uuid? → appointments
+├── photo_date timestamptz
+├── storage_path text   (userId/clientId/uuid.jpg)
+├── observation text?
+├── service_name text?
+└── created_at timestamptz
+```
 
-## Sprint 6 — Crescimento
+Storage bucket: `client-photos` (privado), policies: usuário só lê/escreve sob `auth.uid()/...`.
 
-- [ ] Onboarding em 3 passos (conta padrão, primeiro serviço, primeiro cliente)
-- [ ] Programa de fidelidade simples (selo a cada X atendimentos)
-- [ ] Exportação PDF de relatórios
-- [ ] Backup/restauração de dados do usuário
+Componentes novos:
+- `src/hooks/useClientPhotos.ts`
+- `src/components/clients/ClientPhotosTab.tsx`
+- `src/components/clients/PhotoUploadDialog.tsx`
+- `src/components/clients/PhotoLightbox.tsx` (fullscreen + zoom + nav + edit/delete)
+- `src/components/clients/PhotoCompareDialog.tsx`
+- `src/components/clients/PhotoSlideshowDialog.tsx`
+- `src/components/clients/ClientPhotosButton.tsx` (reusável para agenda)
+- `src/components/appointments/PostAttendancePhotoPrompt.tsx`
 
----
+Atualizações:
+- `src/pages/ClienteFicha.tsx` → Tabs (Dados | Fotos)
+- `src/components/appointments/*` cards/popover → botão 📷
+- `src/hooks/useAppointments.ts` (ou componentes de status) → disparar prompt ao virar **Atendido**
+- `src/types/index.ts` → tipo `ClientPhoto`
 
-## MVP v1.0 (corte mínimo para "produto vendável")
+Migrações:
+1. Criar tabela `client_photos` + GRANTs + RLS + policies + índice
+2. Criar bucket `client-photos` + storage policies
 
-Home "Meu Dia" · Ficha de cliente · Recorrência · Lembrete WhatsApp ·
-Pagamento parcial · Relatórios unificados · Onboarding · Fidelidade simples.
-
----
-
-## Histórico
-
-- v0: Dashboard de Indicadores entregue (`/relatorio-indicadores`)
-- v0: Autenticação com mostrar senha + recuperação de senha
+## Fora do escopo desta entrega
+- Compartilhamento externo / exportação para redes sociais
+- Marca d'água automática
+- Edição de imagem (filtros/crop avançado) — apenas redimensionamento para upload

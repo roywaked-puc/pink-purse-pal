@@ -137,6 +137,42 @@ export type Database = {
         }
         Relationships: []
       }
+      client_photos: {
+        Row: {
+          appointment_id: string | null
+          client_id: string
+          created_at: string
+          id: string
+          observation: string | null
+          photo_date: string
+          service_name: string | null
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          observation?: string | null
+          photo_date?: string
+          service_name?: string | null
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          observation?: string | null
+          photo_date?: string
+          service_name?: string | null
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           created_at: string
