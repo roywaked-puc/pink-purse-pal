@@ -22,6 +22,10 @@ import { useApp } from '@/contexts/AppContext';
 import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
+import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
+import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
+import { ScheduleReturnDialog } from '@/components/appointments/ScheduleReturnDialog';
+
 
 const formatWhatsAppMessage = (appointment: Appointment) => {
   const date = format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR });
