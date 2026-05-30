@@ -170,6 +170,11 @@ const Agendamentos = () => {
     triggerPostAttendance(apt);
   };
 
+  // Disparado pelo formulário: status já salvo, apenas abrir a sequência fotos/retorno
+  const handleAttendanceFromForm = (apt: Appointment) => {
+    triggerPostAttendance(apt);
+  };
+
 
 
   const renderAppointment = (appointment: Appointment, index: number) => {
