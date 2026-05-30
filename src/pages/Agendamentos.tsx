@@ -98,6 +98,11 @@ const Agendamentos = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'week' | 'month'>('month');
   const [searchQuery, setSearchQuery] = useState('');
+  const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
+  const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
+  const [returnSource, setReturnSource] = useState<Appointment | null>(null);
+
+
 
   const sortedAppointments = useMemo(() => {
     return [...appointments]
