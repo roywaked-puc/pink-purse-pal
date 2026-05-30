@@ -44,9 +44,10 @@ interface AppointmentFormProps {
   onOpenChange: (open: boolean) => void;
   appointment?: Appointment | null;
   onDelete?: () => void;
+  onAttendanceConfirmed?: (appointment: Appointment) => void;
 }
 
-export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: AppointmentFormProps) {
+export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed }: AppointmentFormProps) {
   const { appointments, addAppointment, updateAppointment, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('10:00');
@@ -236,6 +237,10 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete }: A
 
     if (appointment) {
       updateAppointment(appointment.id, data);
+      // Se foi mudado para "atendido" e antes não era, dispara callback
+      if (confirmationStatus === 'atendido' && appointment.confirmationStatus !== 'atendido' && onAttendanceConfirmed) {
+        onAttendanceConfirmed({ ...appointment, ...data, id: appointment.id });
+      }
     } else {
       addAppointment(data);
     }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { isToday } from 'date-fns';
 import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,9 @@ import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
 import { ReturnsToConfirmCard } from '@/components/dashboard/ReturnsToConfirmCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { AppointmentForm } from '@/components/appointments/AppointmentForm';
+import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
+import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
+import { ScheduleReturnDialog } from '@/components/appointments/ScheduleReturnDialog';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -38,6 +41,10 @@ const Index = () => {
   const [deleteAppointmentId, setDeleteAppointmentId] = useState<string | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
+  const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
+  const [returnSource, setReturnSource] = useState<Appointment | null>(null);
+  const didOpenUpload = useRef(false);
   const [balancesVisible, setBalancesVisible] = useState(
     () => localStorage.getItem('balancesVisible') === 'true',
   );
@@ -96,6 +103,16 @@ const Index = () => {
     if (deleteAppointmentId) {
       deleteAppointment(deleteAppointmentId);
       setDeleteAppointmentId(null);
+    }
+  };
+    }
+  };
+
+  const triggerPostAttendance = (apt: Appointment) => {
+    if (apt.clientId) {
+      setPhotoPromptSource(apt);
+    } else {
+      setReturnSource(apt);
     }
   };
 
@@ -279,6 +296,10 @@ const Index = () => {
             setShowAppointmentForm(false);
           }
         }}
+        onAttendanceConfirmed={(apt) => {
+          triggerPostAttendance(apt);
+          setShowAppointmentForm(false);
+        }}
       />
 
       <DeleteConfirmDialog
@@ -288,6 +309,54 @@ const Index = () => {
         title="Excluir agendamento"
         description="Tem certeza que deseja excluir este agendamento?"
       />
+
+      {photoPromptSource && (
+        <PostAttendancePhotoPrompt
+          open={!!photoPromptSource}
+          onOpenChange={(o) => {
+            if (!o) {
+              const src = photoPromptSource;
+              setPhotoPromptSource(null);
+              if (src && !didOpenUpload.current) setReturnSource(src);
+              didOpenUpload.current = false;
+            }
+          }}
+          clientName={photoPromptSource.clientName}
+          onConfirm={() => {
+            didOpenUpload.current = true;
+            setPhotoUploadSource(photoPromptSource);
+            setPhotoPromptSource(null);
+          }}
+        />
+      )}
+
+      {photoUploadSource && photoUploadSource.clientId && (
+        <PhotoUploadDialog
+          open={!!photoUploadSource}
+          onOpenChange={(o) => {
+            if (!o) {
+              const src = photoUploadSource;
+              setPhotoUploadSource(null);
+              didOpenUpload.current = false;
+              if (src) setReturnSource(src);
+            }
+          }}
+          clientId={photoUploadSource.clientId}
+          appointmentId={photoUploadSource.id}
+          serviceName={photoUploadSource.service}
+          defaultDate={new Date(photoUploadSource.date)}
+        />
+      )}
+
+      {returnSource && (
+        <ScheduleReturnDialog
+          open={!!returnSource}
+          onOpenChange={(o) => {
+            if (!o) setReturnSource(null);
+          }}
+          sourceAppointment={returnSource}
+        />
+      )}
     </MainLayout>
   );
 };

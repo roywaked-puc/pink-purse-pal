@@ -489,6 +489,10 @@ const Agendamentos = () => {
             setShowForm(false);
           }
         }}
+        onAttendanceConfirmed={(apt) => {
+          handleMarkAttended(apt);
+          setShowForm(false);
+        }}
       />
 
       <TransactionForm
