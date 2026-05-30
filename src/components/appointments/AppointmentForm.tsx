@@ -238,22 +238,32 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       notes: notes.trim() || undefined,
     };
 
-    if (appointment) {
-      updateAppointment(appointment.id, data);
-      // Se foi mudado para "atendido" e antes no era, dispara callback
-      // NO fecha o form aqui - deixa o callback fazer isso
-      if (confirmationStatus === 'atendido' && appointment.confirmationStatus !== 'atendido' && onAttendanceConfirmed) {
-        const updatedAppointment = { ...appointment, ...data, id: appointment.id };
-        onAttendanceConfirmed(updatedAppointment);
-        resetForm();
-        return; // No fecha o form aqui, deixa o callback fazer
-      }
-    } else {
-      addAppointment(data);
-    }
+    try {
+      if (appointment) {
+        const wasAtendido = appointment.confirmationStatus === 'atendido';
+        const becameAtendido = confirmationStatus === 'atendido' && !wasAtendido;
 
-    onOpenChange(false);
-    resetForm();
+        await updateAppointmentAsync({ id: appointment.id, appointment: data });
+
+        if (becameAtendido && onAttendanceConfirmed) {
+          const updated = { ...appointment, ...data, id: appointment.id };
+          onOpenChange(false);
+          resetForm();
+          // Pequeno delay para garantir que o Dialog feche antes de abrir o próximo
+          setTimeout(() => onAttendanceConfirmed(updated), 150);
+          return;
+        }
+      } else {
+        await addAppointmentAsync(data);
+      }
+
+      onOpenChange(false);
+      resetForm();
+    } catch (err: any) {
+      toast.error('Erro ao salvar agendamento', {
+        description: err?.message || 'Tente novamente.',
+      });
+    }
   };
 
   return (
