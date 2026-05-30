@@ -140,8 +140,36 @@ const Agendamentos = () => {
     }
   };
   const handleConfirmationStatusChange = (appointmentId: string, status: ConfirmationStatus) => {
+    if (status === 'atendido') {
+      const apt = appointments.find(a => a.id === appointmentId);
+      if (apt) {
+        handleMarkAttended(apt);
+        return;
+      }
+    }
     updateConfirmationStatus({ id: appointmentId, status });
   };
+
+  const triggerPostAttendance = (apt: Appointment) => {
+    if (apt.clientId) {
+      setPhotoPromptSource(apt);
+    } else {
+      setReturnSource(apt);
+    }
+  };
+
+  const handleMarkAttended = (apt: Appointment) => {
+    if (apt.confirmationStatus !== 'atendido') {
+      updateConfirmationStatus({ id: apt.id, status: 'atendido' });
+    }
+    const stillHasBalance = apt.paidAmount < apt.amount;
+    if (stillHasBalance) {
+      handleReceive(apt);
+    }
+    triggerPostAttendance(apt);
+  };
+
+
 
   const renderAppointment = (appointment: Appointment, index: number) => {
     const appointmentDate = new Date(appointment.date);
