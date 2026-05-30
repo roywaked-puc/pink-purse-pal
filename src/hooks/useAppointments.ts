@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Appointment } from '@/types';
+import { Appointment, ConfirmationStatus } from '@/types';
 import { sanitizeDbError } from '@/lib/sanitizeError';
 
 // Helper function to check if Google Calendar is connected
@@ -98,10 +98,11 @@ export function useAppointments() {
         amount: Number(a.amount),
         paidAmount: Number(a.paid_amount),
         paymentStatus: a.payment_status as 'pago' | 'nao_pago' | 'sinal',
-        confirmationStatus: a.confirmation_status as 'pendente' | 'confirmado' | 'atendido' | 'cancelado',
+        confirmationStatus: a.confirmation_status as ConfirmationStatus,
         duration: a.duration,
         notes: a.notes || undefined,
         googleEventId: a.google_event_id || undefined,
+        parentAppointmentId: (a as any).parent_appointment_id || undefined,
       }));
     },
     enabled: !!user,
@@ -131,6 +132,7 @@ export function useAddAppointment() {
           confirmation_status: appointment.confirmationStatus,
           duration: appointment.duration,
           notes: appointment.notes,
+          parent_appointment_id: appointment.parentAppointmentId,
         })
         .select()
         .single();
@@ -205,6 +207,7 @@ export function useUpdateAppointment() {
           confirmation_status: appointment.confirmationStatus,
           duration: appointment.duration,
           notes: appointment.notes,
+          parent_appointment_id: appointment.parentAppointmentId,
         })
         .eq('id', id)
         .select()
@@ -383,7 +386,7 @@ export function useUpdateConfirmationStatus() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'pendente' | 'confirmado' | 'atendido' | 'cancelado' }) => {
+    mutationFn: async ({ id, status }: { id: string; status: ConfirmationStatus }) => {
       if (!user) throw new Error('Not authenticated');
       
       // 1. Update status in database

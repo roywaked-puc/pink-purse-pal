@@ -10,6 +10,7 @@ import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
 import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
 import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
+import { ScheduleReturnDialog } from '@/components/appointments/ScheduleReturnDialog';
 
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -17,6 +18,7 @@ const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.Element
   confirmado: { icon: Check, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Confirmado' },
   atendido: { icon: CheckCheck, color: 'text-green-600', bg: 'bg-green-100', label: 'Atendido' },
   cancelado: { icon: X, color: 'text-red-600', bg: 'bg-red-100', label: 'Cancelado' },
+  retorno_previsto: { icon: Clock, color: 'text-orange-600', bg: 'bg-orange-100', label: 'Retorno previsto' },
 };
 
 interface AppointmentPreviewProps {
@@ -88,6 +90,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const [historyOpen, setHistoryOpen] = useState(false);
   const [photoPromptOpen, setPhotoPromptOpen] = useState(false);
   const [photoUploadOpen, setPhotoUploadOpen] = useState(false);
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
@@ -105,11 +108,12 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const handleQuickComplete = () => {
     updateStatus({ id: appointment.id, status: 'atendido' });
     if (hasBalance && onReceive) {
-      // abre o form de recebimento já pré-preenchido
       onReceive(appointment);
     }
     if (appointment.clientId) {
       setPhotoPromptOpen(true);
+    } else {
+      setReturnDialogOpen(true);
     }
   };
 
@@ -177,6 +181,11 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           </Link>
         ) : (
           <span className="font-medium">{appointment.clientName}</span>
+        )}
+        {appointment.parentAppointmentId && (
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+            🔄 Retorno
+          </span>
         )}
       </div>
 
@@ -300,7 +309,11 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           />
           <PostAttendancePhotoPrompt
             open={photoPromptOpen}
-            onOpenChange={setPhotoPromptOpen}
+            onOpenChange={(o) => {
+              setPhotoPromptOpen(o);
+              // se fechou sem adicionar foto, abrir direto o de retorno
+              if (!o && !photoUploadOpen) setReturnDialogOpen(true);
+            }}
             clientName={appointment.clientName}
             onConfirm={() => {
               setPhotoPromptOpen(false);
@@ -309,7 +322,10 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           />
           <PhotoUploadDialog
             open={photoUploadOpen}
-            onOpenChange={setPhotoUploadOpen}
+            onOpenChange={(o) => {
+              setPhotoUploadOpen(o);
+              if (!o) setReturnDialogOpen(true);
+            }}
             clientId={appointment.clientId}
             appointmentId={appointment.id}
             serviceName={appointment.service}
@@ -317,6 +333,11 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           />
         </>
       )}
+      <ScheduleReturnDialog
+        open={returnDialogOpen}
+        onOpenChange={setReturnDialogOpen}
+        sourceAppointment={appointment}
+      />
     </div>
   );
 }

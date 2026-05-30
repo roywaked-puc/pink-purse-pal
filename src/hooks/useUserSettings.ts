@@ -10,11 +10,24 @@ export interface UserSettings {
   google_client_id: string | null;
   google_client_secret: string | null;
   google_token_expiry: string | null;
+  retention_intervals: number[];
+  retention_reminder_days: number;
+  retention_color_previsto: string;
+  retention_color_aguardando: string;
+  retention_color_confirmado: string;
 }
+
+const DEFAULTS = {
+  retention_intervals: [15, 20, 21, 30],
+  retention_reminder_days: 3,
+  retention_color_previsto: '#FBBF24',
+  retention_color_aguardando: '#F97316',
+  retention_color_confirmado: '#10B981',
+};
 
 // Safe column list — never select OAuth access/refresh tokens client-side.
 const SAFE_COLUMNS =
-  'id, user_id, google_calendar_enabled, google_client_id, google_client_secret, google_token_expiry';
+  'id, user_id, google_calendar_enabled, google_client_id, google_client_secret, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado';
 
 export function useUserSettings() {
   const { user } = useAuth();
@@ -33,13 +46,19 @@ export function useUserSettings() {
       if (error) throw sanitizeDbError(error);
       if (!data) return null;
 
+      const d = data as any;
       return {
-        id: data.id,
-        user_id: data.user_id,
-        google_calendar_enabled: data.google_calendar_enabled ?? false,
-        google_client_id: (data as any).google_client_id ?? null,
-        google_client_secret: (data as any).google_client_secret ?? null,
-        google_token_expiry: data.google_token_expiry ?? null,
+        id: d.id,
+        user_id: d.user_id,
+        google_calendar_enabled: d.google_calendar_enabled ?? false,
+        google_client_id: d.google_client_id ?? null,
+        google_client_secret: d.google_client_secret ?? null,
+        google_token_expiry: d.google_token_expiry ?? null,
+        retention_intervals: d.retention_intervals ?? DEFAULTS.retention_intervals,
+        retention_reminder_days: d.retention_reminder_days ?? DEFAULTS.retention_reminder_days,
+        retention_color_previsto: d.retention_color_previsto ?? DEFAULTS.retention_color_previsto,
+        retention_color_aguardando: d.retention_color_aguardando ?? DEFAULTS.retention_color_aguardando,
+        retention_color_confirmado: d.retention_color_confirmado ?? DEFAULTS.retention_color_confirmado,
       };
     },
     enabled: !!user,
@@ -67,4 +86,8 @@ export function useUpdateUserSettings() {
       queryClient.invalidateQueries({ queryKey: ['user-settings'] });
     },
   });
+}
+
+export function retentionDefaults() {
+  return { ...DEFAULTS };
 }

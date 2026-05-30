@@ -1,94 +1,67 @@
-# Histórico Fotográfico das Clientes
+## Fluxo de Retorno/Manutenção Inteligente
 
-Módulo completo de prontuário visual, integrado ao cadastro de clientes, à agenda e ao fluxo pós-atendimento.
+Objetivo: após concluir um atendimento, oferecer agendamento imediato do retorno, mantendo a estrutura atual de serviços (cada manutenção continua sendo um serviço independente).
 
-## O que será entregue
+### 1. Banco de dados (migração única)
 
-### 1. Infraestrutura (backend)
-- Tabela `client_photos` (id, user_id, client_id, appointment_id?, photo_date, photo_url, storage_path, observation, service_name?, created_at)
-- RLS por `user_id` + GRANTs
-- Bucket privado **`client-photos`** no Supabase Storage com policies por usuário (path `userId/clientId/arquivo.jpg`)
-- Índices em `(client_id, photo_date desc)`
+**Enum `confirmation_status_enum`**: adicionar valor `retorno_previsto`.
 
-### 2. Hook `useClientPhotos`
-- `listByClient(clientId)` — fotos ordenadas mais recentes primeiro
-- `upload(file, { clientId, appointmentId?, observation, photoDate })` — envia ao Storage, gera signed URL, insere registro
-- `updateObservation(id, obs)`
-- `delete(id)` — remove do Storage + DB
-- `stats(clientId)` — total, primeira, última, tempo de acompanhamento
+**Tabela `appointments`**: nova coluna `parent_appointment_id uuid` (nullable) para vincular o retorno ao atendimento que o originou. Índice em `(user_id, parent_appointment_id)`.
 
-### 3. Ficha do Cliente (`/cliente/:id`) — nova aba
-Tabs **Dados** | **Histórico de Fotos**
+**Tabela `user_settings`**: novos campos
+- `retention_intervals int[] default '{15,20,21,30}'`
+- `retention_reminder_days int default 3`
+- `retention_color_previsto text default '#FBBF24'`
+- `retention_color_aguardando text default '#F97316'`
+- `retention_color_confirmado text default '#10B981'`
 
-Aba Fotos:
-- Cabeçalho com indicadores: total · primeira · última · "Cliente há X meses"
-- Botões: **➕ Adicionar Foto** · **📽 Evolução** (slideshow) · **Comparar** (ativa seleção de 2 fotos)
-- Grade responsiva: 2 col mobile, 3 col tablet, 4 col desktop, com lazy loading
-- Cada card: thumbnail, data, observação curta
-- Click → modal fullscreen com: zoom (pinch/scroll), navegação ◀ ▶, editar observação, excluir
-- Modo comparação: seleção de 2 fotos → view lado a lado (Antes | Depois) com datas
-- Slideshow: avança automaticamente em ordem cronológica crescente
+### 2. Detecção de serviços de manutenção
 
-### 4. Modal "Adicionar Foto"
-- Input file com `capture="environment"` (abre câmera no mobile, galeria no desktop)
-- Múltiplos arquivos permitidos
-- Preview + compressão client-side (máx 1600px, jpeg 0.85) antes do upload
-- Campos: observação (com sugestões rápidas: Primeira aplicação, Manutenção 15 dias, Volume brasileiro, Volume egípcio, Correção de falhas), data (default hoje), serviço (auto se vier de agendamento)
+Helper `findMaintenanceServices(currentService, allServices)`:
+- Extrai a "base" do nome do serviço atual (texto antes de ` - `, ex: "Volume Brasileiro").
+- Procura serviços cujo nome começa com a mesma base **e** contém "manutenção" ou "retorno" (case/acentos-insensível).
+- Para cada match, tenta extrair número de dias por regex (`/(\d+)\s*dias?/i`); se não houver, cai no primeiro valor de `retention_intervals`.
 
-### 5. Integração com a Agenda
-- Em cada card/popover de agendamento, novo botão **📷 Histórico** ao lado de Editar/WhatsApp/Pagamento
-- Click abre o modal de histórico fotográfico (mesmo componente da aba), focado no cliente
+### 3. Componentes novos
 
-### 6. Pós-atendimento
-- Quando o usuário marca um agendamento como **Atendido**, dispara dialog:
-  > "Deseja adicionar fotos deste atendimento?"
-  > [Adicionar Fotos] [Agora Não]
-- "Adicionar Fotos" abre o modal já pré-preenchido com `appointmentId` + `clientId` + serviço
+**`ScheduleReturnDialog.tsx`** (`src/components/appointments/`)
+- Etapa 1: pergunta "Deseja agendar o próximo retorno?" com botões **Agendar Retorno** / **Agora Não**.
+- Etapa 2: lista de manutenções detectadas (radio). Se nenhuma for detectada, mostra todos os serviços do mesmo grupo + permite escolher manualmente.
+- Etapa 3: sugere data (`atendimento.date + dias`) via `<Calendar>` editável + input de horário. Validação de conflito reaproveita a regra existente.
+- Confirma → cria appointment novo com `confirmationStatus = 'retorno_previsto'`, `parentAppointmentId = atendimentoOrigem.id`, copia `clientId`, `clientName`, `serviceId`, `service`, `amount`, `duration`, observações da cliente.
 
-### 7. Performance & UX
-- Thumbnails carregadas via `transform` do Supabase Storage (`width=400`)
-- `loading="lazy"` em todas as imagens
-- Signed URLs com cache de 1h em memória
-- Mobile first, fluxo "adicionar foto" em < 3 toques
+**`ReturnsToConfirmCard.tsx`** (`src/components/dashboard/`)
+- Card no Dashboard. Conta appointments com status `retorno_previsto` cuja data está dentro de `retention_reminder_days`.
+- Click abre `ReturnsToConfirmDialog` listando: cliente, data/hora, telefone, botões **WhatsApp** (deeplink `wa.me`), **Confirmar** (status → `confirmado`), **Remarcar** (abre `AppointmentForm` existente).
 
-## Detalhes técnicos
+**`RetentionSettings.tsx`** (`src/components/settings/`)
+- Editor de lista de intervalos (chips removíveis + input).
+- Input numérico de dias de lembrete.
+- 3 color pickers (`<input type="color">`).
+- Salva em `user_settings` via `useUserSettings`.
 
-```text
-client_photos
-├── id uuid pk
-├── user_id uuid (RLS)
-├── client_id uuid → clients
-├── appointment_id uuid? → appointments
-├── photo_date timestamptz
-├── storage_path text   (userId/clientId/uuid.jpg)
-├── observation text?
-├── service_name text?
-└── created_at timestamptz
-```
+### 4. Integrações
 
-Storage bucket: `client-photos` (privado), policies: usuário só lê/escreve sob `auth.uid()/...`.
+**`useAppointments.ts` – `useUpdateConfirmationStatus`**: após gravar status `atendido`, retornar flag/contexto para a UI abrir o `ScheduleReturnDialog` (substitui ou complementa o `PostAttendancePhotoPrompt` atual: ambos podem ser disparados em sequência – fotos primeiro, depois retorno).
 
-Componentes novos:
-- `src/hooks/useClientPhotos.ts`
-- `src/components/clients/ClientPhotosTab.tsx`
-- `src/components/clients/PhotoUploadDialog.tsx`
-- `src/components/clients/PhotoLightbox.tsx` (fullscreen + zoom + nav + edit/delete)
-- `src/components/clients/PhotoCompareDialog.tsx`
-- `src/components/clients/PhotoSlideshowDialog.tsx`
-- `src/components/clients/ClientPhotosButton.tsx` (reusável para agenda)
-- `src/components/appointments/PostAttendancePhotoPrompt.tsx`
+**`AppointmentPreview.tsx` / pontos que chamam `useUpdateConfirmationStatus('atendido')`**: encadear `PostAttendancePhotoPrompt` → `ScheduleReturnDialog`.
 
-Atualizações:
-- `src/pages/ClienteFicha.tsx` → Tabs (Dados | Fotos)
-- `src/components/appointments/*` cards/popover → botão 📷
-- `src/hooks/useAppointments.ts` (ou componentes de status) → disparar prompt ao virar **Atendido**
-- `src/types/index.ts` → tipo `ClientPhoto`
+**Agenda (`MonthlyCalendar`, `WeeklyCalendar`, lista)**: badge "🔄 Retorno" quando `parentAppointmentId` existe. Cor do card mapeada conforme status:
+- `retorno_previsto` (fora da janela de lembrete) → `retention_color_previsto`
+- `retorno_previsto` (dentro da janela) → `retention_color_aguardando`
+- `confirmado` & `parentAppointmentId` → `retention_color_confirmado`
 
-Migrações:
-1. Criar tabela `client_photos` + GRANTs + RLS + policies + índice
-2. Criar bucket `client-photos` + storage policies
+**`ClienteFicha.tsx`**: nova mini-seção "Retenção" no topo da aba Dados com Último Atendimento (último `atendido`), Próxima Manutenção (próximo appointment futuro), Status do Retorno.
 
-## Fora do escopo desta entrega
-- Compartilhamento externo / exportação para redes sociais
-- Marca d'água automática
-- Edição de imagem (filtros/crop avançado) — apenas redimensionamento para upload
+**`Configuracoes.tsx`**: novo `AccordionItem` "Retenção de Clientes" usando `RetentionSettings`.
+
+**`src/types/index.ts`**: adicionar `'retorno_previsto'` ao `ConfirmationStatus`; campo `parentAppointmentId?` em `Appointment`; campos novos em `UserSettings`.
+
+### 5. Fora de escopo (deixar explícito)
+- Envio automático de WhatsApp (apenas deeplink manual).
+- Notificações push/email.
+- Refatorar serviços ou criar tabela de "tipos de manutenção".
+- Edição de agendamentos de retorno fora dos fluxos já existentes.
+
+### Fluxo final
+Atendido → modal de foto (existente) → modal de retorno → escolhe manutenção → escolhe data/hora → cria appointment `retorno_previsto` → aparece no card "Retornos para Confirmar" do Dashboard a partir de `data - reminder_days`.
