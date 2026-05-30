@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
 import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
+import { ReturnsToConfirmCard } from '@/components/dashboard/ReturnsToConfirmCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { AppointmentForm } from '@/components/appointments/AppointmentForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
@@ -147,6 +148,9 @@ const Index = () => {
           />
         </div>
       </div>
+
+      {/* Retornos para confirmar */}
+      <ReturnsToConfirmCard />
 
       {/* Hoje — o foco do dia */}
       <section className="mb-6">
