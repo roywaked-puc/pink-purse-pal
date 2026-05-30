@@ -313,15 +313,16 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
             open={photoPromptOpen}
             onOpenChange={(o) => {
               setPhotoPromptOpen(o);
-              // se fechou sem adicionar foto, abrir direto o de retorno
-              if (!o && !photoUploadOpen) setReturnDialogOpen(true);
+              if (!o && !wantsPhotoUpload.current) setReturnDialogOpen(true);
             }}
             clientName={appointment.clientName}
             onConfirm={() => {
+              wantsPhotoUpload.current = true;
               setPhotoPromptOpen(false);
               setPhotoUploadOpen(true);
             }}
           />
+
           <PhotoUploadDialog
             open={photoUploadOpen}
             onOpenChange={(o) => {
