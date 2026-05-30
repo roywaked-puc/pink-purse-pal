@@ -245,6 +245,17 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
               </a>
             </Button>
           )}
+          {appointment.clientId && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setHistoryOpen(true)}
+              className="h-8 w-8 text-pink-600 hover:text-pink-700"
+              title="Histórico de fotos"
+            >
+              <Camera className="w-4 h-4" />
+            </Button>
+          )}
           {canComplete && (
             <Button
               variant="ghost"
@@ -278,6 +289,34 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           )}
         </div>
       </div>
+
+      {appointment.clientId && (
+        <>
+          <ClientPhotosDialog
+            open={historyOpen}
+            onOpenChange={setHistoryOpen}
+            clientId={appointment.clientId}
+            clientName={appointment.clientName}
+          />
+          <PostAttendancePhotoPrompt
+            open={photoPromptOpen}
+            onOpenChange={setPhotoPromptOpen}
+            clientName={appointment.clientName}
+            onConfirm={() => {
+              setPhotoPromptOpen(false);
+              setPhotoUploadOpen(true);
+            }}
+          />
+          <PhotoUploadDialog
+            open={photoUploadOpen}
+            onOpenChange={setPhotoUploadOpen}
+            clientId={appointment.clientId}
+            appointmentId={appointment.id}
+            serviceName={appointment.service}
+            defaultDate={appointmentDate}
+          />
+        </>
+      )}
     </div>
   );
 }
