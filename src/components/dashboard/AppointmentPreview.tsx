@@ -17,6 +17,7 @@ const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.Element
   confirmado: { icon: Check, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Confirmado' },
   atendido: { icon: CheckCheck, color: 'text-green-600', bg: 'bg-green-100', label: 'Atendido' },
   cancelado: { icon: X, color: 'text-red-600', bg: 'bg-red-100', label: 'Cancelado' },
+  retorno_previsto: { icon: Clock, color: 'text-orange-600', bg: 'bg-orange-100', label: 'Retorno previsto' },
 };
 
 interface AppointmentPreviewProps {

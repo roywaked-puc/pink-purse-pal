@@ -99,6 +99,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
       confirmado: 'Confirmado',
       atendido: 'Atendido',
       cancelado: 'Cancelado',
+      retorno_previsto: 'Retorno previsto',
     };
     return labels[status] || status;
   };

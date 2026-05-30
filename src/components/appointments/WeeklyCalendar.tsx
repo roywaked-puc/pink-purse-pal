@@ -38,6 +38,7 @@ const confirmationIcons = {
   confirmado: Check,
   atendido: CheckCheck,
   cancelado: X,
+  retorno_previsto: Clock,
 };
 
 const confirmationColors: Record<ConfirmationStatus, string> = {
@@ -45,6 +46,7 @@ const confirmationColors: Record<ConfirmationStatus, string> = {
   confirmado: 'text-emerald-600',
   atendido: 'text-blue-600',
   cancelado: 'text-destructive',
+  retorno_previsto: 'text-orange-600',
 };
 
 const shortDayNames: Record<string, string> = {
