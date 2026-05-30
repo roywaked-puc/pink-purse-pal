@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -91,6 +91,8 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const [photoPromptOpen, setPhotoPromptOpen] = useState(false);
   const [photoUploadOpen, setPhotoUploadOpen] = useState(false);
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const wantsPhotoUpload = useRef(false);
+
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
@@ -311,26 +313,31 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
             open={photoPromptOpen}
             onOpenChange={(o) => {
               setPhotoPromptOpen(o);
-              // se fechou sem adicionar foto, abrir direto o de retorno
-              if (!o && !photoUploadOpen) setReturnDialogOpen(true);
+              if (!o && !wantsPhotoUpload.current) setReturnDialogOpen(true);
             }}
             clientName={appointment.clientName}
             onConfirm={() => {
+              wantsPhotoUpload.current = true;
               setPhotoPromptOpen(false);
               setPhotoUploadOpen(true);
             }}
           />
+
           <PhotoUploadDialog
             open={photoUploadOpen}
             onOpenChange={(o) => {
               setPhotoUploadOpen(o);
-              if (!o) setReturnDialogOpen(true);
+              if (!o) {
+                wantsPhotoUpload.current = false;
+                setReturnDialogOpen(true);
+              }
             }}
             clientId={appointment.clientId}
             appointmentId={appointment.id}
             serviceName={appointment.service}
             defaultDate={appointmentDate}
           />
+
         </>
       )}
       <ScheduleReturnDialog

@@ -1,67 +1,42 @@
-## Fluxo de Retorno/Manutenção Inteligente
+## Causa
 
-Objetivo: após concluir um atendimento, oferecer agendamento imediato do retorno, mantendo a estrutura atual de serviços (cada manutenção continua sendo um serviço independente).
+O fluxo de "Agendar Retorno" (e o prompt de foto pós-atendimento) só está conectado ao componente `AppointmentPreview` usado no **Dashboard**. Quando você marca como **Atendido** dentro da página `/agendamentos` — seja pelo menu de 3 pontinhos (linha 187) ou pelo botão verde de check (linha 307) ou pelo botão "Receber" que muda status para atendido (linha 293) — o código chama direto `updateConfirmationStatus` e **não dispara** o `ScheduleReturnDialog`. Por isso a tela do próximo agendamento não aparece.
 
-### 1. Banco de dados (migração única)
+Você não fez nada de errado — é uma integração faltando na página de Agendamentos.
 
-**Enum `confirmation_status_enum`**: adicionar valor `retorno_previsto`.
+## Correção proposta
 
-**Tabela `appointments`**: nova coluna `parent_appointment_id uuid` (nullable) para vincular o retorno ao atendimento que o originou. Índice em `(user_id, parent_appointment_id)`.
+Integrar o mesmo fluxo já existente (`PostAttendancePhotoPrompt` → `PhotoUploadDialog` → `ScheduleReturnDialog`) na página `src/pages/Agendamentos.tsx`.
 
-**Tabela `user_settings`**: novos campos
-- `retention_intervals int[] default '{15,20,21,30}'`
-- `retention_reminder_days int default 3`
-- `retention_color_previsto text default '#FBBF24'`
-- `retention_color_aguardando text default '#F97316'`
-- `retention_color_confirmado text default '#10B981'`
+### Mudanças em `src/pages/Agendamentos.tsx`
 
-### 2. Detecção de serviços de manutenção
+1. Adicionar estado:
+   - `returnSource: Appointment | null`
+   - `photoPromptSource: Appointment | null`
+   - `photoUploadSource: Appointment | null`
 
-Helper `findMaintenanceServices(currentService, allServices)`:
-- Extrai a "base" do nome do serviço atual (texto antes de ` - `, ex: "Volume Brasileiro").
-- Procura serviços cujo nome começa com a mesma base **e** contém "manutenção" ou "retorno" (case/acentos-insensível).
-- Para cada match, tenta extrair número de dias por regex (`/(\d+)\s*dias?/i`); se não houver, cai no primeiro valor de `retention_intervals`.
+2. Criar handler único `handleMarkAttended(appointment)` que:
+   - Chama `updateConfirmationStatus({ id, status: 'atendido' })`
+   - Se houver saldo em aberto, abre o `TransactionForm` (fluxo "Receber" atual)
+   - Se tiver `clientId`, abre `PostAttendancePhotoPrompt`; caso contrário, abre direto `ScheduleReturnDialog`
 
-### 3. Componentes novos
+3. Substituir as 3 chamadas diretas a `updateConfirmationStatus({status:'atendido'})` (DropdownMenu linha 187, botão verde linha 307, e o trecho do "Receber" linhas 292-294) por esse handler.
 
-**`ScheduleReturnDialog.tsx`** (`src/components/appointments/`)
-- Etapa 1: pergunta "Deseja agendar o próximo retorno?" com botões **Agendar Retorno** / **Agora Não**.
-- Etapa 2: lista de manutenções detectadas (radio). Se nenhuma for detectada, mostra todos os serviços do mesmo grupo + permite escolher manualmente.
-- Etapa 3: sugere data (`atendimento.date + dias`) via `<Calendar>` editável + input de horário. Validação de conflito reaproveita a regra existente.
-- Confirma → cria appointment novo com `confirmationStatus = 'retorno_previsto'`, `parentAppointmentId = atendimentoOrigem.id`, copia `clientId`, `clientName`, `serviceId`, `service`, `amount`, `duration`, observações da cliente.
+4. Renderizar no final do componente (uma vez só, controlado pelos estados):
+   - `<PostAttendancePhotoPrompt>` → ao confirmar abre `PhotoUploadDialog`; ao fechar abre `ScheduleReturnDialog`
+   - `<PhotoUploadDialog>` → ao fechar abre `ScheduleReturnDialog`
+   - `<ScheduleReturnDialog>` com `sourceAppointment={returnSource}`
 
-**`ReturnsToConfirmCard.tsx`** (`src/components/dashboard/`)
-- Card no Dashboard. Conta appointments com status `retorno_previsto` cuja data está dentro de `retention_reminder_days`.
-- Click abre `ReturnsToConfirmDialog` listando: cliente, data/hora, telefone, botões **WhatsApp** (deeplink `wa.me`), **Confirmar** (status → `confirmado`), **Remarcar** (abre `AppointmentForm` existente).
+### Pequena correção em `AppointmentPreview.tsx`
 
-**`RetentionSettings.tsx`** (`src/components/settings/`)
-- Editor de lista de intervalos (chips removíveis + input).
-- Input numérico de dias de lembrete.
-- 3 color pickers (`<input type="color">`).
-- Salva em `user_settings` via `useUserSettings`.
+Na linha 312-316, há um bug menor de timing: o callback usa `photoUploadOpen` que ainda é `false` no momento do fechamento, então o `ScheduleReturnDialog` pode abrir mesmo quando o usuário escolheu "Sim, adicionar foto". Trocar a lógica para usar uma flag de intenção (ex.: `didOpenUpload.current`) — corrigir junto para manter consistência entre Dashboard e Agendamentos.
 
-### 4. Integrações
+## Fora de escopo
 
-**`useAppointments.ts` – `useUpdateConfirmationStatus`**: após gravar status `atendido`, retornar flag/contexto para a UI abrir o `ScheduleReturnDialog` (substitui ou complementa o `PostAttendancePhotoPrompt` atual: ambos podem ser disparados em sequência – fotos primeiro, depois retorno).
+- Não mexer no Calendário Mensal/Semanal nesta rodada (status só é alterado lá via edição do form, que abre outro fluxo). Se quiser, integro depois.
+- Não alterar a lógica de detecção de manutenção, banco ou tipos.
 
-**`AppointmentPreview.tsx` / pontos que chamam `useUpdateConfirmationStatus('atendido')`**: encadear `PostAttendancePhotoPrompt` → `ScheduleReturnDialog`.
+## Arquivos afetados
 
-**Agenda (`MonthlyCalendar`, `WeeklyCalendar`, lista)**: badge "🔄 Retorno" quando `parentAppointmentId` existe. Cor do card mapeada conforme status:
-- `retorno_previsto` (fora da janela de lembrete) → `retention_color_previsto`
-- `retorno_previsto` (dentro da janela) → `retention_color_aguardando`
-- `confirmado` & `parentAppointmentId` → `retention_color_confirmado`
-
-**`ClienteFicha.tsx`**: nova mini-seção "Retenção" no topo da aba Dados com Último Atendimento (último `atendido`), Próxima Manutenção (próximo appointment futuro), Status do Retorno.
-
-**`Configuracoes.tsx`**: novo `AccordionItem` "Retenção de Clientes" usando `RetentionSettings`.
-
-**`src/types/index.ts`**: adicionar `'retorno_previsto'` ao `ConfirmationStatus`; campo `parentAppointmentId?` em `Appointment`; campos novos em `UserSettings`.
-
-### 5. Fora de escopo (deixar explícito)
-- Envio automático de WhatsApp (apenas deeplink manual).
-- Notificações push/email.
-- Refatorar serviços ou criar tabela de "tipos de manutenção".
-- Edição de agendamentos de retorno fora dos fluxos já existentes.
-
-### Fluxo final
-Atendido → modal de foto (existente) → modal de retorno → escolhe manutenção → escolhe data/hora → cria appointment `retorno_previsto` → aparece no card "Retornos para Confirmar" do Dashboard a partir de `data - reminder_days`.
+- `src/pages/Agendamentos.tsx` (edição)
+- `src/components/dashboard/AppointmentPreview.tsx` (pequeno fix de timing)

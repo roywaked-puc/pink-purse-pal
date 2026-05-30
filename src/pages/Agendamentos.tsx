@@ -22,6 +22,10 @@ import { useApp } from '@/contexts/AppContext';
 import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
+import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
+import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
+import { ScheduleReturnDialog } from '@/components/appointments/ScheduleReturnDialog';
+
 
 const formatWhatsAppMessage = (appointment: Appointment) => {
   const date = format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR });
@@ -94,6 +98,11 @@ const Agendamentos = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'week' | 'month'>('month');
   const [searchQuery, setSearchQuery] = useState('');
+  const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
+  const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
+  const [returnSource, setReturnSource] = useState<Appointment | null>(null);
+
+
 
   const sortedAppointments = useMemo(() => {
     return [...appointments]
@@ -131,8 +140,36 @@ const Agendamentos = () => {
     }
   };
   const handleConfirmationStatusChange = (appointmentId: string, status: ConfirmationStatus) => {
+    if (status === 'atendido') {
+      const apt = appointments.find(a => a.id === appointmentId);
+      if (apt) {
+        handleMarkAttended(apt);
+        return;
+      }
+    }
     updateConfirmationStatus({ id: appointmentId, status });
   };
+
+  const triggerPostAttendance = (apt: Appointment) => {
+    if (apt.clientId) {
+      setPhotoPromptSource(apt);
+    } else {
+      setReturnSource(apt);
+    }
+  };
+
+  const handleMarkAttended = (apt: Appointment) => {
+    if (apt.confirmationStatus !== 'atendido') {
+      updateConfirmationStatus({ id: apt.id, status: 'atendido' });
+    }
+    const stillHasBalance = apt.paidAmount < apt.amount;
+    if (stillHasBalance) {
+      handleReceive(apt);
+    }
+    triggerPostAttendance(apt);
+  };
+
+
 
   const renderAppointment = (appointment: Appointment, index: number) => {
     const appointmentDate = new Date(appointment.date);
@@ -288,12 +325,7 @@ const Agendamentos = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  if (appointment.confirmationStatus !== 'atendido') {
-                    updateConfirmationStatus({ id: appointment.id, status: 'atendido' });
-                  }
-                  handleReceive(appointment);
-                }}
+                onClick={() => handleMarkAttended(appointment)}
                 className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
                 title="Concluir e receber"
               >
@@ -304,13 +336,14 @@ const Agendamentos = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => updateConfirmationStatus({ id: appointment.id, status: 'atendido' })}
+                onClick={() => handleMarkAttended(appointment)}
                 className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
                 title="Marcar como atendido"
               >
                 <CheckCheck className="w-4 h-4" />
               </Button>
             )}
+
             {canDelete && (
               <Button
                 variant="ghost"
@@ -473,8 +506,55 @@ const Agendamentos = () => {
         title="Excluir agendamento"
         description="Tem certeza que deseja excluir este agendamento?"
       />
+
+      {photoPromptSource && (
+        <PostAttendancePhotoPrompt
+          open={!!photoPromptSource}
+          onOpenChange={(o) => {
+            if (!o) {
+              const src = photoPromptSource;
+              setPhotoPromptSource(null);
+              // se não escolheu adicionar foto, segue direto pro retorno
+              if (src && !photoUploadSource) setReturnSource(src);
+            }
+          }}
+          clientName={photoPromptSource.clientName}
+          onConfirm={() => {
+            setPhotoUploadSource(photoPromptSource);
+            setPhotoPromptSource(null);
+          }}
+        />
+      )}
+
+      {photoUploadSource && photoUploadSource.clientId && (
+        <PhotoUploadDialog
+          open={!!photoUploadSource}
+          onOpenChange={(o) => {
+            if (!o) {
+              const src = photoUploadSource;
+              setPhotoUploadSource(null);
+              if (src) setReturnSource(src);
+            }
+          }}
+          clientId={photoUploadSource.clientId}
+          appointmentId={photoUploadSource.id}
+          serviceName={photoUploadSource.service}
+          defaultDate={new Date(photoUploadSource.date)}
+        />
+      )}
+
+      {returnSource && (
+        <ScheduleReturnDialog
+          open={!!returnSource}
+          onOpenChange={(o) => {
+            if (!o) setReturnSource(null);
+          }}
+          sourceAppointment={returnSource}
+        />
+      )}
     </MainLayout>
   );
 };
+
 
 export default Agendamentos;
