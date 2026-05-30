@@ -325,12 +325,7 @@ const Agendamentos = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  if (appointment.confirmationStatus !== 'atendido') {
-                    updateConfirmationStatus({ id: appointment.id, status: 'atendido' });
-                  }
-                  handleReceive(appointment);
-                }}
+                onClick={() => handleMarkAttended(appointment)}
                 className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
                 title="Concluir e receber"
               >
@@ -341,13 +336,14 @@ const Agendamentos = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => updateConfirmationStatus({ id: appointment.id, status: 'atendido' })}
+                onClick={() => handleMarkAttended(appointment)}
                 className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
                 title="Marcar como atendido"
               >
                 <CheckCheck className="w-4 h-4" />
               </Button>
             )}
+
             {canDelete && (
               <Button
                 variant="ghost"
