@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { format, addDays, isAfter } from 'date-fns';
+import { format, addDays, isAfter, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   ArrowLeft,
@@ -209,26 +209,55 @@ export default function ClienteFicha() {
               />
             ) : (
               <div className="space-y-2">
-                {clientAppointments.map((a) => (
-                  <div
-                    key={a.id}
-                    className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">
-                        {format(new Date(a.date), "dd 'de' MMM yyyy 'às' HH:mm", { locale: ptBR })}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">{a.service}</p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <StatusBadge status={a.confirmationStatus} />
-                      <span className="text-sm font-semibold text-primary">
-                        {formatCurrency(a.amount)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                {(() => {
+                  const completedIds = clientAppointments
+                    .filter((a) => a.confirmationStatus === 'atendido')
+                    .map((a) => a.id);
+                  const today = new Date();
+                  return clientAppointments.map((a) => {
+                    let daysLabel: string | null = null;
+                    if (a.confirmationStatus === 'atendido') {
+                      const idx = completedIds.indexOf(a.id);
+                      if (idx === 0) {
+                        const diff = differenceInCalendarDays(new Date(a.date), today);
+                        if (diff === 0) daysLabel = 'Hoje';
+                        else if (diff > 0) daysLabel = `Em ${diff} ${diff === 1 ? 'dia' : 'dias'}`;
+                        else daysLabel = `Há ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'dia' : 'dias'}`;
+                      } else if (idx > 0) {
+                        const prevId = completedIds[idx - 1];
+                        const prev = clientAppointments.find((x) => x.id === prevId);
+                        if (prev) {
+                          const diff = differenceInCalendarDays(new Date(prev.date), new Date(a.date));
+                          daysLabel = `+${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`;
+                        }
+                      }
+                    }
+                    return (
+                      <div
+                        key={a.id}
+                        className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">
+                            {format(new Date(a.date), "dd 'de' MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">{a.service}</p>
+                          {daysLabel && (
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{daysLabel}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <StatusBadge status={a.confirmationStatus} />
+                          <span className="text-sm font-semibold text-primary">
+                            {formatCurrency(a.amount)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
+
             )}
           </section>
         </TabsContent>
