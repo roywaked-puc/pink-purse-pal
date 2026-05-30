@@ -495,8 +495,7 @@ const Agendamentos = () => {
           }
         }}
         onAttendanceConfirmed={(apt) => {
-          handleMarkAttended(apt);
-          setShowForm(false);
+          handleAttendanceFromForm(apt);
         }}
       />
 
