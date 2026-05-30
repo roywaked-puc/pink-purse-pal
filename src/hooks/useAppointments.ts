@@ -384,7 +384,7 @@ export function useUpdateConfirmationStatus() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'pendente' | 'confirmado' | 'atendido' | 'cancelado' }) => {
+    mutationFn: async ({ id, status }: { id: string; status: ConfirmationStatus }) => {
       if (!user) throw new Error('Not authenticated');
       
       // 1. Update status in database
