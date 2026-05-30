@@ -75,3 +75,15 @@ export interface UserSettings {
   google_client_secret: string | null;
   google_token_expiry: string | null;
 }
+
+export interface ClientPhoto {
+  id: string;
+  clientId: string;
+  appointmentId?: string;
+  photoDate: Date;
+  storagePath: string;
+  observation?: string;
+  serviceName?: string;
+  createdAt: Date;
+}
+
