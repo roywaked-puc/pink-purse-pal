@@ -238,8 +238,12 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
     if (appointment) {
       updateAppointment(appointment.id, data);
       // Se foi mudado para "atendido" e antes não era, dispara callback
+      // NÃO fecha o form aqui - deixa o callback fazer isso
       if (confirmationStatus === 'atendido' && appointment.confirmationStatus !== 'atendido' && onAttendanceConfirmed) {
-        onAttendanceConfirmed({ ...appointment, ...data, id: appointment.id });
+        const updatedAppointment = { ...appointment, ...data, id: appointment.id };
+        onAttendanceConfirmed(updatedAppointment);
+        resetForm();
+        return; // Não fecha o form aqui, deixa o callback fazer
       }
     } else {
       addAppointment(data);
