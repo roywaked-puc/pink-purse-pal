@@ -327,13 +327,17 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
             open={photoUploadOpen}
             onOpenChange={(o) => {
               setPhotoUploadOpen(o);
-              if (!o) setReturnDialogOpen(true);
+              if (!o) {
+                wantsPhotoUpload.current = false;
+                setReturnDialogOpen(true);
+              }
             }}
             clientId={appointment.clientId}
             appointmentId={appointment.id}
             serviceName={appointment.service}
             defaultDate={appointmentDate}
           />
+
         </>
       )}
       <ScheduleReturnDialog
