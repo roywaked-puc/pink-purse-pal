@@ -218,20 +218,24 @@ export default function ClienteFicha() {
                     let daysLabel: string | null = null;
                     if (a.confirmationStatus === 'atendido') {
                       const idx = completedIds.indexOf(a.id);
+                      const parts: string[] = [];
                       if (idx === 0) {
                         const diff = differenceInCalendarDays(new Date(a.date), today);
-                        if (diff === 0) daysLabel = 'Hoje';
-                        else if (diff > 0) daysLabel = `Em ${diff} ${diff === 1 ? 'dia' : 'dias'}`;
-                        else daysLabel = `Há ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'dia' : 'dias'}`;
-                      } else if (idx > 0) {
-                        const prevId = completedIds[idx - 1];
+                        if (diff === 0) parts.push('Hoje');
+                        else if (diff > 0) parts.push(`Em ${diff} ${diff === 1 ? 'dia' : 'dias'}`);
+                        else parts.push(`Há ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'dia' : 'dias'}`);
+                      }
+                      if (idx >= 0 && idx < completedIds.length - 1) {
+                        const prevId = completedIds[idx + 1];
                         const prev = clientAppointments.find((x) => x.id === prevId);
                         if (prev) {
-                          const diff = differenceInCalendarDays(new Date(prev.date), new Date(a.date));
-                          daysLabel = `+${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`;
+                          const diff = differenceInCalendarDays(new Date(a.date), new Date(prev.date));
+                          parts.push(`${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`);
                         }
                       }
+                      if (parts.length) daysLabel = parts.join(' · ');
                     }
+
                     return (
                       <div
                         key={a.id}
