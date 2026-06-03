@@ -8,10 +8,11 @@ import { ExportData } from '@/components/settings/ExportData';
 import { ChangePasswordDialog } from '@/components/settings/ChangePasswordDialog';
 import { GoogleCalendarSettings } from '@/components/settings/GoogleCalendarSettings';
 import { RetentionSettings } from '@/components/settings/RetentionSettings';
+import { CrmSettings } from '@/components/settings/CrmSettings';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
-import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Download, Calendar, Repeat } from 'lucide-react';
+import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Download, Calendar, Repeat, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Accordion,
