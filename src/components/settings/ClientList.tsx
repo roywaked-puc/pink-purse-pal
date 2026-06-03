@@ -54,6 +54,7 @@ export function ClientList() {
     setPhone(client.phone);
     setNotes(client.notes || '');
     setRecurrenceDays(client.recurrenceDays ? String(client.recurrenceDays) : '');
+    setBirthDate(client.birthDate || '');
     setFormOpen(true);
   };
 
