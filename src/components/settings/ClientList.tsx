@@ -228,6 +228,18 @@ export function ClientList() {
             </div>
 
             <div className="space-y-2">
+              <Label>Data de nascimento</Label>
+              <Input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Usado para o aniversariante do mês no CRM.
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label>Observação</Label>
               <Textarea
                 value={notes}
