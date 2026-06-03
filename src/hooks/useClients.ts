@@ -25,6 +25,7 @@ export function useClients() {
         phone: c.phone,
         notes: c.notes || undefined,
         recurrenceDays: c.recurrence_days ?? undefined,
+        birthDate: c.birth_date ?? undefined,
       }));
     },
     enabled: !!user,
