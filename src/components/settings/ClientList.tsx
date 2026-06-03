@@ -32,12 +32,14 @@ export function ClientList() {
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [recurrenceDays, setRecurrenceDays] = useState<string>('');
+  const [birthDate, setBirthDate] = useState<string>('');
 
   const resetForm = () => {
     setName('');
     setPhone('');
     setNotes('');
     setRecurrenceDays('');
+    setBirthDate('');
     setEditingClient(null);
   };
 
