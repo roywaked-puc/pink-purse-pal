@@ -74,6 +74,7 @@ export function useUpdateClient() {
           phone: client.phone,
           notes: client.notes,
           recurrence_days: client.recurrenceDays ?? null,
+          birth_date: client.birthDate ?? null,
         } as any)
         .eq('id', id);
 
