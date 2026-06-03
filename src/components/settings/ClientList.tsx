@@ -77,6 +77,7 @@ export function ClientList() {
       phone,
       notes: notes.trim() || undefined,
       recurrenceDays: recurrence && recurrence > 0 ? recurrence : undefined,
+      birthDate: birthDate || undefined,
     };
 
     try {
