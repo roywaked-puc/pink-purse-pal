@@ -268,6 +268,10 @@ export default function ClienteFicha() {
           </section>
         </TabsContent>
 
+        <TabsContent value="crm">
+          <ClienteCrmTab clientId={client.id} />
+        </TabsContent>
+
         <TabsContent value="fotos">
           <ClientPhotosTab clientId={client.id} />
         </TabsContent>
