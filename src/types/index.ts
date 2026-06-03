@@ -81,6 +81,9 @@ export interface UserSettings {
   retention_color_previsto: string;
   retention_color_aguardando: string;
   retention_color_confirmado: string;
+  crm_inactive_days: number;
+  crm_confirm_days: number;
+  crm_vip_count: number;
 }
 
 export interface ClientPhoto {
