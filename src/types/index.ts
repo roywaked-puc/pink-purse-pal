@@ -26,6 +26,7 @@ export interface Client {
   phone: string;
   notes?: string;
   recurrenceDays?: number;
+  birthDate?: string; // ISO date 'YYYY-MM-DD'
 }
 
 export interface Appointment {
