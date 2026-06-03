@@ -15,6 +15,9 @@ export interface UserSettings {
   retention_color_previsto: string;
   retention_color_aguardando: string;
   retention_color_confirmado: string;
+  crm_inactive_days: number;
+  crm_confirm_days: number;
+  crm_vip_count: number;
 }
 
 const DEFAULTS = {
@@ -23,11 +26,14 @@ const DEFAULTS = {
   retention_color_previsto: '#FBBF24',
   retention_color_aguardando: '#F97316',
   retention_color_confirmado: '#10B981',
+  crm_inactive_days: 45,
+  crm_confirm_days: 3,
+  crm_vip_count: 10,
 };
 
 // Safe column list — never select OAuth access/refresh tokens client-side.
 const SAFE_COLUMNS =
-  'id, user_id, google_calendar_enabled, google_client_id, google_client_secret, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado';
+  'id, user_id, google_calendar_enabled, google_client_id, google_client_secret, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count';
 
 export function useUserSettings() {
   const { user } = useAuth();
