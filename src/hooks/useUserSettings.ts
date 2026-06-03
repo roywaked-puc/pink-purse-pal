@@ -65,6 +65,9 @@ export function useUserSettings() {
         retention_color_previsto: d.retention_color_previsto ?? DEFAULTS.retention_color_previsto,
         retention_color_aguardando: d.retention_color_aguardando ?? DEFAULTS.retention_color_aguardando,
         retention_color_confirmado: d.retention_color_confirmado ?? DEFAULTS.retention_color_confirmado,
+        crm_inactive_days: d.crm_inactive_days ?? DEFAULTS.crm_inactive_days,
+        crm_confirm_days: d.crm_confirm_days ?? DEFAULTS.crm_confirm_days,
+        crm_vip_count: d.crm_vip_count ?? DEFAULTS.crm_vip_count,
       };
     },
     enabled: !!user,
