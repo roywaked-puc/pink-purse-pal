@@ -86,6 +86,11 @@ function AppRoutes() {
           <Configuracoes />
         </ProtectedRoute>
       } />
+      <Route path="/crm" element={
+        <ProtectedRoute>
+          <CRM />
+        </ProtectedRoute>
+      } />
       <Route path="/cliente/:id" element={
         <ProtectedRoute>
           <ClienteFicha />
