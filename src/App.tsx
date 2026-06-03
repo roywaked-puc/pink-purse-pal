@@ -14,6 +14,7 @@ import RelatorioMovimentacoes from "./pages/RelatorioMovimentacoes";
 import RelatorioAgendamentos from "./pages/RelatorioAgendamentos";
 import RelatorioIndicadores from "./pages/RelatorioIndicadores";
 import Configuracoes from "./pages/Configuracoes";
+import CRM from "./pages/CRM";
 import ClienteFicha from "./pages/ClienteFicha";
 import Auth from "./pages/Auth";
 import RecuperarSenha from "./pages/RecuperarSenha";
