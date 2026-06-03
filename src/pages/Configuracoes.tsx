@@ -170,6 +170,23 @@ const Configuracoes = () => {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="crm" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Heart className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">CRM</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    Inativas, confirmação e VIPs
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <CrmSettings />
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="export" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline py-4">
               <div className="flex items-center gap-3">
