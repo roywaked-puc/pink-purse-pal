@@ -32,12 +32,14 @@ export function ClientList() {
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [recurrenceDays, setRecurrenceDays] = useState<string>('');
+  const [birthDate, setBirthDate] = useState<string>('');
 
   const resetForm = () => {
     setName('');
     setPhone('');
     setNotes('');
     setRecurrenceDays('');
+    setBirthDate('');
     setEditingClient(null);
   };
 
@@ -52,6 +54,7 @@ export function ClientList() {
     setPhone(client.phone);
     setNotes(client.notes || '');
     setRecurrenceDays(client.recurrenceDays ? String(client.recurrenceDays) : '');
+    setBirthDate(client.birthDate || '');
     setFormOpen(true);
   };
 
@@ -74,6 +77,7 @@ export function ClientList() {
       phone,
       notes: notes.trim() || undefined,
       recurrenceDays: recurrence && recurrence > 0 ? recurrence : undefined,
+      birthDate: birthDate || undefined,
     };
 
     try {
@@ -220,6 +224,18 @@ export function ClientList() {
               />
               <p className="text-xs text-muted-foreground">
                 Usado para sugerir o próximo agendamento na ficha do cliente.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Data de nascimento</Label>
+              <Input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Usado para o aniversariante do mês no CRM.
               </p>
             </div>
 

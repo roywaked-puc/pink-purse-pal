@@ -178,6 +178,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          birth_date: string | null
           created_at: string
           id: string
           name: string
@@ -187,6 +188,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           name: string
@@ -196,6 +198,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           name?: string
@@ -321,6 +324,9 @@ export type Database = {
       user_settings: {
         Row: {
           created_at: string | null
+          crm_confirm_days: number
+          crm_inactive_days: number
+          crm_vip_count: number
           google_access_token: string | null
           google_calendar_enabled: boolean | null
           google_client_id: string | null
@@ -338,6 +344,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          crm_confirm_days?: number
+          crm_inactive_days?: number
+          crm_vip_count?: number
           google_access_token?: string | null
           google_calendar_enabled?: boolean | null
           google_client_id?: string | null
@@ -355,6 +364,9 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          crm_confirm_days?: number
+          crm_inactive_days?: number
+          crm_vip_count?: number
           google_access_token?: string | null
           google_calendar_enabled?: boolean | null
           google_client_id?: string | null

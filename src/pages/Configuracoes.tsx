@@ -8,10 +8,11 @@ import { ExportData } from '@/components/settings/ExportData';
 import { ChangePasswordDialog } from '@/components/settings/ChangePasswordDialog';
 import { GoogleCalendarSettings } from '@/components/settings/GoogleCalendarSettings';
 import { RetentionSettings } from '@/components/settings/RetentionSettings';
+import { CrmSettings } from '@/components/settings/CrmSettings';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
-import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Download, Calendar, Repeat } from 'lucide-react';
+import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Download, Calendar, Repeat, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Accordion,
@@ -166,6 +167,23 @@ const Configuracoes = () => {
             </AccordionTrigger>
             <AccordionContent>
               <RetentionSettings />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="crm" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Heart className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">CRM</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    Inativas, confirmação e VIPs
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <CrmSettings />
             </AccordionContent>
           </AccordionItem>
 

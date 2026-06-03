@@ -23,6 +23,7 @@ import { StatusBadge } from '@/components/ds/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClientPhotosTab } from '@/components/clients/ClientPhotosTab';
+import { ClienteCrmTab } from '@/components/crm/ClienteCrmTab';
 import { useApp } from '@/contexts/AppContext';
 
 const formatCurrency = (value: number) =>
@@ -109,8 +110,9 @@ export default function ClienteFicha() {
       />
 
       <Tabs defaultValue="dados" className="w-full">
-        <TabsList className="grid grid-cols-2 w-full max-w-xs mb-4">
+        <TabsList className="grid grid-cols-3 w-full max-w-md mb-4">
           <TabsTrigger value="dados">Dados</TabsTrigger>
+          <TabsTrigger value="crm">CRM</TabsTrigger>
           <TabsTrigger value="fotos">
             <Images className="w-4 h-4 mr-1" />
             Fotos
@@ -264,6 +266,10 @@ export default function ClienteFicha() {
 
             )}
           </section>
+        </TabsContent>
+
+        <TabsContent value="crm">
+          <ClienteCrmTab clientId={client.id} />
         </TabsContent>
 
         <TabsContent value="fotos">

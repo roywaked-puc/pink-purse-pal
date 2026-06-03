@@ -1,13 +1,14 @@
-import { Home, ArrowLeftRight, Calendar, FileText, Settings } from 'lucide-react';
+import { Home, ArrowLeftRight, Calendar, FileText, Settings, Heart } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 // Agenda é o item CORE — posicionado ao centro e em destaque
 const navItems = [
   { icon: Home, label: 'Início', path: '/' },
-  { icon: ArrowLeftRight, label: 'Movimentações', path: '/movimentacoes' },
+  { icon: ArrowLeftRight, label: 'Movim.', path: '/movimentacoes' },
   { icon: Calendar, label: 'Agenda', path: '/agendamentos', highlight: true },
-  { icon: FileText, label: 'Relatórios', path: '/relatorios' },
+  { icon: Heart, label: 'CRM', path: '/crm' },
+  { icon: FileText, label: 'Relat.', path: '/relatorios' },
   { icon: Settings, label: 'Config', path: '/configuracoes' },
 ];
 
