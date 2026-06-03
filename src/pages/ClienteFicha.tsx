@@ -23,6 +23,7 @@ import { StatusBadge } from '@/components/ds/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClientPhotosTab } from '@/components/clients/ClientPhotosTab';
+import { ClienteCrmTab } from '@/components/crm/ClienteCrmTab';
 import { useApp } from '@/contexts/AppContext';
 
 const formatCurrency = (value: number) =>
