@@ -166,6 +166,39 @@ export function useCrm() {
       });
   }, [stats]);
 
+  // CARD: Produção do mês
+  const monthlyProduction = useMemo(() => {
+    const today = new Date();
+    const monthStart = startOfMonth(today);
+    const monthEnd = endOfMonth(today);
+    const monthAppts = appointments.filter((a) => {
+      const d = new Date(a.date);
+      return d >= monthStart && d <= monthEnd && a.confirmationStatus !== 'cancelado';
+    });
+    const attended = monthAppts.filter((a) => a.confirmationStatus === 'atendido');
+    const upcoming = monthAppts
+      .filter((a) => a.confirmationStatus !== 'atendido' && new Date(a.date) >= today)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const realized = attended.reduce((s, a) => s + (a.amount || 0), 0);
+    const forecast = upcoming.reduce((s, a) => s + (a.amount || 0), 0);
+    const projection = realized + forecast;
+    const goal = settings?.crm_monthly_goal ?? 0;
+    const progress = goal > 0 ? (projection / goal) * 100 : 0;
+
+    return {
+      attendedCount: attended.length,
+      upcomingCount: upcoming.length,
+      realized,
+      forecast,
+      projection,
+      goal,
+      progress,
+      upcomingAppointments: upcoming,
+      attendedAppointments: attended,
+    };
+  }, [appointments, settings?.crm_monthly_goal]);
+
   const totals = useMemo(
     () => ({
       activeCount: stats.filter((s) => s.isActive).length,
@@ -187,8 +220,9 @@ export function useCrm() {
     pendingPayments,
     vipClients,
     birthdaysThisMonth,
+    monthlyProduction,
     totals,
-    settings: { inactiveDays, confirmDays, vipCount },
+    settings: { inactiveDays, confirmDays, vipCount, monthlyGoal: settings?.crm_monthly_goal ?? 0 },
   };
 }
 
