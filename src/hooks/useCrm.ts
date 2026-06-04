@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { differenceInCalendarDays, addDays, isAfter, isBefore, isSameMonth, parseISO } from 'date-fns';
+import { differenceInCalendarDays, addDays, isAfter, isBefore, isSameMonth, parseISO, startOfMonth, endOfMonth } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { Appointment, Client } from '@/types';
