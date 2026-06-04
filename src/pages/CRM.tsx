@@ -477,3 +477,119 @@ function MiniStat({
     </div>
   );
 }
+
+function SummaryTile({
+  label,
+  value,
+  isText,
+  highlight,
+}: {
+  label: string;
+  value: number | string;
+  isText?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'p-3 rounded-lg border text-center',
+        highlight ? 'bg-primary/10 border-primary/30' : 'bg-card border-border',
+      )}
+    >
+      <p className={cn('font-bold tabular-nums', isText ? 'text-sm' : 'text-xl', highlight && 'text-primary')}>
+        {value}
+      </p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+function ProducaoMesCard({
+  data,
+  onClick,
+}: {
+  data: {
+    attendedCount: number;
+    upcomingCount: number;
+    realized: number;
+    forecast: number;
+    projection: number;
+    goal: number;
+    progress: number;
+  };
+  onClick: () => void;
+}) {
+  const { attendedCount, upcomingCount, realized, forecast, projection, goal, progress } = data;
+  const clamped = Math.min(progress, 100);
+  const barColor =
+    progress >= 90 ? 'bg-emerald-500' : progress >= 61 ? 'bg-amber-500' : 'bg-rose-500';
+  const monthName = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full text-left mb-6 p-5 rounded-2xl border bg-gradient-to-br from-primary/10 via-card to-card shadow-elevated hover:shadow-lg transition-all"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+            <CalendarDays className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-bold text-base">📅 Produção do Mês</p>
+            <p className="text-xs text-muted-foreground capitalize">{monthName}</p>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="p-3 rounded-lg bg-background/60 border">
+          <p className="text-2xl font-bold tabular-nums text-emerald-600">{attendedCount}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Atendidos</p>
+        </div>
+        <div className="p-3 rounded-lg bg-background/60 border">
+          <p className="text-2xl font-bold tabular-nums text-sky-600">{upcomingCount}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Agendados</p>
+        </div>
+        <div className="p-3 rounded-lg bg-background/60 border">
+          <p className="text-sm font-bold tabular-nums">{formatBRL(realized)}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Realizado</p>
+        </div>
+        <div className="p-3 rounded-lg bg-background/60 border">
+          <p className="text-sm font-bold tabular-nums">{formatBRL(forecast)}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Previsto</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <TrendingUp className="w-4 h-4 text-primary" />
+          <span className="text-xs font-medium text-muted-foreground">Projeção final</span>
+        </div>
+        <span className="text-lg font-bold tabular-nums text-primary">{formatBRL(projection)}</span>
+      </div>
+
+      {goal > 0 ? (
+        <div className="space-y-1.5">
+          <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn('h-full rounded-full transition-all', barColor)}
+              style={{ width: `${clamped}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="font-medium">{Math.round(progress)}% da meta</span>
+            <span>Meta: {formatBRL(goal)}</span>
+          </div>
+        </div>
+      ) : (
+        <p className="text-[11px] text-muted-foreground italic">
+          Defina uma meta mensal em Configurações → CRM para ver o progresso.
+        </p>
+      )}
+    </button>
+  );
+}
+
