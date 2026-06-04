@@ -56,6 +56,7 @@ export default function CRM() {
     pendingPayments,
     vipClients,
     birthdaysThisMonth,
+    monthlyProduction,
     totals,
     settings,
   } = useCrm();
