@@ -95,6 +95,23 @@ export function CrmSettings() {
         </p>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="monthlyGoal">Meta mensal de faturamento (R$)</Label>
+        <Input
+          id="monthlyGoal"
+          type="number"
+          min={0}
+          step="0.01"
+          value={monthlyGoal}
+          onChange={(e) => setMonthlyGoal(parseFloat(e.target.value) || 0)}
+          className="max-w-[180px]"
+        />
+        <p className="text-xs text-muted-foreground">
+          Define a meta usada no card "Produção do Mês". Deixe 0 para ocultar a barra de progresso.
+        </p>
+      </div>
+
+
       <Button onClick={handleSave} disabled={isPending} className="w-full">
         {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
         Salvar configurações
