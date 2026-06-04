@@ -338,43 +338,51 @@ export default function CRM() {
         ))}
       </CrmListSheet>
 
-      {/* SHEET: Saldo */}
+      {/* SHEET: Produção do mês */}
       <CrmListSheet
-        open={sheet === 'pending'}
+        open={sheet === 'production'}
         onOpenChange={(o) => !o && setSheet(null)}
-        title="💰 Saldo Pendente"
-        description={`Total ${formatBRL(totals.pendingBalanceTotal)} a receber`}
+        title="📅 Produção do Mês"
+        description={format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
       >
-        {pendingPayments.length === 0 && (
-          <EmptyState icon={CheckCircle2} title="Sem pendências!" description="Nenhum saldo em aberto." />
-        )}
-        {pendingPayments.map((s) => (
-          <div key={s.client.id} className="p-3 border rounded-lg bg-card space-y-2">
-            <div>
-              <p className="font-medium text-sm">{s.client.name}</p>
-              <p className="text-xs text-muted-foreground">
-                Total {formatBRL(s.totalSpent)} · Pago {formatBRL(s.totalPaid)}
-              </p>
-              <p className="text-sm font-semibold text-rose-600 mt-1">
-                Saldo {formatBRL(s.pendingBalance)}
-              </p>
+        <div className="grid grid-cols-2 gap-2">
+          <SummaryTile label="Atendidos" value={monthlyProduction.attendedCount} />
+          <SummaryTile label="Agendados" value={monthlyProduction.upcomingCount} />
+          <SummaryTile label="Realizado" value={formatBRL(monthlyProduction.realized)} isText />
+          <SummaryTile label="Previsto" value={formatBRL(monthlyProduction.forecast)} isText />
+          <SummaryTile label="Projeção" value={formatBRL(monthlyProduction.projection)} isText highlight />
+          <SummaryTile
+            label="Meta"
+            value={monthlyProduction.goal > 0 ? formatBRL(monthlyProduction.goal) : '—'}
+            isText
+          />
+        </div>
+
+        <div className="pt-4">
+          <h3 className="font-semibold text-sm mb-2">Produção futura</h3>
+          {monthlyProduction.upcomingAppointments.length === 0 ? (
+            <EmptyState icon={CalendarDays} title="Sem agendamentos" description="Nada previsto até o fim do mês." />
+          ) : (
+            <div className="space-y-2">
+              {monthlyProduction.upcomingAppointments.map((a) => {
+                const d = new Date(a.date);
+                return (
+                  <div key={a.id} className="p-3 border rounded-lg bg-card">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-sm truncate">{a.clientName}</p>
+                      <span className="text-sm font-semibold tabular-nums">{formatBRL(a.amount)}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} · {a.service}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <WhatsAppButton
-                phone={s.client.phone}
-                message={waMessages.pendingPayment(s.client.name, formatBRL(s.pendingBalance))}
-              />
-              <Button
-                size="sm"
-                onClick={() => navigate(`/movimentacoes?clientId=${s.client.id}&type=entrada`)}
-              >
-                <DollarSign className="w-4 h-4 mr-1" />
-                Registrar pagamento
-              </Button>
-            </div>
-          </div>
-        ))}
+          )}
+        </div>
       </CrmListSheet>
+
 
       {/* SHEET: VIP */}
       <CrmListSheet
