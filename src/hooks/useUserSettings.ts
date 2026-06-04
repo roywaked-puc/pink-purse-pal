@@ -18,6 +18,7 @@ export interface UserSettings {
   crm_inactive_days: number;
   crm_confirm_days: number;
   crm_vip_count: number;
+  crm_monthly_goal: number;
 }
 
 const DEFAULTS = {
