@@ -13,12 +13,14 @@ export function CrmSettings() {
   const [inactiveDays, setInactiveDays] = useState(45);
   const [confirmDays, setConfirmDays] = useState(3);
   const [vipCount, setVipCount] = useState(10);
+  const [monthlyGoal, setMonthlyGoal] = useState(0);
 
   useEffect(() => {
     if (settings) {
       setInactiveDays(settings.crm_inactive_days);
       setConfirmDays(settings.crm_confirm_days);
       setVipCount(settings.crm_vip_count);
+      setMonthlyGoal(settings.crm_monthly_goal ?? 0);
     }
   }, [settings]);
 
@@ -28,6 +30,7 @@ export function CrmSettings() {
         crm_inactive_days: inactiveDays,
         crm_confirm_days: confirmDays,
         crm_vip_count: vipCount,
+        crm_monthly_goal: monthlyGoal,
       });
       toast.success('Configurações do CRM salvas');
     } catch (e: any) {
