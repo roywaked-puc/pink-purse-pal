@@ -326,6 +326,7 @@ export type Database = {
           created_at: string | null
           crm_confirm_days: number
           crm_inactive_days: number
+          crm_monthly_goal: number
           crm_vip_count: number
           google_access_token: string | null
           google_calendar_enabled: boolean | null
@@ -346,6 +347,7 @@ export type Database = {
           created_at?: string | null
           crm_confirm_days?: number
           crm_inactive_days?: number
+          crm_monthly_goal?: number
           crm_vip_count?: number
           google_access_token?: string | null
           google_calendar_enabled?: boolean | null
@@ -366,6 +368,7 @@ export type Database = {
           created_at?: string | null
           crm_confirm_days?: number
           crm_inactive_days?: number
+          crm_monthly_goal?: number
           crm_vip_count?: number
           google_access_token?: string | null
           google_calendar_enabled?: boolean | null

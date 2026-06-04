@@ -11,6 +11,8 @@ import {
   CalendarPlus,
   Users,
   ChevronRight,
+  TrendingUp,
+  CalendarDays,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,7 +31,7 @@ import { waMessages } from '@/lib/whatsapp';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-type SheetType = null | 'confirm' | 'returns' | 'inactive' | 'pending' | 'vip' | 'birthday';
+type SheetType = null | 'confirm' | 'returns' | 'inactive' | 'production' | 'vip' | 'birthday';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -54,6 +56,7 @@ export default function CRM() {
     pendingPayments,
     vipClients,
     birthdaysThisMonth,
+    monthlyProduction,
     totals,
     settings,
   } = useCrm();
@@ -108,6 +111,9 @@ export default function CRM() {
         <MiniStat label="VIPs" value={totals.vipCount} tone="muted" />
       </div>
 
+      {/* Produção do mês — destaque */}
+      <ProducaoMesCard data={monthlyProduction} onClick={() => setSheet('production')} />
+
       {/* Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
         <ActionCard
@@ -138,15 +144,6 @@ export default function CRM() {
           tone="warning"
         />
         <ActionCard
-          icon={DollarSign}
-          emoji="💰"
-          title="Saldo Pendente"
-          count={pendingPayments.length}
-          description={`Total ${formatBRL(totals.pendingBalanceTotal)} a receber`}
-          onClick={() => setSheet('pending')}
-          tone="danger"
-        />
-        <ActionCard
           icon={Star}
           emoji="⭐"
           title="Clientes VIP"
@@ -165,6 +162,7 @@ export default function CRM() {
           tone="muted"
         />
       </div>
+
 
       {/* Filtros e lista */}
       <section className="space-y-3">
@@ -340,43 +338,51 @@ export default function CRM() {
         ))}
       </CrmListSheet>
 
-      {/* SHEET: Saldo */}
+      {/* SHEET: Produção do mês */}
       <CrmListSheet
-        open={sheet === 'pending'}
+        open={sheet === 'production'}
         onOpenChange={(o) => !o && setSheet(null)}
-        title="💰 Saldo Pendente"
-        description={`Total ${formatBRL(totals.pendingBalanceTotal)} a receber`}
+        title="📅 Produção do Mês"
+        description={format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
       >
-        {pendingPayments.length === 0 && (
-          <EmptyState icon={CheckCircle2} title="Sem pendências!" description="Nenhum saldo em aberto." />
-        )}
-        {pendingPayments.map((s) => (
-          <div key={s.client.id} className="p-3 border rounded-lg bg-card space-y-2">
-            <div>
-              <p className="font-medium text-sm">{s.client.name}</p>
-              <p className="text-xs text-muted-foreground">
-                Total {formatBRL(s.totalSpent)} · Pago {formatBRL(s.totalPaid)}
-              </p>
-              <p className="text-sm font-semibold text-rose-600 mt-1">
-                Saldo {formatBRL(s.pendingBalance)}
-              </p>
+        <div className="grid grid-cols-2 gap-2">
+          <SummaryTile label="Atendidos" value={monthlyProduction.attendedCount} />
+          <SummaryTile label="Agendados" value={monthlyProduction.upcomingCount} />
+          <SummaryTile label="Realizado" value={formatBRL(monthlyProduction.realized)} isText />
+          <SummaryTile label="Previsto" value={formatBRL(monthlyProduction.forecast)} isText />
+          <SummaryTile label="Projeção" value={formatBRL(monthlyProduction.projection)} isText highlight />
+          <SummaryTile
+            label="Meta"
+            value={monthlyProduction.goal > 0 ? formatBRL(monthlyProduction.goal) : '—'}
+            isText
+          />
+        </div>
+
+        <div className="pt-4">
+          <h3 className="font-semibold text-sm mb-2">Produção futura</h3>
+          {monthlyProduction.upcomingAppointments.length === 0 ? (
+            <EmptyState icon={CalendarDays} title="Sem agendamentos" description="Nada previsto até o fim do mês." />
+          ) : (
+            <div className="space-y-2">
+              {monthlyProduction.upcomingAppointments.map((a) => {
+                const d = new Date(a.date);
+                return (
+                  <div key={a.id} className="p-3 border rounded-lg bg-card">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-sm truncate">{a.clientName}</p>
+                      <span className="text-sm font-semibold tabular-nums">{formatBRL(a.amount)}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} · {a.service}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <WhatsAppButton
-                phone={s.client.phone}
-                message={waMessages.pendingPayment(s.client.name, formatBRL(s.pendingBalance))}
-              />
-              <Button
-                size="sm"
-                onClick={() => navigate(`/movimentacoes?clientId=${s.client.id}&type=entrada`)}
-              >
-                <DollarSign className="w-4 h-4 mr-1" />
-                Registrar pagamento
-              </Button>
-            </div>
-          </div>
-        ))}
+          )}
+        </div>
       </CrmListSheet>
+
 
       {/* SHEET: VIP */}
       <CrmListSheet
@@ -471,3 +477,119 @@ function MiniStat({
     </div>
   );
 }
+
+function SummaryTile({
+  label,
+  value,
+  isText,
+  highlight,
+}: {
+  label: string;
+  value: number | string;
+  isText?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'p-3 rounded-lg border text-center',
+        highlight ? 'bg-primary/10 border-primary/30' : 'bg-card border-border',
+      )}
+    >
+      <p className={cn('font-bold tabular-nums', isText ? 'text-sm' : 'text-xl', highlight && 'text-primary')}>
+        {value}
+      </p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+function ProducaoMesCard({
+  data,
+  onClick,
+}: {
+  data: {
+    attendedCount: number;
+    upcomingCount: number;
+    realized: number;
+    forecast: number;
+    projection: number;
+    goal: number;
+    progress: number;
+  };
+  onClick: () => void;
+}) {
+  const { attendedCount, upcomingCount, realized, forecast, projection, goal, progress } = data;
+  const clamped = Math.min(progress, 100);
+  const barColor =
+    progress >= 90 ? 'bg-emerald-500' : progress >= 61 ? 'bg-amber-500' : 'bg-rose-500';
+  const monthName = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full text-left mb-6 p-5 rounded-2xl border bg-gradient-to-br from-primary/10 via-card to-card shadow-elevated hover:shadow-lg transition-all"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+            <CalendarDays className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-bold text-base">📅 Produção do Mês</p>
+            <p className="text-xs text-muted-foreground capitalize">{monthName}</p>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="p-3 rounded-lg bg-background/60 border">
+          <p className="text-2xl font-bold tabular-nums text-emerald-600">{attendedCount}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Atendidos</p>
+        </div>
+        <div className="p-3 rounded-lg bg-background/60 border">
+          <p className="text-2xl font-bold tabular-nums text-sky-600">{upcomingCount}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Agendados</p>
+        </div>
+        <div className="p-3 rounded-lg bg-background/60 border">
+          <p className="text-sm font-bold tabular-nums">{formatBRL(realized)}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Realizado</p>
+        </div>
+        <div className="p-3 rounded-lg bg-background/60 border">
+          <p className="text-sm font-bold tabular-nums">{formatBRL(forecast)}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Previsto</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <TrendingUp className="w-4 h-4 text-primary" />
+          <span className="text-xs font-medium text-muted-foreground">Projeção final</span>
+        </div>
+        <span className="text-lg font-bold tabular-nums text-primary">{formatBRL(projection)}</span>
+      </div>
+
+      {goal > 0 ? (
+        <div className="space-y-1.5">
+          <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn('h-full rounded-full transition-all', barColor)}
+              style={{ width: `${clamped}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="font-medium">{Math.round(progress)}% da meta</span>
+            <span>Meta: {formatBRL(goal)}</span>
+          </div>
+        </div>
+      ) : (
+        <p className="text-[11px] text-muted-foreground italic">
+          Defina uma meta mensal em Configurações → CRM para ver o progresso.
+        </p>
+      )}
+    </button>
+  );
+}
+

@@ -1,0 +1,1 @@
+ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS crm_monthly_goal numeric NOT NULL DEFAULT 0;
