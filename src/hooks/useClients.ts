@@ -32,6 +32,8 @@ export function useClients() {
   });
 }
 
+const normalizePhone = (p?: string) => (p || '').replace(/\D/g, '');
+
 export function useAddClient() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -39,6 +41,15 @@ export function useAddClient() {
   return useMutation({
     mutationFn: async (client: Omit<Client, 'id'>): Promise<string> => {
       if (!user) throw new Error('Not authenticated');
+
+      const newPhone = normalizePhone(client.phone);
+      if (newPhone) {
+        const existing = queryClient.getQueryData<Client[]>(['clients', user.id]) || [];
+        const dup = existing.find((c) => normalizePhone(c.phone) === newPhone);
+        if (dup) {
+          throw new Error(`Já existe um cliente com este telefone: ${dup.name}`);
+        }
+      }
 
       const { data, error } = await supabase
         .from('clients')
@@ -64,9 +75,19 @@ export function useAddClient() {
 
 export function useUpdateClient() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, client }: { id: string; client: Omit<Client, 'id'> }) => {
+      const newPhone = normalizePhone(client.phone);
+      if (newPhone && user) {
+        const existing = queryClient.getQueryData<Client[]>(['clients', user.id]) || [];
+        const dup = existing.find((c) => c.id !== id && normalizePhone(c.phone) === newPhone);
+        if (dup) {
+          throw new Error(`Já existe um cliente com este telefone: ${dup.name}`);
+        }
+      }
+
       const { error } = await supabase
         .from('clients')
         .update({
@@ -85,6 +106,7 @@ export function useUpdateClient() {
     },
   });
 }
+
 
 export function useDeleteClient() {
   const queryClient = useQueryClient();
