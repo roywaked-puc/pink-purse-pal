@@ -111,6 +111,9 @@ export default function CRM() {
         <MiniStat label="VIPs" value={totals.vipCount} tone="muted" />
       </div>
 
+      {/* Produção do mês — destaque */}
+      <ProducaoMesCard data={monthlyProduction} onClick={() => setSheet('production')} />
+
       {/* Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
         <ActionCard
@@ -141,15 +144,6 @@ export default function CRM() {
           tone="warning"
         />
         <ActionCard
-          icon={DollarSign}
-          emoji="💰"
-          title="Saldo Pendente"
-          count={pendingPayments.length}
-          description={`Total ${formatBRL(totals.pendingBalanceTotal)} a receber`}
-          onClick={() => setSheet('pending')}
-          tone="danger"
-        />
-        <ActionCard
           icon={Star}
           emoji="⭐"
           title="Clientes VIP"
@@ -168,6 +162,7 @@ export default function CRM() {
           tone="muted"
         />
       </div>
+
 
       {/* Filtros e lista */}
       <section className="space-y-3">
