@@ -90,8 +90,8 @@ export function ClientList() {
       }
       setFormOpen(false);
       resetForm();
-    } catch (error) {
-      toast.error('Erro ao salvar cliente');
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao salvar cliente');
     }
   };
 
