@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
-import { CalendarIcon, HelpCircle, Receipt } from 'lucide-react';
+import { CalendarIcon, HelpCircle, Receipt, Loader2 } from 'lucide-react';
 import { AppointmentTransactionsDialog } from './AppointmentTransactionsDialog';
 import {
   Tooltip,
@@ -67,6 +67,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const [confirmationStatus, setConfirmationStatus] = useState<ConfirmationStatus>('pendente');
   const [notes, setNotes] = useState('');
   const [showTransactions, setShowTransactions] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (appointment) {
@@ -177,6 +178,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     
     const [hours, minutes] = time.split(':').map(Number);
     const fullDate = new Date(date);
@@ -195,50 +197,51 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       return;
     }
 
-    let clientId = selectedClientId;
-
-    // Se tem cliente selecionado, atualiza os dados se mudaram
-    if (selectedClientId) {
-      updateClient(selectedClientId, {
-        name: clientName,
-        phone: clientPhone,
-        notes: clientNotes,
-      });
-    } else if (clientName.trim()) {
-      // Cria novo cliente e aguarda o ID real do banco
-      clientId = await addClientAsync({
-        name: clientName.trim(),
-        phone: clientPhone,
-        notes: clientNotes,
-      });
-    }
-
-    let serviceId = selectedServiceId;
-
-    // Se digitou serviço novo, cria automaticamente e aguarda o ID real
-    if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
-      serviceId = await addServiceAsync({
-        description: service.trim(),
-        amount: parseFloat(amount),
-        duration: 60, // Duração padrão de 1 hora para novos serviços
-      });
-    }
-
-    const data = {
-      date: fullDate,
-      clientId: clientId || undefined,
-      clientName: clientName.trim(),
-      serviceId: serviceId || undefined,
-      service,
-      amount: parseFloat(amount) || 0,
-      paidAmount: appointment?.paidAmount || 0,
-      paymentStatus,
-      confirmationStatus,
-      duration: parseInt(duration) || 60,
-      notes: notes.trim() || undefined,
-    };
-
+    setIsSubmitting(true);
     try {
+      let clientId = selectedClientId;
+
+      // Se tem cliente selecionado, atualiza os dados se mudaram
+      if (selectedClientId) {
+        updateClient(selectedClientId, {
+          name: clientName,
+          phone: clientPhone,
+          notes: clientNotes,
+        });
+      } else if (clientName.trim()) {
+        // Cria novo cliente e aguarda o ID real do banco
+        clientId = await addClientAsync({
+          name: clientName.trim(),
+          phone: clientPhone,
+          notes: clientNotes,
+        });
+      }
+
+      let serviceId = selectedServiceId;
+
+      // Se digitou serviço novo, cria automaticamente e aguarda o ID real
+      if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
+        serviceId = await addServiceAsync({
+          description: service.trim(),
+          amount: parseFloat(amount),
+          duration: 60, // Duração padrão de 1 hora para novos serviços
+        });
+      }
+
+      const data = {
+        date: fullDate,
+        clientId: clientId || undefined,
+        clientName: clientName.trim(),
+        serviceId: serviceId || undefined,
+        service,
+        amount: parseFloat(amount) || 0,
+        paidAmount: appointment?.paidAmount || 0,
+        paymentStatus,
+        confirmationStatus,
+        duration: parseInt(duration) || 60,
+        notes: notes.trim() || undefined,
+      };
+
       if (appointment) {
         const wasAtendido = appointment.confirmationStatus === 'atendido';
         const becameAtendido = confirmationStatus === 'atendido' && !wasAtendido;
@@ -263,11 +266,13 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       toast.error('Erro ao salvar agendamento', {
         description: err?.message || 'Tente novamente.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!isSubmitting) onOpenChange(o); }}>
       <DialogContent className="max-w-[95%] sm:max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -466,6 +471,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                 type="button"
                 variant="destructive"
                 onClick={onDelete}
+                disabled={isSubmitting}
                 className="w-full sm:w-auto"
               >
                 Excluir
@@ -476,12 +482,20 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
                 className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="flex-1">
-                Salvar
+              <Button type="submit" disabled={isSubmitting} className="flex-1">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar'
+                )}
               </Button>
             </div>
           </DialogFooter>
