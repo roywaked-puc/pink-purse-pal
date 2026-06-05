@@ -178,6 +178,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     
     const [hours, minutes] = time.split(':').map(Number);
     const fullDate = new Date(date);
@@ -196,50 +197,51 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       return;
     }
 
-    let clientId = selectedClientId;
-
-    // Se tem cliente selecionado, atualiza os dados se mudaram
-    if (selectedClientId) {
-      updateClient(selectedClientId, {
-        name: clientName,
-        phone: clientPhone,
-        notes: clientNotes,
-      });
-    } else if (clientName.trim()) {
-      // Cria novo cliente e aguarda o ID real do banco
-      clientId = await addClientAsync({
-        name: clientName.trim(),
-        phone: clientPhone,
-        notes: clientNotes,
-      });
-    }
-
-    let serviceId = selectedServiceId;
-
-    // Se digitou serviço novo, cria automaticamente e aguarda o ID real
-    if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
-      serviceId = await addServiceAsync({
-        description: service.trim(),
-        amount: parseFloat(amount),
-        duration: 60, // Duração padrão de 1 hora para novos serviços
-      });
-    }
-
-    const data = {
-      date: fullDate,
-      clientId: clientId || undefined,
-      clientName: clientName.trim(),
-      serviceId: serviceId || undefined,
-      service,
-      amount: parseFloat(amount) || 0,
-      paidAmount: appointment?.paidAmount || 0,
-      paymentStatus,
-      confirmationStatus,
-      duration: parseInt(duration) || 60,
-      notes: notes.trim() || undefined,
-    };
-
+    setIsSubmitting(true);
     try {
+      let clientId = selectedClientId;
+
+      // Se tem cliente selecionado, atualiza os dados se mudaram
+      if (selectedClientId) {
+        updateClient(selectedClientId, {
+          name: clientName,
+          phone: clientPhone,
+          notes: clientNotes,
+        });
+      } else if (clientName.trim()) {
+        // Cria novo cliente e aguarda o ID real do banco
+        clientId = await addClientAsync({
+          name: clientName.trim(),
+          phone: clientPhone,
+          notes: clientNotes,
+        });
+      }
+
+      let serviceId = selectedServiceId;
+
+      // Se digitou serviço novo, cria automaticamente e aguarda o ID real
+      if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
+        serviceId = await addServiceAsync({
+          description: service.trim(),
+          amount: parseFloat(amount),
+          duration: 60, // Duração padrão de 1 hora para novos serviços
+        });
+      }
+
+      const data = {
+        date: fullDate,
+        clientId: clientId || undefined,
+        clientName: clientName.trim(),
+        serviceId: serviceId || undefined,
+        service,
+        amount: parseFloat(amount) || 0,
+        paidAmount: appointment?.paidAmount || 0,
+        paymentStatus,
+        confirmationStatus,
+        duration: parseInt(duration) || 60,
+        notes: notes.trim() || undefined,
+      };
+
       if (appointment) {
         const wasAtendido = appointment.confirmationStatus === 'atendido';
         const becameAtendido = confirmationStatus === 'atendido' && !wasAtendido;
@@ -264,6 +266,8 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       toast.error('Erro ao salvar agendamento', {
         description: err?.message || 'Tente novamente.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
