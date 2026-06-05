@@ -67,6 +67,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const [confirmationStatus, setConfirmationStatus] = useState<ConfirmationStatus>('pendente');
   const [notes, setNotes] = useState('');
   const [showTransactions, setShowTransactions] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (appointment) {
