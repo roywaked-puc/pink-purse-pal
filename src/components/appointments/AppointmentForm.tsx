@@ -471,6 +471,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                 type="button"
                 variant="destructive"
                 onClick={onDelete}
+                disabled={isSubmitting}
                 className="w-full sm:w-auto"
               >
                 Excluir
@@ -481,12 +482,20 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
                 className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="flex-1">
-                Salvar
+              <Button type="submit" disabled={isSubmitting} className="flex-1">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar'
+                )}
               </Button>
             </div>
           </DialogFooter>
