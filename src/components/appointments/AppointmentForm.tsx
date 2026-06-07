@@ -40,15 +40,29 @@ import { ClientAutocomplete } from './ClientAutocomplete';
 import { ServiceAutocomplete } from './ServiceAutocomplete';
 import { toast } from 'sonner';
 
+export interface AppointmentPrefill {
+  date?: Date;
+  clientId?: string;
+  clientName?: string;
+  clientPhone?: string;
+  clientNotes?: string;
+  serviceId?: string;
+  service?: string;
+  amount?: number;
+  duration?: number;
+  notes?: string;
+}
+
 interface AppointmentFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointment?: Appointment | null;
   onDelete?: () => void;
   onAttendanceConfirmed?: (appointment: Appointment) => void;
+  prefill?: AppointmentPrefill | null;
 }
 
-export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed }: AppointmentFormProps) {
+export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed, prefill }: AppointmentFormProps) {
   const { appointments, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
   const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
   const { mutateAsync: addAppointmentAsync } = useAddAppointment();
@@ -105,10 +119,25 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
         setSelectedServiceId(null);
         setServiceNotes('');
       }
+    } else if (prefill) {
+      resetForm();
+      if (prefill.date) {
+        setDate(prefill.date);
+        setTime(format(prefill.date, 'HH:mm'));
+      }
+      if (prefill.clientId) setSelectedClientId(prefill.clientId);
+      if (prefill.clientName) setClientName(prefill.clientName);
+      if (prefill.clientPhone) setClientPhone(prefill.clientPhone);
+      if (prefill.clientNotes) setClientNotes(prefill.clientNotes);
+      if (prefill.serviceId) setSelectedServiceId(prefill.serviceId);
+      if (prefill.service) setService(prefill.service);
+      if (prefill.amount != null) setAmount(prefill.amount.toString());
+      if (prefill.duration != null) setDuration(prefill.duration.toString());
+      if (prefill.notes) setNotes(prefill.notes);
     } else {
       resetForm();
     }
-  }, [appointment, open, getClientById, getServiceById]);
+  }, [appointment, open, getClientById, getServiceById, prefill]);
 
   const resetForm = () => {
     setDate(new Date());
