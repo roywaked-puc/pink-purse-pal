@@ -40,15 +40,29 @@ import { ClientAutocomplete } from './ClientAutocomplete';
 import { ServiceAutocomplete } from './ServiceAutocomplete';
 import { toast } from 'sonner';
 
+export interface AppointmentPrefill {
+  date?: Date;
+  clientId?: string;
+  clientName?: string;
+  clientPhone?: string;
+  clientNotes?: string;
+  serviceId?: string;
+  service?: string;
+  amount?: number;
+  duration?: number;
+  notes?: string;
+}
+
 interface AppointmentFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointment?: Appointment | null;
   onDelete?: () => void;
   onAttendanceConfirmed?: (appointment: Appointment) => void;
+  prefill?: AppointmentPrefill | null;
 }
 
-export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed }: AppointmentFormProps) {
+export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed, prefill }: AppointmentFormProps) {
   const { appointments, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
   const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
   const { mutateAsync: addAppointmentAsync } = useAddAppointment();
