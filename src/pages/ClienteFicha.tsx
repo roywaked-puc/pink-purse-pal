@@ -112,12 +112,16 @@ export default function ClienteFicha() {
       />
 
       <Tabs defaultValue="dados" className="w-full">
-        <TabsList className="grid grid-cols-3 w-full max-w-md mb-4">
+        <TabsList className="grid grid-cols-4 w-full max-w-md mb-4">
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="crm">CRM</TabsTrigger>
           <TabsTrigger value="fotos">
             <Images className="w-4 h-4 mr-1" />
             Fotos
+          </TabsTrigger>
+          <TabsTrigger value="anamnese">
+            <ClipboardList className="w-4 h-4 mr-1" />
+            Anamneses
           </TabsTrigger>
         </TabsList>
 
