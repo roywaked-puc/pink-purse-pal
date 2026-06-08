@@ -29,14 +29,15 @@ export function AnamneseForm({ responseId, open, onOpenChange }: Props) {
   const [signature, setSignature] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     if (data?.answers) {
       const map: Record<string, unknown> = {};
       data.answers.forEach((a) => { map[a.question_id] = a.value; });
       setAnswers(map);
     }
     if (data?.response.signature_data) setSignature(data.response.signature_data);
-  }, [data?.response.id]); // eslint-disable-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.response.id]);
 
   const sections = useMemo(() => {
     const map = new Map<string, AnamneseQuestion[]>();
