@@ -41,6 +41,233 @@ export type Database = {
         }
         Relationships: []
       }
+      anamnese_answers: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: string
+          response_id: string
+          user_id: string
+          value: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id: string
+          response_id: string
+          user_id: string
+          value?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: string
+          response_id?: string
+          user_id?: string
+          value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnese_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "anamnese_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anamnese_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "anamnese_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anamnese_questions: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          options: Json
+          order_index: number
+          required: boolean
+          section: string
+          type: Database["public"]["Enums"]["anamnese_question_type"]
+          user_id: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          options?: Json
+          order_index?: number
+          required?: boolean
+          section?: string
+          type: Database["public"]["Enums"]["anamnese_question_type"]
+          user_id: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          options?: Json
+          order_index?: number
+          required?: boolean
+          section?: string
+          type?: Database["public"]["Enums"]["anamnese_question_type"]
+          user_id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnese_questions_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "anamnese_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anamnese_responses: {
+        Row: {
+          client_id: string
+          created_at: string
+          filled_at: string | null
+          id: string
+          pdf_path: string | null
+          share_token: string
+          signature_data: string | null
+          signed_at: string | null
+          status: Database["public"]["Enums"]["anamnese_response_status"]
+          template_id: string
+          updated_at: string
+          user_id: string
+          version_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          filled_at?: string | null
+          id?: string
+          pdf_path?: string | null
+          share_token?: string
+          signature_data?: string | null
+          signed_at?: string | null
+          status?: Database["public"]["Enums"]["anamnese_response_status"]
+          template_id: string
+          updated_at?: string
+          user_id: string
+          version_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          filled_at?: string | null
+          id?: string
+          pdf_path?: string | null
+          share_token?: string
+          signature_data?: string | null
+          signed_at?: string | null
+          status?: Database["public"]["Enums"]["anamnese_response_status"]
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnese_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anamnese_responses_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "anamnese_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anamnese_responses_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "anamnese_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anamnese_template_versions: {
+        Row: {
+          created_at: string
+          id: string
+          is_current: boolean
+          locked: boolean
+          template_id: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          locked?: boolean
+          template_id: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          locked?: boolean
+          template_id?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnese_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "anamnese_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anamnese_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           amount: number
@@ -395,6 +622,20 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      anamnese_question_type:
+        | "texto_curto"
+        | "texto_longo"
+        | "sim_nao"
+        | "multipla_escolha"
+        | "selecao_unica"
+        | "data"
+        | "numero"
+        | "checkbox"
+      anamnese_response_status:
+        | "pendente"
+        | "preenchida"
+        | "assinada"
+        | "arquivada"
       confirmation_status_enum:
         | "pendente"
         | "confirmado"
@@ -529,6 +770,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      anamnese_question_type: [
+        "texto_curto",
+        "texto_longo",
+        "sim_nao",
+        "multipla_escolha",
+        "selecao_unica",
+        "data",
+        "numero",
+        "checkbox",
+      ],
+      anamnese_response_status: [
+        "pendente",
+        "preenchida",
+        "assinada",
+        "arquivada",
+      ],
       confirmation_status_enum: [
         "pendente",
         "confirmado",
