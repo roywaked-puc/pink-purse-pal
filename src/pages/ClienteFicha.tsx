@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Hash,
   Images,
+  ClipboardList,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -24,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClientPhotosTab } from '@/components/clients/ClientPhotosTab';
 import { ClienteCrmTab } from '@/components/crm/ClienteCrmTab';
+import { ClienteAnamneseTab } from '@/components/anamnese/ClienteAnamneseTab';
 import { useApp } from '@/contexts/AppContext';
 
 const formatCurrency = (value: number) =>
