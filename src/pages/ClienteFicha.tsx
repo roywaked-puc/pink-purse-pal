@@ -281,6 +281,10 @@ export default function ClienteFicha() {
         <TabsContent value="fotos">
           <ClientPhotosTab clientId={client.id} />
         </TabsContent>
+
+        <TabsContent value="anamnese">
+          <ClienteAnamneseTab clientId={client.id} />
+        </TabsContent>
       </Tabs>
     </MainLayout>
   );
