@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,9 +8,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
-import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
-import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
-import { ScheduleReturnDialog } from '@/components/appointments/ScheduleReturnDialog';
 
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -27,6 +24,7 @@ interface AppointmentPreviewProps {
   onEdit: (appointment: Appointment) => void;
   onDelete: (id: string) => void;
   onReceive?: (appointment: Appointment) => void;
+  onAttendanceCompleted?: (appointment: Appointment) => void;
   getClientPhone?: (clientId: string) => string | undefined;
 }
 
@@ -85,13 +83,9 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
 };
 
-export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
+export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, onAttendanceCompleted, getClientPhone }: AppointmentPreviewProps) {
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [photoPromptOpen, setPhotoPromptOpen] = useState(false);
-  const [photoUploadOpen, setPhotoUploadOpen] = useState(false);
-  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
-  const wantsPhotoUpload = useRef(false);
 
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
@@ -112,11 +106,9 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
     if (hasBalance && onReceive) {
       onReceive(appointment);
     }
-    if (appointment.clientId) {
-      setPhotoPromptOpen(true);
-    } else {
-      setReturnDialogOpen(true);
-    }
+    // Delegate post-attendance flow (photo prompt + schedule return) to the page,
+    // since this component may unmount as soon as the appointment is filtered out.
+    onAttendanceCompleted?.(appointment);
   };
 
 
@@ -302,49 +294,13 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
       </div>
 
       {appointment.clientId && (
-        <>
-          <ClientPhotosDialog
-            open={historyOpen}
-            onOpenChange={setHistoryOpen}
-            clientId={appointment.clientId}
-            clientName={appointment.clientName}
-          />
-          <PostAttendancePhotoPrompt
-            open={photoPromptOpen}
-            onOpenChange={(o) => {
-              setPhotoPromptOpen(o);
-              if (!o && !wantsPhotoUpload.current) setReturnDialogOpen(true);
-            }}
-            clientName={appointment.clientName}
-            onConfirm={() => {
-              wantsPhotoUpload.current = true;
-              setPhotoPromptOpen(false);
-              setPhotoUploadOpen(true);
-            }}
-          />
-
-          <PhotoUploadDialog
-            open={photoUploadOpen}
-            onOpenChange={(o) => {
-              setPhotoUploadOpen(o);
-              if (!o) {
-                wantsPhotoUpload.current = false;
-                setReturnDialogOpen(true);
-              }
-            }}
-            clientId={appointment.clientId}
-            appointmentId={appointment.id}
-            serviceName={appointment.service}
-            defaultDate={appointmentDate}
-          />
-
-        </>
+        <ClientPhotosDialog
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+          clientId={appointment.clientId}
+          clientName={appointment.clientName}
+        />
       )}
-      <ScheduleReturnDialog
-        open={returnDialogOpen}
-        onOpenChange={setReturnDialogOpen}
-        sourceAppointment={appointment}
-      />
     </div>
   );
 }
