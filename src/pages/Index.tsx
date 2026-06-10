@@ -128,6 +128,7 @@ const Index = () => {
             onEdit={handleEditAppointment}
             onDelete={handleDeleteAppointment}
             onReceive={handleReceiveAppointment}
+            onAttendanceCompleted={triggerPostAttendance}
             getClientPhone={getClientPhone}
           />
         </div>
