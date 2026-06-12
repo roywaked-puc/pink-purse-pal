@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { addDays } from 'date-fns';
 import { Repeat } from 'lucide-react';
 import {
@@ -14,19 +14,18 @@ import { useApp } from '@/contexts/AppContext';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { Appointment, Service } from '@/types';
 import { findMaintenanceServices, extractDaysFromName, getServiceBase } from '@/lib/maintenance';
-import { AppointmentForm, AppointmentPrefill } from './AppointmentForm';
+import { AppointmentPrefill } from './AppointmentForm';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sourceAppointment: Appointment | null;
+  onAgendarAgora?: (prefill: AppointmentPrefill) => void;
 }
 
-export function ScheduleReturnDialog({ open, onOpenChange, sourceAppointment }: Props) {
+export function ScheduleReturnDialog({ open, onOpenChange, sourceAppointment, onAgendarAgora }: Props) {
   const { services, getClientById } = useApp();
   const { data: settings } = useUserSettings();
-  const [formOpen, setFormOpen] = useState(false);
-  const [prefill, setPrefill] = useState<AppointmentPrefill | null>(null);
 
   const detectedServices = useMemo<Service[]>(() => {
     if (!sourceAppointment) return [];
@@ -50,14 +49,13 @@ export function ScheduleReturnDialog({ open, onOpenChange, sourceAppointment }: 
       : fallbackInterval;
     const source = new Date(sourceAppointment.date);
     const suggestedDate = addDays(source, days);
-    // Preserve same hour/minute as source appointment
     suggestedDate.setHours(source.getHours(), source.getMinutes(), 0, 0);
 
     const client = sourceAppointment.clientId
       ? getClientById(sourceAppointment.clientId)
       : null;
 
-    setPrefill({
+    const prefill: AppointmentPrefill = {
       date: suggestedDate,
       clientId: sourceAppointment.clientId,
       clientName: sourceAppointment.clientName,
@@ -68,44 +66,33 @@ export function ScheduleReturnDialog({ open, onOpenChange, sourceAppointment }: 
       amount: suggestedService?.amount ?? sourceAppointment.amount,
       duration: suggestedService?.duration ?? sourceAppointment.duration,
       notes: sourceAppointment.notes,
-    });
+    };
+
     onOpenChange(false);
-    // Open the full appointment form
-    setTimeout(() => setFormOpen(true), 100);
+    onAgendarAgora?.(prefill);
   };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[95%] sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Repeat className="w-5 h-5 text-primary" />
-              Próxima Manutenção
-            </DialogTitle>
-            <DialogDescription>
-              Deseja agendar agora o próximo retorno desta cliente?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-row gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-              Depois
-            </Button>
-            <Button className="flex-1" onClick={handleAgendarAgora}>
-              Agendar Agora
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <AppointmentForm
-        open={formOpen}
-        onOpenChange={(o) => {
-          setFormOpen(o);
-          if (!o) setPrefill(null);
-        }}
-        prefill={prefill}
-      />
-    </>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[95%] sm:max-w-md rounded-xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Repeat className="w-5 h-5 text-primary" />
+            Próxima Manutenção
+          </DialogTitle>
+          <DialogDescription>
+            Deseja agendar agora o próximo retorno desta cliente?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex-row gap-2">
+          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+            Depois
+          </Button>
+          <Button className="flex-1" onClick={handleAgendarAgora}>
+            Agendar Agora
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
