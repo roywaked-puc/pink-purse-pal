@@ -232,10 +232,13 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
 
       // Se tem cliente selecionado, atualiza os dados se mudaram
       if (selectedClientId) {
+        const existingClient = getClientById(selectedClientId);
         updateClient(selectedClientId, {
           name: clientName,
           phone: clientPhone,
           notes: clientNotes,
+          recurrenceDays: existingClient?.recurrenceDays,
+          birthDate: existingClient?.birthDate,
         });
       } else if (clientName.trim()) {
         // Cria novo cliente e aguarda o ID real do banco
