@@ -465,6 +465,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                     <SelectItem value="confirmado">✓ Confirmado</SelectItem>
                     <SelectItem value="atendido">✓✓ Atendido</SelectItem>
                     <SelectItem value="cancelado">✗ Cancelado</SelectItem>
+                    <SelectItem value="retorno_previsto">🔁 Retorno Previsto</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
