@@ -295,6 +295,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       onOpenChange(false);
       resetForm();
     } catch (err: any) {
+      console.error('[AppointmentForm] save error:', err);
       toast.error('Erro ao salvar agendamento', {
         description: err?.message || 'Tente novamente.',
       });
