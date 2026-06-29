@@ -103,6 +103,7 @@ export function useAppointments() {
         notes: a.notes || undefined,
         googleEventId: a.google_event_id || undefined,
         parentAppointmentId: (a as any).parent_appointment_id || undefined,
+        isPermuta: Boolean((a as any).is_permuta) || false,
       }));
     },
     enabled: !!user,
@@ -133,6 +134,7 @@ export function useAddAppointment() {
           duration: appointment.duration,
           notes: appointment.notes,
           parent_appointment_id: appointment.parentAppointmentId,
+          is_permuta: appointment.isPermuta ?? false,
         })
         .select()
         .single();
@@ -208,6 +210,7 @@ export function useUpdateAppointment() {
           duration: appointment.duration,
           notes: appointment.notes,
           parent_appointment_id: appointment.parentAppointmentId,
+          is_permuta: appointment.isPermuta ?? false,
         })
         .eq('id', id)
         .select()
