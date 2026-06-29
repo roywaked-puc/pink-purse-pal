@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
 
         if (updateError) {
           console.error('Update error:', updateError);
-          throw updateError;
+          throw new Error('Erro ao salvar configurações');
         }
 
         return new Response(
