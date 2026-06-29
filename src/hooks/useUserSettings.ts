@@ -33,9 +33,9 @@ const DEFAULTS = {
   crm_monthly_goal: 0,
 };
 
-// Safe column list — never select OAuth access/refresh tokens client-side.
+// Safe column list — never select OAuth client secret or access/refresh tokens client-side.
 const SAFE_COLUMNS =
-  'id, user_id, google_calendar_enabled, google_client_id, google_client_secret, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count, crm_monthly_goal';
+  'id, user_id, google_calendar_enabled, google_client_id, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count, crm_monthly_goal';
 
 export function useUserSettings() {
   const { user } = useAuth();
