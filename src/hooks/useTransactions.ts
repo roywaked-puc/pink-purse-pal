@@ -4,18 +4,34 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Transaction } from '@/types';
 import { sanitizeDbError } from '@/lib/sanitizeError';
 
-export function useTransactions() {
+interface UseTransactionsOptions {
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export function useTransactions(options: UseTransactionsOptions = {}) {
   const { user } = useAuth();
+  const startDateIso = options.startDate?.toISOString() ?? null;
+  const endDateIso = options.endDate?.toISOString() ?? null;
 
   return useQuery({
-    queryKey: ['transactions', user?.id],
+    queryKey: ['transactions', user?.id, startDateIso ?? 'all', endDateIso ?? 'all'],
     queryFn: async (): Promise<Transaction[]> => {
       if (!user) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
-        .select('*')
-        .order('date', { ascending: false });
+        .select('*');
+
+      if (startDateIso) {
+        query = query.gte('date', startDateIso);
+      }
+
+      if (endDateIso) {
+        query = query.lte('date', endDateIso);
+      }
+
+      const { data, error } = await query.order('date', { ascending: false });
       
       if (error) throw sanitizeDbError(error);
       
@@ -37,6 +53,7 @@ export function useTransactions() {
       }));
     },
     enabled: !!user,
+    staleTime: 30_000,
   });
 }
 
