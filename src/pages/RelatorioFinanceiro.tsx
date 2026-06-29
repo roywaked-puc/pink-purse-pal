@@ -19,6 +19,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { BiGastos } from '@/components/relatorios/BiGastos';
 
 type ScopeFilter = 'todos' | 'empresa' | 'pessoal';
 
