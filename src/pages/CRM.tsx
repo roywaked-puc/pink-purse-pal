@@ -31,7 +31,21 @@ import { waMessages } from '@/lib/whatsapp';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-type SheetType = null | 'confirm' | 'returns' | 'inactive' | 'production' | 'vip' | 'birthday';
+type ProductionFilter = {
+  kind: 'previsto' | 'realizado';
+  permuta: boolean;
+};
+type SheetType =
+  | null
+  | 'confirm'
+  | 'returns'
+  | 'inactive'
+  | 'production'
+  | 'vip'
+  | 'birthday'
+  | 'active'
+  | 'balance'
+  | 'productionFilter';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -47,7 +61,7 @@ const filterChips: { value: string; label: string }[] = [
 
 export default function CRM() {
   const navigate = useNavigate();
-  const { getClientById } = useApp();
+  const { getClientById, appointments } = useApp();
   const {
     stats,
     pendingConfirmations,
@@ -62,7 +76,35 @@ export default function CRM() {
   } = useCrm();
   const updateStatus = useUpdateConfirmationStatus();
   const [sheet, setSheet] = useState<SheetType>(null);
+  const [productionFilter, setProductionFilter] = useState<ProductionFilter | null>(null);
   const [filter, setFilter] = useState<string>('todas');
+
+  const activeClients = useMemo(() => stats.filter((s) => s.isActive), [stats]);
+
+  const pendingBalanceAppointments = useMemo(() => {
+    return appointments
+      .filter((a) => a.confirmationStatus !== 'cancelado' && a.amount - a.paidAmount > 0.01)
+      .map((a) => ({
+        id: a.id,
+        clientName: a.clientName,
+        date: new Date(a.date),
+        service: a.service,
+        amount: a.amount,
+        paidAmount: a.paidAmount,
+        pending: a.amount - a.paidAmount,
+      }))
+      .sort((a, b) => b.pending - a.pending);
+  }, [appointments]);
+
+  const productionFilterList = useMemo(() => {
+    if (!productionFilter) return [];
+    const base =
+      productionFilter.kind === 'previsto'
+        ? monthlyProduction.upcomingAppointments
+        : monthlyProduction.attendedAppointments;
+    return base.filter((a) => !!a.isPermuta === productionFilter.permuta);
+  }, [productionFilter, monthlyProduction]);
+
 
   const vipIds = useMemo(() => new Set(vipClients.map((v) => v.client.id)), [vipClients]);
 
@@ -98,24 +140,30 @@ export default function CRM() {
 
       {/* Mini dashboard */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-6">
-        <MiniStat label="Ativas" value={totals.activeCount} tone="success" />
-        <MiniStat label="Inativas" value={totals.inactiveCount} tone="warning" />
-        <MiniStat label="Confirmar" value={totals.pendingConfirmationsCount} tone="info" />
-        <MiniStat label="Retornos" value={totals.pendingReturnsCount} tone="primary" />
+        <MiniStat label="Ativas" value={totals.activeCount} tone="success" onClick={() => setSheet('active')} />
+        <MiniStat label="Inativas" value={totals.inactiveCount} tone="warning" onClick={() => setSheet('inactive')} />
+        <MiniStat label="Confirmar" value={totals.pendingConfirmationsCount} tone="info" onClick={() => setSheet('confirm')} />
+        <MiniStat label="Retornos" value={totals.pendingReturnsCount} tone="primary" onClick={() => setSheet('returns')} />
         <MiniStat
           label="Saldo"
           value={formatBRL(totals.pendingBalanceTotal)}
           tone="danger"
           isText
+          onClick={() => setSheet('balance')}
         />
-        <MiniStat label="VIPs" value={totals.vipCount} tone="muted" />
+        <MiniStat label="VIPs" value={totals.vipCount} tone="muted" onClick={() => setSheet('vip')} />
       </div>
 
       {/* Produção do mês — destaque */}
       <ProducaoMesCard
         data={monthlyProduction}
         onClick={() => setSheet('production')}
+        onFilter={(f) => {
+          setProductionFilter(f);
+          setSheet('productionFilter');
+        }}
       />
+
 
       {/* Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
@@ -459,6 +507,101 @@ export default function CRM() {
           );
         })}
       </CrmListSheet>
+
+      {/* SHEET: Ativas */}
+      <CrmListSheet
+        open={sheet === 'active'}
+        onOpenChange={(o) => !o && setSheet(null)}
+        title="✅ Clientes Ativas"
+        description={`Último atendimento nos últimos ${settings.inactiveDays} dias`}
+      >
+        {activeClients.length === 0 && (
+          <EmptyState icon={Users} title="Sem clientes ativas" description="Registre atendimentos para popular esta lista." />
+        )}
+        {activeClients.map((s) => (
+          <Link
+            key={s.client.id}
+            to={`/cliente/${s.client.id}`}
+            className="flex items-center justify-between gap-3 p-3 border rounded-lg bg-card hover:border-primary/40"
+          >
+            <div className="min-w-0">
+              <p className="font-medium text-sm truncate">{s.client.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {s.attendedCount} atend. · Último: {format(new Date(s.lastAttended!.date), 'dd/MM/yyyy', { locale: ptBR })}
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </Link>
+        ))}
+      </CrmListSheet>
+
+      {/* SHEET: Saldo Pendente */}
+      <CrmListSheet
+        open={sheet === 'balance'}
+        onOpenChange={(o) => !o && setSheet(null)}
+        title="💰 Saldo Pendente"
+        description={`${pendingBalanceAppointments.length} agendamento(s) com saldo a receber`}
+      >
+        {pendingBalanceAppointments.length === 0 && (
+          <EmptyState icon={CheckCircle2} title="Sem pendências" description="Todos os agendamentos estão quitados." />
+        )}
+        {pendingBalanceAppointments.map((a) => (
+          <div key={a.id} className="p-3 border rounded-lg bg-card">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-medium text-sm truncate">{a.clientName}</p>
+              <span className="text-sm font-semibold tabular-nums text-rose-600">
+                {formatBRL(a.pending)}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {format(a.date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} · {a.service}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Total {formatBRL(a.amount)} · Pago {formatBRL(a.paidAmount)}
+            </p>
+          </div>
+        ))}
+      </CrmListSheet>
+
+      {/* SHEET: Produção do mês — filtro específico */}
+      <CrmListSheet
+        open={sheet === 'productionFilter'}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSheet(null);
+            setProductionFilter(null);
+          }
+        }}
+        title={
+          productionFilter
+            ? `📅 ${productionFilter.kind === 'previsto' ? 'Previsto' : 'Realizado'} · ${productionFilter.permuta ? 'Permuta' : 'A receber'}`
+            : 'Produção'
+        }
+        description={format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+      >
+        {productionFilterList.length === 0 ? (
+          <EmptyState icon={CalendarDays} title="Sem agendamentos" description="Nenhum agendamento neste recorte." />
+        ) : (
+          productionFilterList.map((a) => {
+            const d = new Date(a.date);
+            const value =
+              productionFilter?.kind === 'realizado' ? a.paidAmount : a.amount;
+            return (
+              <div key={a.id} className="p-3 border rounded-lg bg-card">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium text-sm truncate">{a.clientName}</p>
+                  <span className={cn('text-sm font-semibold tabular-nums', productionFilter?.permuta ? 'text-amber-600' : 'text-emerald-600')}>
+                    {formatBRL(value)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} · {a.service}
+                </p>
+              </div>
+            );
+          })
+        )}
+      </CrmListSheet>
     </MainLayout>
   );
 }
@@ -468,11 +611,13 @@ function MiniStat({
   value,
   tone,
   isText,
+  onClick,
 }: {
   label: string;
   value: number | string;
   tone: 'success' | 'warning' | 'info' | 'primary' | 'danger' | 'muted';
   isText?: boolean;
+  onClick?: () => void;
 }) {
   const tones: Record<typeof tone, string> = {
     success: 'text-emerald-600',
@@ -482,13 +627,27 @@ function MiniStat({
     danger: 'text-rose-600',
     muted: 'text-muted-foreground',
   };
-  return (
-    <div className="p-2 rounded-lg bg-card border border-border text-center">
+  const content = (
+    <>
       <p className={cn('font-bold tabular-nums', isText ? 'text-sm' : 'text-lg', tones[tone])}>
         {value}
       </p>
       <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">{label}</p>
-    </div>
+    </>
+  );
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="p-2 rounded-lg bg-card border border-border text-center hover:border-primary/40 hover:shadow-sm transition-all"
+      >
+        {content}
+      </button>
+    );
+  }
+  return (
+    <div className="p-2 rounded-lg bg-card border border-border text-center">{content}</div>
   );
 }
 
@@ -559,6 +718,7 @@ function SplitBlock({
 function ProducaoMesCard({
   data,
   onClick,
+  onFilter,
 }: {
   data: {
     attendedSplit: { receivable: { count: number; amount: number }; permuta: { count: number; amount: number } };
@@ -570,6 +730,7 @@ function ProducaoMesCard({
     progress: number;
   };
   onClick: () => void;
+  onFilter: (f: ProductionFilter) => void;
 }) {
   const { attendedSplit, upcomingSplit, realized, forecast, projection, goal, progress } = data;
   const clamped = Math.min(progress, 100);
@@ -577,11 +738,23 @@ function ProducaoMesCard({
     progress >= 90 ? 'bg-emerald-500' : progress >= 61 ? 'bg-amber-500' : 'bg-rose-500';
   const monthName = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
 
+  const stop = (cb: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    cb();
+  };
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="group w-full text-left mb-6 p-5 rounded-2xl border bg-gradient-to-br from-primary/10 via-card to-card shadow-elevated hover:shadow-lg transition-all"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group w-full text-left mb-6 p-5 rounded-2xl border bg-gradient-to-br from-primary/10 via-card to-card shadow-elevated hover:shadow-lg transition-all cursor-pointer"
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -600,30 +773,47 @@ function ProducaoMesCard({
         <div className="p-3 rounded-lg bg-background/60 border">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1.5 font-semibold">Previsto</p>
           <div className="space-y-1 text-sm">
-            <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={stop(() => onFilter({ kind: 'previsto', permuta: false }))}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1 py-0.5 hover:bg-emerald-500/5 transition-colors"
+            >
               <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{upcomingSplit.receivable.count}</span> ag.</span>
               <span className="font-semibold tabular-nums text-emerald-600">{formatBRL(upcomingSplit.receivable.amount)} <span className="text-[10px] font-normal text-muted-foreground">a receber</span></span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
+            </button>
+            <button
+              type="button"
+              onClick={stop(() => onFilter({ kind: 'previsto', permuta: true }))}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1 py-0.5 hover:bg-amber-500/5 transition-colors"
+            >
               <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{upcomingSplit.permuta.count}</span> ag.</span>
               <span className="font-semibold tabular-nums text-amber-600">{formatBRL(upcomingSplit.permuta.amount)} <span className="text-[10px] font-normal text-muted-foreground">permuta</span></span>
-            </div>
+            </button>
           </div>
         </div>
         <div className="p-3 rounded-lg bg-background/60 border">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1.5 font-semibold">Realizado</p>
           <div className="space-y-1 text-sm">
-            <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={stop(() => onFilter({ kind: 'realizado', permuta: false }))}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1 py-0.5 hover:bg-emerald-500/5 transition-colors"
+            >
               <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{attendedSplit.receivable.count}</span> ag.</span>
               <span className="font-semibold tabular-nums text-emerald-600">{formatBRL(attendedSplit.receivable.amount)} <span className="text-[10px] font-normal text-muted-foreground">a receber</span></span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
+            </button>
+            <button
+              type="button"
+              onClick={stop(() => onFilter({ kind: 'realizado', permuta: true }))}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1 py-0.5 hover:bg-amber-500/5 transition-colors"
+            >
               <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{attendedSplit.permuta.count}</span> ag.</span>
               <span className="font-semibold tabular-nums text-amber-600">{formatBRL(attendedSplit.permuta.amount)} <span className="text-[10px] font-normal text-muted-foreground">permuta</span></span>
-            </div>
+            </button>
           </div>
         </div>
       </div>
+
 
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
@@ -651,7 +841,7 @@ function ProducaoMesCard({
           Defina uma meta mensal em Configurações → CRM para ver o progresso.
         </p>
       )}
-    </button>
+    </div>
   );
 }
 
