@@ -395,10 +395,10 @@ Deno.serve(async (req) => {
         );
     }
   } catch (error: unknown) {
-    console.error('Function error type:', error instanceof Error ? error.name : 'unknown');
-    const message = error instanceof Error ? error.message : 'Erro interno';
+    console.error('Function error:', error);
+    // Never forward raw error messages to clients - they may leak schema details
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: 'Erro interno' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
