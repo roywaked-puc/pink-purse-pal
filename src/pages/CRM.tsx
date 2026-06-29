@@ -718,6 +718,7 @@ function SplitBlock({
 function ProducaoMesCard({
   data,
   onClick,
+  onFilter,
 }: {
   data: {
     attendedSplit: { receivable: { count: number; amount: number }; permuta: { count: number; amount: number } };
@@ -729,6 +730,7 @@ function ProducaoMesCard({
     progress: number;
   };
   onClick: () => void;
+  onFilter: (f: ProductionFilter) => void;
 }) {
   const { attendedSplit, upcomingSplit, realized, forecast, projection, goal, progress } = data;
   const clamped = Math.min(progress, 100);
@@ -736,11 +738,23 @@ function ProducaoMesCard({
     progress >= 90 ? 'bg-emerald-500' : progress >= 61 ? 'bg-amber-500' : 'bg-rose-500';
   const monthName = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
 
+  const stop = (cb: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    cb();
+  };
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="group w-full text-left mb-6 p-5 rounded-2xl border bg-gradient-to-br from-primary/10 via-card to-card shadow-elevated hover:shadow-lg transition-all"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group w-full text-left mb-6 p-5 rounded-2xl border bg-gradient-to-br from-primary/10 via-card to-card shadow-elevated hover:shadow-lg transition-all cursor-pointer"
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -759,30 +773,47 @@ function ProducaoMesCard({
         <div className="p-3 rounded-lg bg-background/60 border">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1.5 font-semibold">Previsto</p>
           <div className="space-y-1 text-sm">
-            <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={stop(() => onFilter({ kind: 'previsto', permuta: false }))}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1 py-0.5 hover:bg-emerald-500/5 transition-colors"
+            >
               <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{upcomingSplit.receivable.count}</span> ag.</span>
               <span className="font-semibold tabular-nums text-emerald-600">{formatBRL(upcomingSplit.receivable.amount)} <span className="text-[10px] font-normal text-muted-foreground">a receber</span></span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
+            </button>
+            <button
+              type="button"
+              onClick={stop(() => onFilter({ kind: 'previsto', permuta: true }))}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1 py-0.5 hover:bg-amber-500/5 transition-colors"
+            >
               <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{upcomingSplit.permuta.count}</span> ag.</span>
               <span className="font-semibold tabular-nums text-amber-600">{formatBRL(upcomingSplit.permuta.amount)} <span className="text-[10px] font-normal text-muted-foreground">permuta</span></span>
-            </div>
+            </button>
           </div>
         </div>
         <div className="p-3 rounded-lg bg-background/60 border">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1.5 font-semibold">Realizado</p>
           <div className="space-y-1 text-sm">
-            <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={stop(() => onFilter({ kind: 'realizado', permuta: false }))}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1 py-0.5 hover:bg-emerald-500/5 transition-colors"
+            >
               <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{attendedSplit.receivable.count}</span> ag.</span>
               <span className="font-semibold tabular-nums text-emerald-600">{formatBRL(attendedSplit.receivable.amount)} <span className="text-[10px] font-normal text-muted-foreground">a receber</span></span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
+            </button>
+            <button
+              type="button"
+              onClick={stop(() => onFilter({ kind: 'realizado', permuta: true }))}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1 py-0.5 hover:bg-amber-500/5 transition-colors"
+            >
               <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{attendedSplit.permuta.count}</span> ag.</span>
               <span className="font-semibold tabular-nums text-amber-600">{formatBRL(attendedSplit.permuta.amount)} <span className="text-[10px] font-normal text-muted-foreground">permuta</span></span>
-            </div>
+            </button>
           </div>
         </div>
       </div>
+
 
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
