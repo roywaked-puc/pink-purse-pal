@@ -345,17 +345,28 @@ export default function CRM() {
         title="📅 Produção do Mês"
         description={format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
       >
-        <div className="grid grid-cols-2 gap-2">
-          <SummaryTile label="Atendidos" value={monthlyProduction.attendedCount} />
-          <SummaryTile label="Agendados" value={monthlyProduction.upcomingCount} />
-          <SummaryTile label="Realizado" value={formatBRL(monthlyProduction.realized)} isText />
-          <SummaryTile label="Previsto" value={formatBRL(monthlyProduction.forecast)} isText />
-          <SummaryTile label="Projeção" value={formatBRL(monthlyProduction.projection)} isText highlight />
-          <SummaryTile
-            label="Meta"
-            value={monthlyProduction.goal > 0 ? formatBRL(monthlyProduction.goal) : '—'}
-            isText
+        <div className="space-y-4">
+          <SplitBlock
+            label="Previsto"
+            receivable={monthlyProduction.upcomingSplit.receivable}
+            permuta={monthlyProduction.upcomingSplit.permuta}
           />
+          <SplitBlock
+            label="Realizado"
+            receivable={monthlyProduction.attendedSplit.receivable}
+            permuta={monthlyProduction.attendedSplit.permuta}
+          />
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+            <SummaryTile label="Projeção" value={formatBRL(monthlyProduction.projection)} isText highlight />
+            <SummaryTile
+              label="Meta"
+              value={monthlyProduction.goal > 0 ? formatBRL(monthlyProduction.goal) : '—'}
+              isText
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground italic">
+            Meta e Projeção consideram apenas valores a receber (sem permuta).
+          </p>
         </div>
 
         <div className="pt-4">
