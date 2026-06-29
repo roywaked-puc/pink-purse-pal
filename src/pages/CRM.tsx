@@ -31,7 +31,21 @@ import { waMessages } from '@/lib/whatsapp';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-type SheetType = null | 'confirm' | 'returns' | 'inactive' | 'production' | 'vip' | 'birthday';
+type ProductionFilter = {
+  kind: 'previsto' | 'realizado';
+  permuta: boolean;
+};
+type SheetType =
+  | null
+  | 'confirm'
+  | 'returns'
+  | 'inactive'
+  | 'production'
+  | 'vip'
+  | 'birthday'
+  | 'active'
+  | 'balance'
+  | 'productionFilter';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
