@@ -80,6 +80,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
   const [confirmationStatus, setConfirmationStatus] = useState<ConfirmationStatus>('pendente');
   const [notes, setNotes] = useState('');
+  const [isPermuta, setIsPermuta] = useState(false);
   const [showTransactions, setShowTransactions] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -95,6 +96,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       setPaymentStatus(appointment.paymentStatus);
       setConfirmationStatus(appointment.confirmationStatus);
       setNotes(appointment.notes || '');
+      setIsPermuta(Boolean(appointment.isPermuta));
       
       if (appointment.clientId) {
         setSelectedClientId(appointment.clientId);
@@ -154,6 +156,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
     setPaymentStatus('nao_pago');
     setConfirmationStatus('pendente');
     setNotes('');
+    setIsPermuta(false);
   };
 
   const handleClientSelect = (client: Client | null) => {
@@ -272,6 +275,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
         confirmationStatus,
         duration: parseInt(duration) || 60,
         notes: notes.trim() || undefined,
+        isPermuta,
       };
 
       if (appointment) {
@@ -428,6 +432,17 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
               />
             </div>
           </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none p-2 rounded-md border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={isPermuta}
+              onChange={(e) => setIsPermuta(e.target.checked)}
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+            />
+            <span className="text-sm">Este atendimento é permuta (troca de serviço)</span>
+          </label>
+
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">
