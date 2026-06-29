@@ -230,7 +230,7 @@ export function GoogleCalendarSettings() {
               type={showSecret ? 'text' : 'password'}
               value={clientSecret}
               onChange={(e) => setClientSecret(e.target.value)}
-              placeholder="GOCSPX-..."
+              placeholder={settings?.google_client_secret_configured ? '••••••••••••  (deixe em branco para manter)' : 'GOCSPX-...'}
               disabled={isConnected}
             />
             <Button
