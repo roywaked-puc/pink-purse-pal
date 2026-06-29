@@ -253,7 +253,7 @@ export function GoogleCalendarSettings() {
         {!isConnected && (
           <Button
             onClick={handleSaveCredentials}
-            disabled={updateSettings.isPending || !clientId.trim() || !clientSecret.trim()}
+            disabled={updateSettings.isPending || !clientId.trim() || (!clientSecret.trim() && !settings?.google_client_secret_configured)}
             className="w-full"
             variant="outline"
           >
