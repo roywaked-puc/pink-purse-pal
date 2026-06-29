@@ -502,6 +502,101 @@ export default function CRM() {
           );
         })}
       </CrmListSheet>
+
+      {/* SHEET: Ativas */}
+      <CrmListSheet
+        open={sheet === 'active'}
+        onOpenChange={(o) => !o && setSheet(null)}
+        title="✅ Clientes Ativas"
+        description={`Último atendimento nos últimos ${settings.inactiveDays} dias`}
+      >
+        {activeClients.length === 0 && (
+          <EmptyState icon={Users} title="Sem clientes ativas" description="Registre atendimentos para popular esta lista." />
+        )}
+        {activeClients.map((s) => (
+          <Link
+            key={s.client.id}
+            to={`/cliente/${s.client.id}`}
+            className="flex items-center justify-between gap-3 p-3 border rounded-lg bg-card hover:border-primary/40"
+          >
+            <div className="min-w-0">
+              <p className="font-medium text-sm truncate">{s.client.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {s.attendedCount} atend. · Último: {format(new Date(s.lastAttended!.date), 'dd/MM/yyyy', { locale: ptBR })}
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </Link>
+        ))}
+      </CrmListSheet>
+
+      {/* SHEET: Saldo Pendente */}
+      <CrmListSheet
+        open={sheet === 'balance'}
+        onOpenChange={(o) => !o && setSheet(null)}
+        title="💰 Saldo Pendente"
+        description={`${pendingBalanceAppointments.length} agendamento(s) com saldo a receber`}
+      >
+        {pendingBalanceAppointments.length === 0 && (
+          <EmptyState icon={CheckCircle2} title="Sem pendências" description="Todos os agendamentos estão quitados." />
+        )}
+        {pendingBalanceAppointments.map((a) => (
+          <div key={a.id} className="p-3 border rounded-lg bg-card">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-medium text-sm truncate">{a.clientName}</p>
+              <span className="text-sm font-semibold tabular-nums text-rose-600">
+                {formatBRL(a.pending)}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {format(a.date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} · {a.service}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Total {formatBRL(a.amount)} · Pago {formatBRL(a.paidAmount)}
+            </p>
+          </div>
+        ))}
+      </CrmListSheet>
+
+      {/* SHEET: Produção do mês — filtro específico */}
+      <CrmListSheet
+        open={sheet === 'productionFilter'}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSheet(null);
+            setProductionFilter(null);
+          }
+        }}
+        title={
+          productionFilter
+            ? `📅 ${productionFilter.kind === 'previsto' ? 'Previsto' : 'Realizado'} · ${productionFilter.permuta ? 'Permuta' : 'A receber'}`
+            : 'Produção'
+        }
+        description={format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+      >
+        {productionFilterList.length === 0 ? (
+          <EmptyState icon={CalendarDays} title="Sem agendamentos" description="Nenhum agendamento neste recorte." />
+        ) : (
+          productionFilterList.map((a) => {
+            const d = new Date(a.date);
+            const value =
+              productionFilter?.kind === 'realizado' ? a.paidAmount : a.amount;
+            return (
+              <div key={a.id} className="p-3 border rounded-lg bg-card">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium text-sm truncate">{a.clientName}</p>
+                  <span className={cn('text-sm font-semibold tabular-nums', productionFilter?.permuta ? 'text-amber-600' : 'text-emerald-600')}>
+                    {formatBRL(value)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} · {a.service}
+                </p>
+              </div>
+            );
+          })
+        )}
+      </CrmListSheet>
     </MainLayout>
   );
 }
