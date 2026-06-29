@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
 
         if (updateError) {
           console.error('Disconnect error:', updateError);
-          throw updateError;
+          throw new Error('Erro ao desconectar Google Calendar');
         }
 
         return new Response(
