@@ -841,7 +841,7 @@ function ProducaoMesCard({
           Defina uma meta mensal em Configurações → CRM para ver o progresso.
         </p>
       )}
-    </button>
+    </div>
   );
 }
 
