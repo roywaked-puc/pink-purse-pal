@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { addMonths, endOfMonth, format, isWithinInterval, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, TrendingDown } from 'lucide-react';
@@ -16,18 +16,20 @@ interface CategoryTotal {
 }
 
 function useGastosByScope(month: Date) {
-  const { data: transactions = [] } = useTransactions();
+  const monthStart = useMemo(() => startOfMonth(month), [month]);
+  const monthEnd = useMemo(() => endOfMonth(month), [month]);
+  const { data: transactions = [] } = useTransactions({
+    startDate: monthStart,
+    endDate: monthEnd,
+  });
 
   return useMemo(() => {
-    const start = startOfMonth(month);
-    const end = endOfMonth(month);
-
     const build = (scope: TransactionScope) => {
       const items = transactions.filter(
         (t) =>
           t.type === 'saida' &&
           t.scope === scope &&
-          isWithinInterval(new Date(t.date), { start, end }),
+          isWithinInterval(new Date(t.date), { start: monthStart, end: monthEnd }),
       );
       const total = items.reduce((s, t) => s + t.amount, 0);
       const byCat = new Map<string, number>();
@@ -46,7 +48,7 @@ function useGastosByScope(month: Date) {
     };
 
     return { empresa: build('empresa'), pessoal: build('pessoal') };
-  }, [transactions, month]);
+  }, [transactions, monthStart, monthEnd]);
 }
 
 interface ScopeSectionProps {
@@ -128,8 +130,20 @@ export function BiGastos() {
   const [selectedMonth, setSelectedMonth] = useState<Date>(startOfMonth(new Date()));
   const { empresa, pessoal } = useGastosByScope(selectedMonth);
 
-  const goPrev = () => setSelectedMonth((m) => startOfMonth(addMonths(m, -1)));
-  const goNext = () => setSelectedMonth((m) => startOfMonth(addMonths(m, 1)));
+  const changeMonth = useCallback((amount: number) => {
+    setSelectedMonth((currentMonth) => {
+      const nextMonth = startOfMonth(addMonths(currentMonth, amount));
+
+      if (import.meta.env.DEV) {
+        console.debug('[BI de Gastos] mês selecionado:', format(nextMonth, 'yyyy-MM-dd'));
+      }
+
+      return nextMonth;
+    });
+  }, []);
+
+  const goPrev = () => changeMonth(-1);
+  const goNext = () => changeMonth(1);
 
   return (
     <div className="space-y-4">
