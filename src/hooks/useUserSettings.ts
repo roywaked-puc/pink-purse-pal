@@ -8,7 +8,7 @@ export interface UserSettings {
   user_id: string;
   google_calendar_enabled: boolean;
   google_client_id: string | null;
-  google_client_secret: string | null;
+  google_client_secret_configured: boolean;
   google_token_expiry: string | null;
   retention_intervals: number[];
   retention_reminder_days: number;
