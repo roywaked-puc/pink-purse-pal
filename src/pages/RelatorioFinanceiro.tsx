@@ -407,6 +407,9 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
     <Wrapper>
 
       <div className="space-y-4">
+        {/* BI de Gastos */}
+        <BiGastos />
+
         {/* Filters */}
         <Card>
           <CardContent className="pt-4">
