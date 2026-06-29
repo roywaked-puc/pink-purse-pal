@@ -140,17 +140,18 @@ export default function CRM() {
 
       {/* Mini dashboard */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-6">
-        <MiniStat label="Ativas" value={totals.activeCount} tone="success" />
-        <MiniStat label="Inativas" value={totals.inactiveCount} tone="warning" />
-        <MiniStat label="Confirmar" value={totals.pendingConfirmationsCount} tone="info" />
-        <MiniStat label="Retornos" value={totals.pendingReturnsCount} tone="primary" />
+        <MiniStat label="Ativas" value={totals.activeCount} tone="success" onClick={() => setSheet('active')} />
+        <MiniStat label="Inativas" value={totals.inactiveCount} tone="warning" onClick={() => setSheet('inactive')} />
+        <MiniStat label="Confirmar" value={totals.pendingConfirmationsCount} tone="info" onClick={() => setSheet('confirm')} />
+        <MiniStat label="Retornos" value={totals.pendingReturnsCount} tone="primary" onClick={() => setSheet('returns')} />
         <MiniStat
           label="Saldo"
           value={formatBRL(totals.pendingBalanceTotal)}
           tone="danger"
           isText
+          onClick={() => setSheet('balance')}
         />
-        <MiniStat label="VIPs" value={totals.vipCount} tone="muted" />
+        <MiniStat label="VIPs" value={totals.vipCount} tone="muted" onClick={() => setSheet('vip')} />
       </div>
 
       {/* Produção do mês — destaque */}
