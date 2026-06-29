@@ -11,7 +11,7 @@ export function useGoogleCalendar() {
 
   const hasCredentials = !!(
     settings?.google_client_id &&
-    settings?.google_client_secret
+    settings?.google_client_secret_configured
   );
 
   return {
