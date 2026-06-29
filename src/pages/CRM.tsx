@@ -76,7 +76,17 @@ export default function CRM() {
   } = useCrm();
   const updateStatus = useUpdateConfirmationStatus();
   const [sheet, setSheet] = useState<SheetType>(null);
+  const [productionFilter, setProductionFilter] = useState<ProductionFilter | null>(null);
   const [filter, setFilter] = useState<string>('todas');
+
+  const activeClients = useMemo(() => stats.filter((s) => s.isActive), [stats]);
+  const pendingBalanceAppointments = useMemo(() => {
+    const list: { client?: ReturnType<typeof getClientById>; clientName: string; date: Date; service: string; amount: number; paidAmount: number; pending: number; id: string }[] = [];
+    stats.forEach((s) => {
+      // reconstruct from raw appointments via getClientById not needed — use appointments via context
+    });
+    return list;
+  }, [stats]);
 
   const vipIds = useMemo(() => new Set(vipClients.map((v) => v.client.id)), [vipClients]);
 
