@@ -158,7 +158,12 @@ export default function CRM() {
       <ProducaoMesCard
         data={monthlyProduction}
         onClick={() => setSheet('production')}
+        onFilter={(f) => {
+          setProductionFilter(f);
+          setSheet('productionFilter');
+        }}
       />
+
 
       {/* Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
