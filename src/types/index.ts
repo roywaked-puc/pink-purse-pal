@@ -44,6 +44,7 @@ export interface Appointment {
   notes?: string;
   googleEventId?: string;
   parentAppointmentId?: string;
+  isPermuta?: boolean;
 }
 
 export interface Category {

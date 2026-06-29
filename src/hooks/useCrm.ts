@@ -180,8 +180,28 @@ export function useCrm() {
       .filter((a) => a.confirmationStatus !== 'atendido' && new Date(a.date) >= today)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    const realized = attended.reduce((s, a) => s + (a.amount || 0), 0);
-    const forecast = upcoming.reduce((s, a) => s + (a.amount || 0), 0);
+    const splitByPermuta = (list: Appointment[], valueField: 'amount' | 'paidAmount') => {
+      const receivable = list.filter((a) => !a.isPermuta);
+      const permuta = list.filter((a) => a.isPermuta);
+      return {
+        receivable: {
+          count: receivable.length,
+          amount: receivable.reduce((s, a) => s + (a[valueField] || 0), 0),
+        },
+        permuta: {
+          count: permuta.length,
+          amount: permuta.reduce((s, a) => s + (a[valueField] || 0), 0),
+        },
+      };
+    };
+
+    // Realizado usa valor pago; Previsto usa valor do agendamento
+    const attendedSplit = splitByPermuta(attended, 'paidAmount');
+    const upcomingSplit = splitByPermuta(upcoming, 'amount');
+
+    // Meta / Projeção ignoram permuta (somente "a receber")
+    const realized = attendedSplit.receivable.amount;
+    const forecast = upcomingSplit.receivable.amount;
     const projection = realized + forecast;
     const goal = settings?.crm_monthly_goal ?? 0;
     const progress = goal > 0 ? (projection / goal) * 100 : 0;
@@ -194,6 +214,8 @@ export function useCrm() {
       projection,
       goal,
       progress,
+      attendedSplit,
+      upcomingSplit,
       upcomingAppointments: upcoming,
       attendedAppointments: attended,
     };

@@ -112,7 +112,10 @@ export default function CRM() {
       </div>
 
       {/* Produção do mês — destaque */}
-      <ProducaoMesCard data={monthlyProduction} onClick={() => setSheet('production')} />
+      <ProducaoMesCard
+        data={monthlyProduction}
+        onClick={() => setSheet('production')}
+      />
 
       {/* Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
@@ -345,17 +348,28 @@ export default function CRM() {
         title="📅 Produção do Mês"
         description={format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
       >
-        <div className="grid grid-cols-2 gap-2">
-          <SummaryTile label="Atendidos" value={monthlyProduction.attendedCount} />
-          <SummaryTile label="Agendados" value={monthlyProduction.upcomingCount} />
-          <SummaryTile label="Realizado" value={formatBRL(monthlyProduction.realized)} isText />
-          <SummaryTile label="Previsto" value={formatBRL(monthlyProduction.forecast)} isText />
-          <SummaryTile label="Projeção" value={formatBRL(monthlyProduction.projection)} isText highlight />
-          <SummaryTile
-            label="Meta"
-            value={monthlyProduction.goal > 0 ? formatBRL(monthlyProduction.goal) : '—'}
-            isText
+        <div className="space-y-4">
+          <SplitBlock
+            label="Previsto"
+            receivable={monthlyProduction.upcomingSplit.receivable}
+            permuta={monthlyProduction.upcomingSplit.permuta}
           />
+          <SplitBlock
+            label="Realizado"
+            receivable={monthlyProduction.attendedSplit.receivable}
+            permuta={monthlyProduction.attendedSplit.permuta}
+          />
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+            <SummaryTile label="Projeção" value={formatBRL(monthlyProduction.projection)} isText highlight />
+            <SummaryTile
+              label="Meta"
+              value={monthlyProduction.goal > 0 ? formatBRL(monthlyProduction.goal) : '—'}
+              isText
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground italic">
+            Meta e Projeção consideram apenas valores a receber (sem permuta).
+          </p>
         </div>
 
         <div className="pt-4">
@@ -504,13 +518,51 @@ function SummaryTile({
   );
 }
 
+function SplitBlock({
+  label,
+  receivable,
+  permuta,
+}: {
+  label: string;
+  receivable: { count: number; amount: number };
+  permuta: { count: number; amount: number };
+}) {
+  return (
+    <div className="p-3 rounded-lg border bg-card">
+      <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-2 font-semibold">
+        {label}
+      </p>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="text-muted-foreground">
+            <span className="font-semibold text-foreground tabular-nums">{receivable.count}</span>{' '}
+            agendamento{receivable.count === 1 ? '' : 's'}
+          </span>
+          <span className="font-semibold tabular-nums text-emerald-600">
+            {formatBRL(receivable.amount)} <span className="text-[11px] font-normal text-muted-foreground">a receber</span>
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="text-muted-foreground">
+            <span className="font-semibold text-foreground tabular-nums">{permuta.count}</span>{' '}
+            agendamento{permuta.count === 1 ? '' : 's'}
+          </span>
+          <span className="font-semibold tabular-nums text-amber-600">
+            {formatBRL(permuta.amount)} <span className="text-[11px] font-normal text-muted-foreground">em permuta</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProducaoMesCard({
   data,
   onClick,
 }: {
   data: {
-    attendedCount: number;
-    upcomingCount: number;
+    attendedSplit: { receivable: { count: number; amount: number }; permuta: { count: number; amount: number } };
+    upcomingSplit: { receivable: { count: number; amount: number }; permuta: { count: number; amount: number } };
     realized: number;
     forecast: number;
     projection: number;
@@ -519,7 +571,7 @@ function ProducaoMesCard({
   };
   onClick: () => void;
 }) {
-  const { attendedCount, upcomingCount, realized, forecast, projection, goal, progress } = data;
+  const { attendedSplit, upcomingSplit, realized, forecast, projection, goal, progress } = data;
   const clamped = Math.min(progress, 100);
   const barColor =
     progress >= 90 ? 'bg-emerald-500' : progress >= 61 ? 'bg-amber-500' : 'bg-rose-500';
@@ -544,29 +596,39 @@ function ProducaoMesCard({
         <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="space-y-3 mb-4">
         <div className="p-3 rounded-lg bg-background/60 border">
-          <p className="text-2xl font-bold tabular-nums text-emerald-600">{attendedCount}</p>
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Atendidos</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1.5 font-semibold">Previsto</p>
+          <div className="space-y-1 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{upcomingSplit.receivable.count}</span> ag.</span>
+              <span className="font-semibold tabular-nums text-emerald-600">{formatBRL(upcomingSplit.receivable.amount)} <span className="text-[10px] font-normal text-muted-foreground">a receber</span></span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{upcomingSplit.permuta.count}</span> ag.</span>
+              <span className="font-semibold tabular-nums text-amber-600">{formatBRL(upcomingSplit.permuta.amount)} <span className="text-[10px] font-normal text-muted-foreground">permuta</span></span>
+            </div>
+          </div>
         </div>
         <div className="p-3 rounded-lg bg-background/60 border">
-          <p className="text-2xl font-bold tabular-nums text-sky-600">{upcomingCount}</p>
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Agendados</p>
-        </div>
-        <div className="p-3 rounded-lg bg-background/60 border">
-          <p className="text-sm font-bold tabular-nums">{formatBRL(realized)}</p>
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Realizado</p>
-        </div>
-        <div className="p-3 rounded-lg bg-background/60 border">
-          <p className="text-sm font-bold tabular-nums">{formatBRL(forecast)}</p>
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Previsto</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1.5 font-semibold">Realizado</p>
+          <div className="space-y-1 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{attendedSplit.receivable.count}</span> ag.</span>
+              <span className="font-semibold tabular-nums text-emerald-600">{formatBRL(attendedSplit.receivable.amount)} <span className="text-[10px] font-normal text-muted-foreground">a receber</span></span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground"><span className="font-semibold text-foreground tabular-nums">{attendedSplit.permuta.count}</span> ag.</span>
+              <span className="font-semibold tabular-nums text-amber-600">{formatBRL(attendedSplit.permuta.amount)} <span className="text-[10px] font-normal text-muted-foreground">permuta</span></span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           <TrendingUp className="w-4 h-4 text-primary" />
-          <span className="text-xs font-medium text-muted-foreground">Projeção final</span>
+          <span className="text-xs font-medium text-muted-foreground">Projeção final (a receber)</span>
         </div>
         <span className="text-lg font-bold tabular-nums text-primary">{formatBRL(projection)}</span>
       </div>
@@ -592,4 +654,5 @@ function ProducaoMesCard({
     </button>
   );
 }
+
 
