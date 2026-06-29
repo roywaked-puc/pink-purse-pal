@@ -61,7 +61,7 @@ const filterChips: { value: string; label: string }[] = [
 
 export default function CRM() {
   const navigate = useNavigate();
-  const { getClientById } = useApp();
+  const { getClientById, appointments } = useApp();
   const {
     stats,
     pendingConfirmations,
@@ -80,13 +80,31 @@ export default function CRM() {
   const [filter, setFilter] = useState<string>('todas');
 
   const activeClients = useMemo(() => stats.filter((s) => s.isActive), [stats]);
+
   const pendingBalanceAppointments = useMemo(() => {
-    const list: { client?: ReturnType<typeof getClientById>; clientName: string; date: Date; service: string; amount: number; paidAmount: number; pending: number; id: string }[] = [];
-    stats.forEach((s) => {
-      // reconstruct from raw appointments via getClientById not needed — use appointments via context
-    });
-    return list;
-  }, [stats]);
+    return appointments
+      .filter((a) => a.confirmationStatus !== 'cancelado' && a.amount - a.paidAmount > 0.01)
+      .map((a) => ({
+        id: a.id,
+        clientName: a.clientName,
+        date: new Date(a.date),
+        service: a.service,
+        amount: a.amount,
+        paidAmount: a.paidAmount,
+        pending: a.amount - a.paidAmount,
+      }))
+      .sort((a, b) => b.pending - a.pending);
+  }, [appointments]);
+
+  const productionFilterList = useMemo(() => {
+    if (!productionFilter) return [];
+    const base =
+      productionFilter.kind === 'previsto'
+        ? monthlyProduction.upcomingAppointments
+        : monthlyProduction.attendedAppointments;
+    return base.filter((a) => !!a.isPermuta === productionFilter.permuta);
+  }, [productionFilter, monthlyProduction]);
+
 
   const vipIds = useMemo(() => new Set(vipClients.map((v) => v.client.id)), [vipClients]);
 
