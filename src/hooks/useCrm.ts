@@ -180,23 +180,24 @@ export function useCrm() {
       .filter((a) => a.confirmationStatus !== 'atendido' && new Date(a.date) >= today)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    const splitByPermuta = (list: Appointment[]) => {
+    const splitByPermuta = (list: Appointment[], valueField: 'amount' | 'paidAmount') => {
       const receivable = list.filter((a) => !a.isPermuta);
       const permuta = list.filter((a) => a.isPermuta);
       return {
         receivable: {
           count: receivable.length,
-          amount: receivable.reduce((s, a) => s + (a.amount || 0), 0),
+          amount: receivable.reduce((s, a) => s + (a[valueField] || 0), 0),
         },
         permuta: {
           count: permuta.length,
-          amount: permuta.reduce((s, a) => s + (a.amount || 0), 0),
+          amount: permuta.reduce((s, a) => s + (a[valueField] || 0), 0),
         },
       };
     };
 
-    const attendedSplit = splitByPermuta(attended);
-    const upcomingSplit = splitByPermuta(upcoming);
+    // Realizado usa valor pago; Previsto usa valor do agendamento
+    const attendedSplit = splitByPermuta(attended, 'paidAmount');
+    const upcomingSplit = splitByPermuta(upcoming, 'amount');
 
     // Meta / Projeção ignoram permuta (somente "a receber")
     const realized = attendedSplit.receivable.amount;
