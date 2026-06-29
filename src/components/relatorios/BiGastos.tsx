@@ -58,7 +58,7 @@ interface ScopeSectionProps {
 
 function ScopeSection({ title, tone, total, cats }: ScopeSectionProps) {
   const maxValue = cats[0]?.total ?? 0;
-  const barColor = tone === 'empresa' ? 'bg-primary' : 'bg-secondary';
+  const barColor = 'bg-primary';
 
   return (
     <Card>
