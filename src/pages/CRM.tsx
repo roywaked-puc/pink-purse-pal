@@ -511,11 +511,13 @@ function MiniStat({
   value,
   tone,
   isText,
+  onClick,
 }: {
   label: string;
   value: number | string;
   tone: 'success' | 'warning' | 'info' | 'primary' | 'danger' | 'muted';
   isText?: boolean;
+  onClick?: () => void;
 }) {
   const tones: Record<typeof tone, string> = {
     success: 'text-emerald-600',
@@ -525,13 +527,27 @@ function MiniStat({
     danger: 'text-rose-600',
     muted: 'text-muted-foreground',
   };
-  return (
-    <div className="p-2 rounded-lg bg-card border border-border text-center">
+  const content = (
+    <>
       <p className={cn('font-bold tabular-nums', isText ? 'text-sm' : 'text-lg', tones[tone])}>
         {value}
       </p>
       <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">{label}</p>
-    </div>
+    </>
+  );
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="p-2 rounded-lg bg-card border border-border text-center hover:border-primary/40 hover:shadow-sm transition-all"
+      >
+        {content}
+      </button>
+    );
+  }
+  return (
+    <div className="p-2 rounded-lg bg-card border border-border text-center">{content}</div>
   );
 }
 
