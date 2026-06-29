@@ -58,7 +58,7 @@ interface ScopeSectionProps {
 
 function ScopeSection({ title, tone, total, cats }: ScopeSectionProps) {
   const maxValue = cats[0]?.total ?? 0;
-  const barColor = tone === 'empresa' ? 'bg-primary' : 'bg-secondary';
+  const barColor = 'bg-primary';
 
   return (
     <Card>
@@ -125,8 +125,11 @@ function ScopeSection({ title, tone, total, cats }: ScopeSectionProps) {
 }
 
 export function BiGastos() {
-  const [month, setMonth] = useState<Date>(startOfMonth(new Date()));
-  const { empresa, pessoal } = useGastosByScope(month);
+  const [selectedMonth, setSelectedMonth] = useState<Date>(startOfMonth(new Date()));
+  const { empresa, pessoal } = useGastosByScope(selectedMonth);
+
+  const goPrev = () => setSelectedMonth((m) => startOfMonth(addMonths(m, -1)));
+  const goNext = () => setSelectedMonth((m) => startOfMonth(addMonths(m, 1)));
 
   return (
     <div className="space-y-4">
@@ -145,20 +148,22 @@ export function BiGastos() {
             </div>
             <div className="flex items-center gap-1">
               <Button
+                type="button"
                 size="icon"
                 variant="ghost"
-                onClick={() => setMonth((m) => addMonths(m, -1))}
+                onClick={goPrev}
                 aria-label="Mês anterior"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="text-sm font-medium capitalize min-w-[130px] text-center">
-                {format(month, "MMMM 'de' yyyy", { locale: ptBR })}
+                {format(selectedMonth, "MMMM 'de' yyyy", { locale: ptBR })}
               </span>
               <Button
+                type="button"
                 size="icon"
                 variant="ghost"
-                onClick={() => setMonth((m) => addMonths(m, 1))}
+                onClick={goNext}
                 aria-label="Próximo mês"
               >
                 <ChevronRight className="w-4 h-4" />
