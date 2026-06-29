@@ -37,11 +37,11 @@ export function GoogleCalendarSettings() {
   const [clientSecret, setClientSecret] = useState('');
   const [showSecret, setShowSecret] = useState(false);
 
-  // Load saved credentials
+  // Load saved client id only. The secret is never sent to the browser;
+  // we only know whether one is configured server-side.
   useEffect(() => {
     if (settings) {
       setClientId(settings.google_client_id || '');
-      setClientSecret(settings.google_client_secret || '');
     }
   }, [settings]);
 
