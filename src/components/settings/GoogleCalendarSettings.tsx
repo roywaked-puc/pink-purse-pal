@@ -78,7 +78,8 @@ export function GoogleCalendarSettings() {
   }, []);
 
   const handleSaveCredentials = async () => {
-    if (!clientId.trim() || !clientSecret.trim()) {
+    const hasExistingSecret = !!settings?.google_client_secret_configured;
+    if (!clientId.trim() || (!clientSecret.trim() && !hasExistingSecret)) {
       toast({
         title: 'Campos obrigatórios',
         description: 'Preencha o Client ID e Client Secret.',
@@ -88,11 +89,16 @@ export function GoogleCalendarSettings() {
     }
 
     try {
-      await updateSettings.mutateAsync({
+      const payload: { google_client_id: string; google_client_secret?: string } = {
         google_client_id: clientId.trim(),
-        google_client_secret: clientSecret.trim(),
-      });
+      };
+      // Only send the secret when the user typed a new value.
+      if (clientSecret.trim()) {
+        payload.google_client_secret = clientSecret.trim();
+      }
+      await updateSettings.mutateAsync(payload);
 
+      setClientSecret('');
       toast({
         title: 'Credenciais salvas!',
         description: 'Agora você pode conectar sua conta Google.',
