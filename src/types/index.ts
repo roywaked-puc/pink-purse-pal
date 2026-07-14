@@ -18,6 +18,7 @@ export interface Transaction {
   clientName?: string;
   appointmentId?: string;
   paymentType?: 'sinal' | 'pagamento';
+  createdAt?: Date;
 }
 
 export interface Client {
