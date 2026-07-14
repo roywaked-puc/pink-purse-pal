@@ -219,19 +219,24 @@ function Metric({
 }: {
   label: string;
   value: string;
-  tone?: 'danger';
+  tone?: 'danger' | 'muted' | 'info';
 }) {
+  const valueClass =
+    tone === 'danger'
+      ? 'text-rose-600'
+      : tone === 'info'
+        ? 'text-sky-600'
+        : tone === 'muted'
+          ? 'text-muted-foreground'
+          : 'text-foreground';
   return (
     <div className="p-2 rounded-lg bg-muted/40">
       <p className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</p>
-      <p
-        className={`font-semibold text-sm ${tone === 'danger' ? 'text-rose-600' : 'text-foreground'}`}
-      >
-        {value}
-      </p>
+      <p className={`font-semibold text-sm ${valueClass}`}>{value}</p>
     </div>
   );
 }
+
 
 function TimelineEntry({ item }: { item: TimelineItem }) {
   const map = {
