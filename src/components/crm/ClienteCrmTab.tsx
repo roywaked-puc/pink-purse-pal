@@ -38,6 +38,21 @@ export function ClienteCrmTab({ clientId }: Props) {
   const { stats } = useCrm();
   const s = getClientStats(stats, clientId);
 
+  const { pendingFromAttended, openScheduledTotal } = useMemo(() => {
+    const cAppts = appointments.filter((a) => a.clientId === clientId);
+    const attended = cAppts.filter((a) => a.confirmationStatus === 'atendido');
+    const open = cAppts.filter((a) =>
+      ['pendente', 'confirmado', 'retorno_previsto'].includes(a.confirmationStatus),
+    );
+    const attendedTotal = attended.reduce((sum, a) => sum + (a.amount || 0), 0);
+    const attendedPaid = attended.reduce((sum, a) => sum + (a.paidAmount || 0), 0);
+    return {
+      pendingFromAttended: Math.max(0, attendedTotal - attendedPaid),
+      openScheduledTotal: open.reduce((sum, a) => sum + (a.amount || 0), 0),
+    };
+  }, [appointments, clientId]);
+
+
   const timeline = useMemo<TimelineItem[]>(() => {
     const items: TimelineItem[] = [];
     const cAppts = appointments.filter((a) => a.clientId === clientId);
@@ -151,10 +166,15 @@ export function ClienteCrmTab({ clientId }: Props) {
           <Metric label="Total pago" value={formatBRL(s.totalPaid)} />
           <Metric
             label="Saldo pendente"
-            value={formatBRL(s.pendingBalance)}
-            tone={s.pendingBalance > 0 ? 'danger' : undefined}
+            value={formatBRL(pendingFromAttended)}
+            tone={pendingFromAttended > 0 ? 'danger' : 'muted'}
           />
-          <Metric label="Ticket médio" value={formatBRL(s.ticketMedio)} />
+          <Metric
+            label="Saldo de agendas abertas"
+            value={formatBRL(openScheduledTotal)}
+            tone="info"
+          />
+
         </div>
         <div className="text-xs text-muted-foreground pt-2 border-t">
           Último pagamento:{' '}
@@ -199,19 +219,24 @@ function Metric({
 }: {
   label: string;
   value: string;
-  tone?: 'danger';
+  tone?: 'danger' | 'muted' | 'info';
 }) {
+  const valueClass =
+    tone === 'danger'
+      ? 'text-rose-600'
+      : tone === 'info'
+        ? 'text-sky-600'
+        : tone === 'muted'
+          ? 'text-muted-foreground'
+          : 'text-foreground';
   return (
     <div className="p-2 rounded-lg bg-muted/40">
       <p className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</p>
-      <p
-        className={`font-semibold text-sm ${tone === 'danger' ? 'text-rose-600' : 'text-foreground'}`}
-      >
-        {value}
-      </p>
+      <p className={`font-semibold text-sm ${valueClass}`}>{value}</p>
     </div>
   );
 }
+
 
 function TimelineEntry({ item }: { item: TimelineItem }) {
   const map = {
