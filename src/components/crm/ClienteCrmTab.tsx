@@ -38,6 +38,21 @@ export function ClienteCrmTab({ clientId }: Props) {
   const { stats } = useCrm();
   const s = getClientStats(stats, clientId);
 
+  const { pendingFromAttended, openScheduledTotal } = useMemo(() => {
+    const cAppts = appointments.filter((a) => a.clientId === clientId);
+    const attended = cAppts.filter((a) => a.confirmationStatus === 'atendido');
+    const open = cAppts.filter((a) =>
+      ['pendente', 'confirmado', 'retorno_previsto'].includes(a.confirmationStatus),
+    );
+    const attendedTotal = attended.reduce((sum, a) => sum + (a.amount || 0), 0);
+    const attendedPaid = attended.reduce((sum, a) => sum + (a.paidAmount || 0), 0);
+    return {
+      pendingFromAttended: Math.max(0, attendedTotal - attendedPaid),
+      openScheduledTotal: open.reduce((sum, a) => sum + (a.amount || 0), 0),
+    };
+  }, [appointments, clientId]);
+
+
   const timeline = useMemo<TimelineItem[]>(() => {
     const items: TimelineItem[] = [];
     const cAppts = appointments.filter((a) => a.clientId === clientId);
