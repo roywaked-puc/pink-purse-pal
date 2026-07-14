@@ -166,10 +166,15 @@ export function ClienteCrmTab({ clientId }: Props) {
           <Metric label="Total pago" value={formatBRL(s.totalPaid)} />
           <Metric
             label="Saldo pendente"
-            value={formatBRL(s.pendingBalance)}
-            tone={s.pendingBalance > 0 ? 'danger' : undefined}
+            value={formatBRL(pendingFromAttended)}
+            tone={pendingFromAttended > 0 ? 'danger' : 'muted'}
           />
-          <Metric label="Ticket médio" value={formatBRL(s.ticketMedio)} />
+          <Metric
+            label="Saldo de agendas abertas"
+            value={formatBRL(openScheduledTotal)}
+            tone="info"
+          />
+
         </div>
         <div className="text-xs text-muted-foreground pt-2 border-t">
           Último pagamento:{' '}
