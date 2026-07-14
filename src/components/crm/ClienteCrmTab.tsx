@@ -294,11 +294,11 @@ function Metric({
 
 function TimelineEntry({ item }: { item: TimelineItem }) {
   const map = {
-    attended: { icon: Sparkles, color: 'bg-emerald-500 text-white' },
-    scheduled: { icon: Calendar, color: 'bg-sky-500 text-white' },
-    payment: { icon: DollarSign, color: 'bg-primary text-primary-foreground' },
+    attended: { icon: Sparkles, color: 'bg-blue-700 text-white' },
+    scheduled: { icon: Calendar, color: 'bg-sky-400 text-white' },
+    payment: { icon: DollarSign, color: 'bg-emerald-500 text-white' },
     photo: { icon: ImageIcon, color: 'bg-violet-500 text-white' },
-    return: { icon: RotateCcw, color: 'bg-amber-500 text-white' },
+    return: { icon: RotateCcw, color: 'bg-sky-400 text-white' },
   } as const;
   const { icon: Icon, color } = map[item.type];
   return (
@@ -311,9 +311,10 @@ function TimelineEntry({ item }: { item: TimelineItem }) {
       <div className="p-3 rounded-lg bg-card border border-border">
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground">
-            {format(item.date, "dd 'de' MMM yyyy", { locale: ptBR })}
+            {format(item.displayDate, "dd 'de' MMM yyyy", { locale: ptBR })}
           </p>
         </div>
+
         <p className="font-medium text-sm">{item.title}</p>
         {item.detail && <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>}
       </div>
