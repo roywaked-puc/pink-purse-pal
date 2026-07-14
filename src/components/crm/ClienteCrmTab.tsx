@@ -26,10 +26,12 @@ interface Props {
 
 interface TimelineItem {
   id: string;
-  date: Date;
+  sortDate: Date;
+  displayDate: Date;
   type: 'attended' | 'scheduled' | 'payment' | 'photo' | 'return';
   title: string;
   detail?: string;
+  coveredDates?: Date[];
 }
 
 export function ClienteCrmTab({ clientId }: Props) {
@@ -56,23 +58,33 @@ export function ClienteCrmTab({ clientId }: Props) {
   const timeline = useMemo<TimelineItem[]>(() => {
     const items: TimelineItem[] = [];
     const cAppts = appointments.filter((a) => a.clientId === clientId);
+    const apptById = new Map(cAppts.map((a) => [a.id, a]));
     const apptIds = new Set(cAppts.map((a) => a.id));
 
+    // Tipo 1 — Atendimento / agendamento
     cAppts.forEach((a) => {
+      if (a.confirmationStatus === 'cancelado') return;
       if (a.confirmationStatus === 'atendido') {
+        const paidRatio = a.amount > 0 ? (a.paidAmount || 0) / a.amount : 0;
+        const payStatus =
+          (a.paidAmount || 0) <= 0
+            ? 'Não pago'
+            : paidRatio >= 0.999
+              ? 'Pago'
+              : 'Parcialmente pago';
         items.push({
           id: `a-${a.id}`,
-          date: new Date(a.date),
+          sortDate: new Date(a.date),
+          displayDate: new Date(a.date),
           type: 'attended',
           title: 'Atendimento realizado',
-          detail: `${a.service} · ${formatBRL(a.amount)}`,
+          detail: `${a.service} · ${formatBRL(a.amount)} · ${payStatus}`,
         });
-      } else if (a.confirmationStatus === 'cancelado') {
-        // ignora cancelados
       } else {
         items.push({
           id: `s-${a.id}`,
-          date: new Date(a.date),
+          sortDate: new Date(a.date),
+          displayDate: new Date(a.date),
           type: a.confirmationStatus === 'retorno_previsto' ? 'return' : 'scheduled',
           title:
             a.confirmationStatus === 'retorno_previsto'
@@ -80,35 +92,77 @@ export function ClienteCrmTab({ clientId }: Props) {
               : a.confirmationStatus === 'confirmado'
                 ? 'Agendamento confirmado'
                 : 'Agendamento',
-          detail: a.service,
+          detail: `${a.service} · ${formatBRL(a.amount)}`,
         });
       }
     });
 
-    transactions
-      .filter((t) => t.appointmentId && apptIds.has(t.appointmentId) && t.type === 'entrada')
-      .forEach((t) => {
-        items.push({
-          id: `t-${t.id}`,
-          date: new Date(t.date),
-          type: 'payment',
-          title: `Pagamento ${formatBRL(t.amount)}`,
-          detail: t.description || t.category,
-        });
-      });
+    // Tipo 2 — Pagamentos agrupados por janela de ±2 min (mesmo cliente)
+    const clientTxs = transactions
+      .filter(
+        (t) =>
+          t.type === 'entrada' &&
+          t.appointmentId &&
+          apptIds.has(t.appointmentId) &&
+          t.createdAt,
+      )
+      .sort((a, b) => (a.createdAt!.getTime() - b.createdAt!.getTime()));
 
+    const WINDOW_MS = 2 * 60 * 1000;
+    const groups: (typeof clientTxs)[] = [];
+    clientTxs.forEach((t) => {
+      const last = groups[groups.length - 1];
+      const lastTx = last?.[last.length - 1];
+      if (lastTx && t.createdAt!.getTime() - lastTx.createdAt!.getTime() <= WINDOW_MS) {
+        last.push(t);
+      } else {
+        groups.push([t]);
+      }
+    });
+
+    groups.forEach((g, idx) => {
+      const total = g.reduce((sum, t) => sum + t.amount, 0);
+      const groupDate = g[0].createdAt!;
+      const uniqueApptIds = Array.from(new Set(g.map((t) => t.appointmentId!)));
+      const coveredDates = uniqueApptIds
+        .map((id) => apptById.get(id)?.date)
+        .filter((d): d is Date => !!d)
+        .map((d) => new Date(d))
+        .sort((a, b) => a.getTime() - b.getTime());
+
+      const coveredLabel =
+        coveredDates.length > 0
+          ? `Cobriu ${coveredDates.length === 1 ? 'atendimento de' : 'atendimentos de'} ${coveredDates
+              .map((d) => format(d, 'dd/MMM', { locale: ptBR }))
+              .join(', ')}`
+          : undefined;
+
+      items.push({
+        id: `pg-${idx}-${groupDate.getTime()}`,
+        sortDate: groupDate,
+        displayDate: groupDate,
+        type: 'payment',
+        title: `Pagamento recebido ${formatBRL(total)}`,
+        detail: coveredLabel,
+        coveredDates,
+      });
+    });
+
+    // Fotos (mantidas)
     photos.forEach((p) => {
       items.push({
         id: `p-${p.id}`,
-        date: new Date(p.photoDate),
+        sortDate: new Date(p.photoDate),
+        displayDate: new Date(p.photoDate),
         type: 'photo',
         title: 'Foto adicionada',
         detail: p.serviceName || p.observation,
       });
     });
 
-    return items.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return items.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
   }, [appointments, transactions, photos, clientId]);
+
 
   if (!s) {
     return <EmptyState icon={CircleDot} title="Sem dados" description="Cliente sem informações ainda." />;
