@@ -184,6 +184,9 @@ export function AccountList() {
                       <X className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
+                  {editType === 'maquininha' && (
+                    <AccountFeeTypes accountId={account.id} />
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
