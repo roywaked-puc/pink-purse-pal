@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { AccountFeeTypes } from './AccountFeeTypes';
 import { cn } from '@/lib/utils';
 
 const formatCurrency = (value: number) => {
