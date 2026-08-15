@@ -11,7 +11,6 @@ import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { AppointmentForm, AppointmentPrefill } from '@/components/appointments/AppointmentForm';
 import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
 import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
-import { ScheduleReturnDialog } from '@/components/appointments/ScheduleReturnDialog';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -43,7 +42,6 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
   const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
-  const [returnSource, setReturnSource] = useState<Appointment | null>(null);
   const [returnPrefill, setReturnPrefill] = useState<AppointmentPrefill | null>(null);
   const didOpenUpload = useRef(false);
   const [balancesVisible, setBalancesVisible] = useState(
@@ -110,8 +108,6 @@ const Index = () => {
   const triggerPostAttendance = (apt: Appointment) => {
     if (apt.clientId) {
       setPhotoPromptSource(apt);
-    } else {
-      setReturnSource(apt);
     }
   };
 
@@ -319,9 +315,7 @@ const Index = () => {
           open={!!photoPromptSource}
           onOpenChange={(o) => {
             if (!o) {
-              const src = photoPromptSource;
               setPhotoPromptSource(null);
-              if (src && !didOpenUpload.current) setReturnSource(src);
               didOpenUpload.current = false;
             }
           }}
@@ -339,10 +333,8 @@ const Index = () => {
           open={!!photoUploadSource}
           onOpenChange={(o) => {
             if (!o) {
-              const src = photoUploadSource;
               setPhotoUploadSource(null);
               didOpenUpload.current = false;
-              if (src) setReturnSource(src);
             }
           }}
           clientId={photoUploadSource.clientId}
@@ -352,21 +344,6 @@ const Index = () => {
         />
       )}
 
-      {returnSource && (
-        <ScheduleReturnDialog
-          open={!!returnSource}
-          onOpenChange={(o) => {
-            if (!o) setReturnSource(null);
-          }}
-          sourceAppointment={returnSource}
-          onAgendarAgora={(prefill) => {
-            setReturnSource(null);
-            setEditingAppointment(null);
-            setReturnPrefill(prefill);
-            setShowAppointmentForm(true);
-          }}
-        />
-      )}
     </MainLayout>
   );
 };

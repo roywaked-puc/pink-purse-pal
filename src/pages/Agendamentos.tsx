@@ -24,7 +24,6 @@ import { cn } from '@/lib/utils';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
 import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
-import { ScheduleReturnDialog } from '@/components/appointments/ScheduleReturnDialog';
 
 
 const formatWhatsAppMessage = (appointment: Appointment) => {
@@ -100,7 +99,6 @@ const Agendamentos = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
   const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
-  const [returnSource, setReturnSource] = useState<Appointment | null>(null);
   const didOpenUpload = useRef(false);
 
 
@@ -154,8 +152,6 @@ const Agendamentos = () => {
   const triggerPostAttendance = (apt: Appointment) => {
     if (apt.clientId) {
       setPhotoPromptSource(apt);
-    } else {
-      setReturnSource(apt);
     }
   };
 
@@ -521,10 +517,7 @@ const Agendamentos = () => {
           open={!!photoPromptSource}
           onOpenChange={(o) => {
             if (!o) {
-              const src = photoPromptSource;
               setPhotoPromptSource(null);
-              // se no escolheu adicionar foto (didOpenUpload.current  false), segue direto pro retorno
-              if (src && !didOpenUpload.current) setReturnSource(src);
               didOpenUpload.current = false;
             }
           }}
@@ -542,10 +535,8 @@ const Agendamentos = () => {
           open={!!photoUploadSource}
           onOpenChange={(o) => {
             if (!o) {
-              const src = photoUploadSource;
               setPhotoUploadSource(null);
               didOpenUpload.current = false;
-              if (src) setReturnSource(src);
             }
           }}
           clientId={photoUploadSource.clientId}
@@ -555,15 +546,6 @@ const Agendamentos = () => {
         />
       )}
 
-      {returnSource && (
-        <ScheduleReturnDialog
-          open={!!returnSource}
-          onOpenChange={(o) => {
-            if (!o) setReturnSource(null);
-          }}
-          sourceAppointment={returnSource}
-        />
-      )}
     </MainLayout>
   );
 };
