@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_fee_types: {
+        Row: {
+          account_id: string
+          created_at: string
+          fee_percentage: number
+          id: string
+          label: string
+          order_index: number
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          fee_percentage?: number
+          id?: string
+          label: string
+          order_index?: number
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          fee_percentage?: number
+          id?: string
+          label?: string
+          order_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_fee_types_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           created_at: string
@@ -475,6 +513,7 @@ export type Database = {
       transactions: {
         Row: {
           account: string
+          account_fee_type_id: string | null
           account_id: string | null
           amount: number
           appointment_id: string | null
@@ -493,6 +532,7 @@ export type Database = {
         }
         Insert: {
           account: string
+          account_fee_type_id?: string | null
           account_id?: string | null
           amount?: number
           appointment_id?: string | null
@@ -511,6 +551,7 @@ export type Database = {
         }
         Update: {
           account?: string
+          account_fee_type_id?: string | null
           account_id?: string | null
           amount?: number
           appointment_id?: string | null
@@ -528,6 +569,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_account_fee_type_id_fkey"
+            columns: ["account_fee_type_id"]
+            isOneToOne: false
+            referencedRelation: "account_fee_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "transactions_account_id_fkey"
             columns: ["account_id"]
