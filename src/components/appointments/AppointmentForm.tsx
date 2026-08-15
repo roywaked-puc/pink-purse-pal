@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
-import { CalendarIcon, HelpCircle, Receipt } from 'lucide-react';
+import { CalendarIcon, HelpCircle, Receipt, Loader2 } from 'lucide-react';
 import { AppointmentTransactionsDialog } from './AppointmentTransactionsDialog';
 import {
   Tooltip,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Appointment, PaymentStatus, ConfirmationStatus, Client, Service } from '@/types';
 import { useApp } from '@/contexts/AppContext';
+import { useUpdateAppointment, useAddAppointment } from '@/hooks/useAppointments';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,16 +40,32 @@ import { ClientAutocomplete } from './ClientAutocomplete';
 import { ServiceAutocomplete } from './ServiceAutocomplete';
 import { toast } from 'sonner';
 
+export interface AppointmentPrefill {
+  date?: Date;
+  clientId?: string;
+  clientName?: string;
+  clientPhone?: string;
+  clientNotes?: string;
+  serviceId?: string;
+  service?: string;
+  amount?: number;
+  duration?: number;
+  notes?: string;
+}
+
 interface AppointmentFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointment?: Appointment | null;
   onDelete?: () => void;
   onAttendanceConfirmed?: (appointment: Appointment) => void;
+  prefill?: AppointmentPrefill | null;
 }
 
-export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed }: AppointmentFormProps) {
-  const { appointments, addAppointment, updateAppointment, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed, prefill }: AppointmentFormProps) {
+  const { appointments, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
+  const { mutateAsync: addAppointmentAsync } = useAddAppointment();
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('10:00');
   const [clientName, setClientName] = useState('');
@@ -63,7 +80,9 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('nao_pago');
   const [confirmationStatus, setConfirmationStatus] = useState<ConfirmationStatus>('pendente');
   const [notes, setNotes] = useState('');
+  const [isPermuta, setIsPermuta] = useState(false);
   const [showTransactions, setShowTransactions] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (appointment) {
@@ -77,6 +96,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       setPaymentStatus(appointment.paymentStatus);
       setConfirmationStatus(appointment.confirmationStatus);
       setNotes(appointment.notes || '');
+      setIsPermuta(Boolean(appointment.isPermuta));
       
       if (appointment.clientId) {
         setSelectedClientId(appointment.clientId);
@@ -101,10 +121,25 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
         setSelectedServiceId(null);
         setServiceNotes('');
       }
+    } else if (prefill) {
+      resetForm();
+      if (prefill.date) {
+        setDate(prefill.date);
+        setTime(format(prefill.date, 'HH:mm'));
+      }
+      if (prefill.clientId) setSelectedClientId(prefill.clientId);
+      if (prefill.clientName) setClientName(prefill.clientName);
+      if (prefill.clientPhone) setClientPhone(prefill.clientPhone);
+      if (prefill.clientNotes) setClientNotes(prefill.clientNotes);
+      if (prefill.serviceId) setSelectedServiceId(prefill.serviceId);
+      if (prefill.service) setService(prefill.service);
+      if (prefill.amount != null) setAmount(prefill.amount.toString());
+      if (prefill.duration != null) setDuration(prefill.duration.toString());
+      if (prefill.notes) setNotes(prefill.notes);
     } else {
       resetForm();
     }
-  }, [appointment, open, getClientById, getServiceById]);
+  }, [appointment, open, getClientById, getServiceById, prefill]);
 
   const resetForm = () => {
     setDate(new Date());
@@ -121,6 +156,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
     setPaymentStatus('nao_pago');
     setConfirmationStatus('pendente');
     setNotes('');
+    setIsPermuta(false);
   };
 
   const handleClientSelect = (client: Client | null) => {
@@ -174,6 +210,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     
     const [hours, minutes] = time.split(':').map(Number);
     const fullDate = new Date(date);
@@ -192,69 +229,87 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       return;
     }
 
-    let clientId = selectedClientId;
+    setIsSubmitting(true);
+    try {
+      let clientId = selectedClientId;
 
-    // Se tem cliente selecionado, atualiza os dados se mudaram
-    if (selectedClientId) {
-      updateClient(selectedClientId, {
-        name: clientName,
-        phone: clientPhone,
-        notes: clientNotes,
-      });
-    } else if (clientName.trim()) {
-      // Cria novo cliente e aguarda o ID real do banco
-      clientId = await addClientAsync({
-        name: clientName.trim(),
-        phone: clientPhone,
-        notes: clientNotes,
-      });
-    }
-
-    let serviceId = selectedServiceId;
-
-    // Se digitou serviço novo, cria automaticamente e aguarda o ID real
-    if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
-      serviceId = await addServiceAsync({
-        description: service.trim(),
-        amount: parseFloat(amount),
-        duration: 60, // Duração padrão de 1 hora para novos serviços
-      });
-    }
-
-    const data = {
-      date: fullDate,
-      clientId: clientId || undefined,
-      clientName: clientName.trim(),
-      serviceId: serviceId || undefined,
-      service,
-      amount: parseFloat(amount) || 0,
-      paidAmount: appointment?.paidAmount || 0,
-      paymentStatus,
-      confirmationStatus,
-      duration: parseInt(duration) || 60,
-      notes: notes.trim() || undefined,
-    };
-
-    if (appointment) {
-      updateAppointment(appointment.id, data);
-      // Se foi mudado para "atendido" e antes n�o era, dispara callback
-      // N�O fecha o form aqui - deixa o callback fazer isso
-      if (confirmationStatus === 'atendido' && appointment.confirmationStatus !== 'atendido' && onAttendanceConfirmed) {
-        const updatedAppointment = { ...appointment, ...data, id: appointment.id };
-        onAttendanceConfirmed(updatedAppointment);
-        resetForm();
-        return; // N�o fecha o form aqui, deixa o callback fazer
+      // Se tem cliente selecionado, atualiza os dados se mudaram
+      if (selectedClientId) {
+        const existingClient = getClientById(selectedClientId);
+        updateClient(selectedClientId, {
+          name: clientName,
+          phone: clientPhone,
+          notes: clientNotes,
+          recurrenceDays: existingClient?.recurrenceDays,
+          birthDate: existingClient?.birthDate,
+        });
+      } else if (clientName.trim()) {
+        // Cria novo cliente e aguarda o ID real do banco
+        clientId = await addClientAsync({
+          name: clientName.trim(),
+          phone: clientPhone,
+          notes: clientNotes,
+        });
       }
-    } else {
-      addAppointment(data);
-    }
 
-    onOpenChange(false);
-    resetForm();
+      let serviceId = selectedServiceId;
+
+      // Se digitou serviço novo, cria automaticamente e aguarda o ID real
+      if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
+        serviceId = await addServiceAsync({
+          description: service.trim(),
+          amount: parseFloat(amount),
+          duration: 60, // Duração padrão de 1 hora para novos serviços
+        });
+      }
+
+      const data = {
+        date: fullDate,
+        clientId: clientId || undefined,
+        clientName: clientName.trim(),
+        serviceId: serviceId || undefined,
+        service,
+        amount: parseFloat(amount) || 0,
+        paidAmount: appointment?.paidAmount || 0,
+        paymentStatus,
+        confirmationStatus,
+        duration: parseInt(duration) || 60,
+        notes: notes.trim() || undefined,
+        isPermuta,
+      };
+
+      if (appointment) {
+        const wasAtendido = appointment.confirmationStatus === 'atendido';
+        const becameAtendido = confirmationStatus === 'atendido' && !wasAtendido;
+
+        await updateAppointmentAsync({ id: appointment.id, appointment: data });
+
+        if (becameAtendido && onAttendanceConfirmed) {
+          const updated = { ...appointment, ...data, id: appointment.id };
+          onOpenChange(false);
+          resetForm();
+          // Pequeno delay para garantir que o Dialog feche antes de abrir o próximo
+          setTimeout(() => onAttendanceConfirmed(updated), 150);
+          return;
+        }
+      } else {
+        await addAppointmentAsync(data);
+      }
+
+      onOpenChange(false);
+      resetForm();
+    } catch (err: any) {
+      console.error('[AppointmentForm] save error:', err);
+      toast.error('Erro ao salvar agendamento', {
+        description: err?.message || 'Tente novamente.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!isSubmitting) onOpenChange(o); }}>
       <DialogContent className="max-w-[95%] sm:max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -378,6 +433,17 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
             </div>
           </div>
 
+          <label className="flex items-center gap-2 cursor-pointer select-none p-2 rounded-md border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={isPermuta}
+              onChange={(e) => setIsPermuta(e.target.checked)}
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+            />
+            <span className="text-sm">Este atendimento é permuta (troca de serviço)</span>
+          </label>
+
+
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Label>Observação do Atendimento</Label>
@@ -414,6 +480,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                     <SelectItem value="confirmado">✓ Confirmado</SelectItem>
                     <SelectItem value="atendido">✓✓ Atendido</SelectItem>
                     <SelectItem value="cancelado">✗ Cancelado</SelectItem>
+                    <SelectItem value="retorno_previsto">🔁 Retorno Previsto</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -453,6 +520,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                 type="button"
                 variant="destructive"
                 onClick={onDelete}
+                disabled={isSubmitting}
                 className="w-full sm:w-auto"
               >
                 Excluir
@@ -463,12 +531,20 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
                 className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="flex-1">
-                Salvar
+              <Button type="submit" disabled={isSubmitting} className="flex-1">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar'
+                )}
               </Button>
             </div>
           </DialogFooter>

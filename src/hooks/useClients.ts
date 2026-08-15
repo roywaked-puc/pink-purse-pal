@@ -25,11 +25,14 @@ export function useClients() {
         phone: c.phone,
         notes: c.notes || undefined,
         recurrenceDays: c.recurrence_days ?? undefined,
+        birthDate: c.birth_date ?? undefined,
       }));
     },
     enabled: !!user,
   });
 }
+
+const normalizePhone = (p?: string) => (p || '').replace(/\D/g, '');
 
 export function useAddClient() {
   const queryClient = useQueryClient();
@@ -39,6 +42,15 @@ export function useAddClient() {
     mutationFn: async (client: Omit<Client, 'id'>): Promise<string> => {
       if (!user) throw new Error('Not authenticated');
 
+      const newPhone = normalizePhone(client.phone);
+      if (newPhone) {
+        const existing = queryClient.getQueryData<Client[]>(['clients', user.id]) || [];
+        const dup = existing.find((c) => normalizePhone(c.phone) === newPhone);
+        if (dup) {
+          throw new Error(`Já existe um cliente com este telefone: ${dup.name}`);
+        }
+      }
+
       const { data, error } = await supabase
         .from('clients')
         .insert({
@@ -47,6 +59,7 @@ export function useAddClient() {
           phone: client.phone,
           notes: client.notes,
           recurrence_days: client.recurrenceDays ?? null,
+          birth_date: client.birthDate ?? null,
         } as any)
         .select('id')
         .single();
@@ -62,9 +75,19 @@ export function useAddClient() {
 
 export function useUpdateClient() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, client }: { id: string; client: Omit<Client, 'id'> }) => {
+      const newPhone = normalizePhone(client.phone);
+      if (newPhone && user) {
+        const existing = queryClient.getQueryData<Client[]>(['clients', user.id]) || [];
+        const dup = existing.find((c) => c.id !== id && normalizePhone(c.phone) === newPhone);
+        if (dup) {
+          throw new Error(`Já existe um cliente com este telefone: ${dup.name}`);
+        }
+      }
+
       const { error } = await supabase
         .from('clients')
         .update({
@@ -72,6 +95,7 @@ export function useUpdateClient() {
           phone: client.phone,
           notes: client.notes,
           recurrence_days: client.recurrenceDays ?? null,
+          birth_date: client.birthDate ?? null,
         } as any)
         .eq('id', id);
 
@@ -82,6 +106,7 @@ export function useUpdateClient() {
     },
   });
 }
+
 
 export function useDeleteClient() {
   const queryClient = useQueryClient();

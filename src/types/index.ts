@@ -18,6 +18,7 @@ export interface Transaction {
   clientName?: string;
   appointmentId?: string;
   paymentType?: 'sinal' | 'pagamento';
+  createdAt?: Date;
 }
 
 export interface Client {
@@ -26,6 +27,7 @@ export interface Client {
   phone: string;
   notes?: string;
   recurrenceDays?: number;
+  birthDate?: string; // ISO date 'YYYY-MM-DD'
 }
 
 export interface Appointment {
@@ -43,6 +45,7 @@ export interface Appointment {
   notes?: string;
   googleEventId?: string;
   parentAppointmentId?: string;
+  isPermuta?: boolean;
 }
 
 export interface Category {
@@ -80,6 +83,10 @@ export interface UserSettings {
   retention_color_previsto: string;
   retention_color_aguardando: string;
   retention_color_confirmado: string;
+  crm_inactive_days: number;
+  crm_confirm_days: number;
+  crm_vip_count: number;
+  crm_monthly_goal: number;
 }
 
 export interface ClientPhoto {

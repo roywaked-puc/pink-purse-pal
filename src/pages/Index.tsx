@@ -8,7 +8,7 @@ import { BalanceCard } from '@/components/dashboard/BalanceCard';
 import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
 import { ReturnsToConfirmCard } from '@/components/dashboard/ReturnsToConfirmCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
-import { AppointmentForm } from '@/components/appointments/AppointmentForm';
+import { AppointmentForm, AppointmentPrefill } from '@/components/appointments/AppointmentForm';
 import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
 import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
 import { ScheduleReturnDialog } from '@/components/appointments/ScheduleReturnDialog';
@@ -44,6 +44,7 @@ const Index = () => {
   const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
   const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
   const [returnSource, setReturnSource] = useState<Appointment | null>(null);
+  const [returnPrefill, setReturnPrefill] = useState<AppointmentPrefill | null>(null);
   const didOpenUpload = useRef(false);
   const [balancesVisible, setBalancesVisible] = useState(
     () => localStorage.getItem('balancesVisible') === 'true',
@@ -105,8 +106,6 @@ const Index = () => {
       setDeleteAppointmentId(null);
     }
   };
-    }
-  };
 
   const triggerPostAttendance = (apt: Appointment) => {
     if (apt.clientId) {
@@ -130,6 +129,7 @@ const Index = () => {
             onEdit={handleEditAppointment}
             onDelete={handleDeleteAppointment}
             onReceive={handleReceiveAppointment}
+            onAttendanceCompleted={triggerPostAttendance}
             getClientPhone={getClientPhone}
           />
         </div>
@@ -287,9 +287,13 @@ const Index = () => {
         open={showAppointmentForm}
         onOpenChange={(open) => {
           setShowAppointmentForm(open);
-          if (!open) setEditingAppointment(null);
+          if (!open) {
+            setEditingAppointment(null);
+            setReturnPrefill(null);
+          }
         }}
         appointment={editingAppointment}
+        prefill={returnPrefill}
         onDelete={() => {
           if (editingAppointment) {
             setDeleteAppointmentId(editingAppointment.id);
@@ -355,6 +359,12 @@ const Index = () => {
             if (!o) setReturnSource(null);
           }}
           sourceAppointment={returnSource}
+          onAgendarAgora={(prefill) => {
+            setReturnSource(null);
+            setEditingAppointment(null);
+            setReturnPrefill(prefill);
+            setShowAppointmentForm(true);
+          }}
         />
       )}
     </MainLayout>

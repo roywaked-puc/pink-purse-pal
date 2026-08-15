@@ -37,11 +37,11 @@ export function GoogleCalendarSettings() {
   const [clientSecret, setClientSecret] = useState('');
   const [showSecret, setShowSecret] = useState(false);
 
-  // Load saved credentials
+  // Load saved client id only. The secret is never sent to the browser;
+  // we only know whether one is configured server-side.
   useEffect(() => {
     if (settings) {
       setClientId(settings.google_client_id || '');
-      setClientSecret(settings.google_client_secret || '');
     }
   }, [settings]);
 
@@ -78,7 +78,8 @@ export function GoogleCalendarSettings() {
   }, []);
 
   const handleSaveCredentials = async () => {
-    if (!clientId.trim() || !clientSecret.trim()) {
+    const hasExistingSecret = !!settings?.google_client_secret_configured;
+    if (!clientId.trim() || (!clientSecret.trim() && !hasExistingSecret)) {
       toast({
         title: 'Campos obrigatórios',
         description: 'Preencha o Client ID e Client Secret.',
@@ -88,11 +89,16 @@ export function GoogleCalendarSettings() {
     }
 
     try {
-      await updateSettings.mutateAsync({
+      const payload: { google_client_id: string; google_client_secret?: string } = {
         google_client_id: clientId.trim(),
-        google_client_secret: clientSecret.trim(),
-      });
+      };
+      // Only send the secret when the user typed a new value.
+      if (clientSecret.trim()) {
+        payload.google_client_secret = clientSecret.trim();
+      }
+      await updateSettings.mutateAsync(payload);
 
+      setClientSecret('');
       toast({
         title: 'Credenciais salvas!',
         description: 'Agora você pode conectar sua conta Google.',
@@ -224,7 +230,7 @@ export function GoogleCalendarSettings() {
               type={showSecret ? 'text' : 'password'}
               value={clientSecret}
               onChange={(e) => setClientSecret(e.target.value)}
-              placeholder="GOCSPX-..."
+              placeholder={settings?.google_client_secret_configured ? '••••••••••••  (deixe em branco para manter)' : 'GOCSPX-...'}
               disabled={isConnected}
             />
             <Button
@@ -247,7 +253,7 @@ export function GoogleCalendarSettings() {
         {!isConnected && (
           <Button
             onClick={handleSaveCredentials}
-            disabled={updateSettings.isPending || !clientId.trim() || !clientSecret.trim()}
+            disabled={updateSettings.isPending || !clientId.trim() || (!clientSecret.trim() && !settings?.google_client_secret_configured)}
             className="w-full"
             variant="outline"
           >
