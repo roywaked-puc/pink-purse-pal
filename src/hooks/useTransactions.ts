@@ -83,6 +83,7 @@ export function useAddTransaction() {
           description: transaction.description,
           client_name: transaction.clientName || null,
           appointment_id: transaction.appointmentId,
+          account_fee_type_id: transaction.accountFeeTypeId || null,
           payment_type: transaction.paymentType,
         });
       
@@ -114,6 +115,7 @@ export function useUpdateTransaction() {
           description: transaction.description,
           client_name: transaction.clientName || null,
           appointment_id: transaction.appointmentId,
+          account_fee_type_id: transaction.accountFeeTypeId || null,
           payment_type: transaction.paymentType,
         })
         .eq('id', id);
