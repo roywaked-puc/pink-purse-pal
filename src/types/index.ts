@@ -17,8 +17,18 @@ export interface Transaction {
   description?: string;
   clientName?: string;
   appointmentId?: string;
+  accountFeeTypeId?: string;
   paymentType?: 'sinal' | 'pagamento';
   createdAt?: Date;
+}
+
+export interface AccountFeeType {
+  id: string;
+  accountId: string;
+  label: string;
+  feePercentage: number;
+  orderIndex: number;
+  createdAt: string;
 }
 
 export interface Client {

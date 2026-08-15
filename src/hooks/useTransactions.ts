@@ -49,6 +49,7 @@ export function useTransactions(options: UseTransactionsOptions = {}) {
         description: t.description || undefined,
         clientName: t.client_name || undefined,
         appointmentId: t.appointment_id || undefined,
+        accountFeeTypeId: (t as any).account_fee_type_id || undefined,
         paymentType: t.payment_type as 'sinal' | 'pagamento' | undefined,
         createdAt: t.created_at ? new Date(t.created_at) : undefined,
       }));
