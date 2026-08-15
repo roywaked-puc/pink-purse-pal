@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from '@/components/appointments/ClientAutocomplete';
 import { AppointmentSelector } from './AppointmentSelector';
 import { useToast } from '@/hooks/use-toast';
+import { useAccountFeeTypes } from '@/hooks/useAccountFeeTypes';
 
 interface TransactionFormProps {
   open: boolean;
@@ -63,6 +64,9 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   // Valor líquido com desconto de operadora
   const [netAmount, setNetAmount] = useState('');
   const [showNetAmount, setShowNetAmount] = useState(false);
+
+  // Forma de cobrança (tipos de taxa da conta, ex: débito, crédito à vista)
+  const [feeTypeId, setFeeTypeId] = useState('');
   
   // Checkbox para vincular a agendamento
   const [linkToAppointment, setLinkToAppointment] = useState(false);
@@ -96,10 +100,32 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     return accounts.find(a => a.id === account);
   }, [accounts, account]);
 
-  // Calcula o valor líquido quando muda o valor ou a conta
+  const { data: feeTypes = [] } = useAccountFeeTypes(account || undefined);
+
+  const accountFeeTypes = useMemo(
+    () => feeTypes.filter(ft => ft.accountId === account),
+    [feeTypes, account]
+  );
+
+  const selectedFeeType = useMemo(
+    () => accountFeeTypes.find(ft => ft.id === feeTypeId),
+    [accountFeeTypes, feeTypeId]
+  );
+
+  // Taxa efetiva: do tipo de cobrança selecionado, senão da conta
+  const effectiveFee = selectedFeeType
+    ? selectedFeeType.feePercentage
+    : (selectedAccount?.feePercentage || 0);
+
+  // Limpa a forma de cobrança quando a conta selecionada muda
   useEffect(() => {
-    if (selectedAccount?.feePercentage && selectedAccount.feePercentage > 0 && amount) {
-      const fee = selectedAccount.feePercentage / 100;
+    setFeeTypeId(prev => (prev && !accountFeeTypes.some(ft => ft.id === prev) ? '' : prev));
+  }, [accountFeeTypes]);
+
+  // Calcula o valor líquido quando muda o valor, a conta ou a forma de cobrança
+  useEffect(() => {
+    if (effectiveFee > 0 && amount) {
+      const fee = effectiveFee / 100;
       const calculated = parseFloat(amount) * (1 - fee);
       setNetAmount(calculated.toFixed(2));
       setShowNetAmount(true);
@@ -107,7 +133,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setNetAmount('');
       setShowNetAmount(false);
     }
-  }, [amount, selectedAccount]);
+  }, [amount, effectiveFee]);
 
   // Quando seleciona categoria, preenche tipo e origem automaticamente
   useEffect(() => {
@@ -148,6 +174,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setType(transaction.type);
       setScope(transaction.scope);
       setAccount(transaction.account);
+      setFeeTypeId(transaction.accountFeeTypeId || '');
       // Se tem valor bruto (grossAmount), usa ele para evitar duplicação de taxa
       setAmount(transaction.grossAmount ? transaction.grossAmount.toString() : transaction.amount.toString());
       setDescription(transaction.description || '');
@@ -194,6 +221,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     setType('');
     setScope('');
     setAccount('');
+    setFeeTypeId('');
     setAmount('');
     setNetAmount('');
     setShowNetAmount(false);
@@ -301,6 +329,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       description: description || undefined,
       clientName: linkToAppointment ? undefined : (referenceClientName || undefined),
       appointmentId: selectedAppointment?.id,
+      accountFeeTypeId: feeTypeId || undefined,
       paymentType: selectedAppointment ? paymentType : undefined,
     };
 
@@ -500,6 +529,25 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             </Select>
           </div>
 
+          {accountFeeTypes.length > 0 && (
+            <div className="space-y-2">
+              <Label>Forma de cobrança</Label>
+              <Select value={feeTypeId} onValueChange={setFeeTypeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accountFeeTypes.map((ft) => (
+                    <SelectItem key={ft.id} value={ft.id}>
+                      {ft.label}
+                      {ft.feePercentage > 0 ? ` • ${ft.feePercentage}%` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>{selectedAppointment ? 'Valor Recebido (R$)' : 'Valor (R$)'} <span className="text-destructive">*</span></Label>
             <Input
@@ -518,7 +566,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
               <div className="flex items-center justify-between">
                 <Label>Valor Líquido (com desconto)</Label>
                 <span className="text-xs text-muted-foreground">
-                  Taxa: {selectedAccount?.feePercentage}%
+                  Taxa: {effectiveFee}%
                 </span>
               </div>
               <Input
