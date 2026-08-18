@@ -235,7 +235,7 @@ const Agendamentos = () => {
             </DropdownMenu>
             <div>
               <p className="text-sm font-medium">
-                {format(appointmentDate, "dd 'de' MMMM", { locale: ptBR })}
+                {format(appointmentDate, "EEE, dd 'de' MMMM", { locale: ptBR })}
               </p>
               <p className="text-xs text-muted-foreground">
                 {format(appointmentDate, "HH:mm")}
