@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, HelpCircle, Receipt, Loader2 } from 'lucide-react';
 import { AppointmentTransactionsDialog } from './AppointmentTransactionsDialog';
 import {
@@ -325,7 +326,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "dd/MM") : "Selecione"}
+                    {date ? format(date, "EEE, dd/MM", { locale: ptBR }) : "Selecione"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
