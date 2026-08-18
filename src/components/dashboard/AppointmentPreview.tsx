@@ -138,7 +138,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           </div>
           <div>
             <p className="text-sm font-medium">
-              {format(appointmentDate, "dd 'de' MMM", { locale: ptBR })}
+              {format(appointmentDate, "EEE, dd 'de' MMM", { locale: ptBR })}
             </p>
             <p className="text-xs text-muted-foreground">
               {format(appointmentDate, "HH:mm")}
