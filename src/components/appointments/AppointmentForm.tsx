@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, HelpCircle, Receipt, Loader2 } from 'lucide-react';
 import { AppointmentTransactionsDialog } from './AppointmentTransactionsDialog';
 import {
