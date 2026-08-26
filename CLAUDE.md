@@ -1,142 +1,152 @@
-# CLAUDE.md
+# CLAUDE.md — guia de trabalho no repositório
 
-Este arquivo orienta o Claude (via Claude Code ou outra interface) ao trabalhar neste repositório.
+Este arquivo orienta o Claude (Claude Code ou outra interface) ao trabalhar neste repositório.
+Ele é o **"como trabalhar"**. O **"o quê e porquê"** (produto, domínio, regras de negócio)
+está em `BIBLIA.md` — **leia `BIBLIA.md` antes de qualquer alteração funcional.**
 
-> 📖 Para contexto de produto/negócio mais profundo, veja também `PROJECT_BIBLE.md`.
+---
 
-## O que é este projeto
+## 0. Regras de ouro (leia sempre)
 
-**Pink Purse Pal** é um sistema de gestão para profissionais autônomos de estética/beleza
-(ou serviço similar por agendamento). É um app web (mobile-first) que centraliza:
+1. **Leia `BIBLIA.md` primeiro.** Os guardrails da seção 5 de lá são inegociáveis.
+2. **Nunca reescreva arquivos inteiros sem necessidade.** O repositório é sincronizado
+   bidirecionalmente com o **Lovable** via GitHub; alterações grandes geram conflito.
+   Prefira diffs pequenos e cirúrgicos.
+3. **Implemente apenas o que foi pedido.** Pode *sugerir* melhorias reais (não cosméticas),
+   mas não as implemente sem combinar.
+4. **Antes de alterar, avalie o impacto no sistema todo.** Nunca quebrar o que já funciona.
+5. **Domínio em português.** Não traduzir rotas, tipos, enums ou status para inglês.
+6. **Não editar arquivos gerados**: `src/integrations/supabase/types.ts`,
+   `src/integrations/supabase/client.ts`, `supabase/config.toml`, `.env`.
+7. **Nunca editar migração já aplicada** — sempre criar uma nova.
+8. **Nunca commitar segredos.** Chaves sensíveis ficam em Lovable Cloud → Secrets.
 
-- Agenda de atendimentos (agendamentos)
-- Financeiro (entradas/saídas, separado em conta **empresa** e **pessoal**)
-- CRM de clientes (retenção, indicadores, WhatsApp)
-- Ficha do cliente (histórico, fotos de antes/depois, anamnese)
-- Relatórios (financeiro, agendamentos, indicadores)
-- Integração com Google Calendar
-
-Foi criado originalmente no **Lovable** (gerador de apps via IA) e agora está sendo evoluído
-diretamente por código, com o Claude como par de desenvolvimento.
-
-## Stack técnica
+## 1. Stack
 
 | Camada | Tecnologia |
 |---|---|
-| Build/dev | Vite |
-| Linguagem | TypeScript |
-| UI | React 18 + shadcn/ui (Radix) + Tailwind CSS |
-| Roteamento | React Router v6 |
-| Estado servidor | TanStack Query (React Query) |
-| Backend | Lovable Cloud (Postgres + Auth + Storage + Edge Functions, compatível com a API do Supabase) |
+| Build/dev | Vite 5 |
+| Linguagem | TypeScript 5 |
+| UI | React 18 + shadcn/ui (Radix) + Tailwind CSS 3 |
+| Rotas | React Router v6 |
+| Estado servidor | TanStack Query v5 |
+| Backend | Lovable Cloud (Postgres + Auth + Storage + Edge Functions, API compatível com Supabase) |
 | Formulários | React Hook Form + Zod |
 | Gráficos | Recharts |
 | PDF | jsPDF + jspdf-autotable |
-| Gerenciador de pacotes | npm (há também bun.lock — ver nota abaixo) |
+| Datas | date-fns v3 (locale pt-BR) |
 
-⚠️ O repositório tem `bun.lock`/`bun.lockb` **e** `package-lock.json`. Confirme com o usuário
-qual gerenciador está em uso antes de instalar pacotes, para não gerar lockfiles conflitantes.
-
-## Comandos
+## 2. Comandos
 
 ```bash
 npm i              # instalar dependências
-npm run dev         # servidor de desenvolvimento (Vite)
-npm run build        # build de produção
-npm run build:dev      # build em modo development
-npm run lint         # ESLint
-npm run preview       # servir o build localmente
+npm run dev        # dev server (Vite, porta 8080)
+npm run build      # build de produção
+npm run build:dev  # build em modo development
+npm run lint       # ESLint
+npm run preview    # servir o build
 ```
 
-Não há suíte de testes automatizados configurada no projeto até o momento.
+Não há suíte de testes automatizados. Validação = `npm run lint` + `npm run build` + teste manual.
 
-## Estrutura de pastas
+> ⚠️ Existem `bun.lock` **e** `package-lock.json`. **Use npm** por padrão e confirme com o
+> usuário antes de instalar pacotes, para não gerar lockfiles conflitantes.
+
+## 3. Estrutura
 
 ```
 src/
-  pages/          # Uma página por rota (Index, Agendamentos, CRM, Movimentacoes, Relatorios*, Configuracoes, Auth...)
+  pages/          # 1 arquivo por rota (Index, Agendamentos, Movimentacoes, CRM,
+                  #  ClienteFicha, Relatorio*, Configuracoes, Auth, RecuperarSenha)
   components/
-    ui/           # Componentes shadcn/ui "puros" (não editar estilo/API à mão — regenerar via shadcn quando possível)
-    appointments/ # Formulário e calendários de agendamento
-    clients/      # Fotos de clientes, comparador, upload
-    crm/          # Cards de ação, aba CRM da ficha do cliente, WhatsApp
-    dashboard/    # Cards da home (saldo, próximos atendimentos, retornos)
-    anamnese/     # Fichas de anamnese (formulário, viewer, assinatura)
-    settings/     # Telas de configuração (contas, categorias, clientes, serviços, CRM, Google Calendar)
-    transactions/ # Formulário e itens de movimentação financeira
-    layout/       # MainLayout, BottomNav, PageHeader
-    ds/           # "Design system" interno: EmptyState, MoneyDisplay, StatusBadge, SectionHeader, FormSheet
-  contexts/       # AuthContext (sessão Supabase) e AppContext (estado de domínio via hooks)
-  hooks/          # Um hook por entidade (useClients, useAppointments, useTransactions, useCrm, useAnamnese, useGoogleCalendar...)
-  integrations/supabase/  # client.ts e types.ts (tipos gerados do schema — não editar à mão)
-  types/          # Tipos de domínio (Transaction, Appointment, Client, Service, Category, Account...)
-  lib/            # Utilitários (whatsapp.ts, passwordValidation.ts, sanitizeError.ts, maintenance.ts)
+    ui/           # shadcn puro — não editar à mão; regenerar via shadcn
+    ds/           # design system interno: EmptyState, MoneyDisplay, StatusBadge,
+                  #  SectionHeader, FormSheet
+    appointments/ clients/ crm/ dashboard/ anamnese/ settings/ transactions/
+    relatorios/ layout/ shared/
+  contexts/       # AuthContext (sessão) e AppContext (domínio, agrega os hooks)
+  hooks/          # 1 hook por entidade (useClients, useAppointments, useTransactions,
+                  #  useAccounts, useAccountFeeTypes, useCategories, useServices,
+                  #  useCrm, useAnamnese, useClientPhotos, useGoogleCalendar, useUserSettings)
+  integrations/supabase/  # client.ts + types.ts (GERADOS — não editar)
+  types/index.ts  # tipos de domínio
+  lib/            # whatsapp, passwordValidation, sanitizeError, maintenance, anamneseSeeds, utils
 supabase/
-  migrations/     # Histórico de migrações SQL (fonte da verdade do schema)
-  functions/      # Edge Functions (google-calendar)
-  config.toml
+  migrations/     # SQL cronológico — fonte da verdade do schema
+  functions/google-calendar/
 ```
 
-## Convenções do projeto
+## 4. Padrões obrigatórios
 
-- **Idioma**: nomes de rotas, páginas, tipos de domínio e textos de UI estão em **português**
-  (`Agendamentos`, `Movimentacoes`, `ClienteFicha`, campos como `scope: 'empresa' | 'pessoal'`).
-  Mantenha esse padrão ao criar novas features — não traduza para inglês no meio do código.
-- **Padrão de dados**: cada entidade de domínio segue o padrão
-  `useX` (query), `useAddX`, `useUpdateX`, `useDeleteX` (mutations) em `src/hooks/`,
-  consumidos via `AppContext` (`src/contexts/AppContext.tsx`). Ao adicionar uma entidade nova,
-  siga esse mesmo padrão em vez de acessar o Supabase direto dentro de componentes de página.
-- **Tipos de domínio** ficam centralizados em `src/types/index.ts`. Ao alterar uma tabela no
-  Supabase, atualize também o tipo correspondente aqui (os tipos gerados ficam em
-  `src/integrations/supabase/types.ts`, que é auto-gerado — não editar manualmente).
-- **UI compartilhada**: antes de estilizar algo do zero, veja se já existe em `components/ds/`
-  (`MoneyDisplay` para valores monetários, `StatusBadge` para status, `EmptyState`, etc.) ou em
-  `components/ui/` (shadcn).
-- **Autenticação**: todo o app é protegido por `ProtectedRoute` em `App.tsx`, que depende de
-  `AuthContext`. Rotas públicas: `/auth` e `/recuperar-senha`.
-- **Financeiro**: toda transação tem `type` (`entrada` | `saida`) e `scope` (`empresa` | `pessoal`).
-  Saldos são sempre calculados filtrando por `scope` — não misture os dois em somas.
-- **Row Level Security (RLS)**: o banco (Lovable Cloud, Postgres) usa RLS — a maioria das
-  tabelas já tem políticas. Qualquer tabela nova precisa de política de RLS coerente com
-  `auth.uid()` antes de ir para produção — nunca deixe uma tabela sem RLS.
+### 4.1 Acesso a dados
+Cada entidade segue: `useX` (query) + `useAddX` / `useUpdateX` / `useDeleteX` (mutations)
+em `src/hooks/`, consumidos via `AppContext`.
+**Nunca chamar `supabase` diretamente dentro de um componente de página.**
 
-## Banco de dados (Lovable Cloud)
+- Erros de banco passam por `sanitizeDbError` (`src/lib/sanitizeError.ts`) e são
+  traduzidos para mensagens amigáveis em pt-BR.
+- Queries com filtro de data **devem incluir as datas na `queryKey`** (bug já ocorrido no
+  BI de Gastos: cache não invalidava ao trocar o mês).
+- Ao criar registros dependentes, **aguarde o UUID real com `mutateAsync`** antes de salvar
+  o dependente (ex: cliente criado durante o fluxo de agendamento).
+- Invalide as queries certas em `onSuccess`.
 
-> ⚠️ O banco, auth, storage e edge functions são gerenciados pelo **Lovable Cloud**, direto
-> pelo painel do Lovable (aba "Cloud" → Database/Storage/Users/Secrets/Edge functions) — não
-> existe um projeto Supabase separado sendo administrado à parte. A biblioteca cliente usada
-> no código (`@supabase/supabase-js`) e a pasta `src/integrations/supabase/` existem porque o
-> Lovable Cloud expõe uma API compatível com Supabase, mas a gestão (secrets, tabelas, RLS,
-> deploy de functions) acontece toda dentro do Lovable.
+### 4.2 Tipos
+Tipos de domínio em `src/types/index.ts`. Ao alterar uma tabela, atualize o tipo aqui também
+(o `types.ts` do Supabase é regenerado, não editado).
 
+### 4.3 UI
+Antes de estilizar do zero, procure em `components/ds/` e `components/ui/`.
+Cores só via tokens semânticos — nunca `text-white`, `bg-black` ou `bg-[#hex]`.
+Formulários: React Hook Form + Zod. Feedback: `toast` (`use-toast` / sonner).
 
-Tabelas principais (ver `supabase/migrations/` para o histórico completo e
-`src/integrations/supabase/types.ts` para os tipos atuais):
+### 4.4 Banco de dados
+Toda migração que cria tabela no schema `public` deve seguir esta ordem, sem exceção:
 
-`clients`, `services`, `categories`, `accounts`, `appointments`, `transactions`,
-`user_settings`, `client_photos`, `anamnese_templates`, `anamnese_template_versions`,
-`anamnese_questions`, `anamnese_responses`, `anamnese_answers`.
+```sql
+CREATE TABLE public.<nome> (...);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.<nome> TO authenticated;
+GRANT ALL ON public.<nome> TO service_role;
+ALTER TABLE public.<nome> ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "..." ON public.<nome> FOR ALL TO authenticated
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+```
 
-- Migrações são incrementais e cronológicas (`YYYYMMDDHHMMSS_uuid.sql`). **Nunca edite uma
-  migração já aplicada** — crie uma nova migração para qualquer alteração de schema.
-- A Edge Function `google-calendar` cuida da sincronização de agendamentos com o Google Calendar
-  (tokens ficam em `user_settings`).
+Nome do arquivo: `YYYYMMDDHHMMSS_<uuid>.sql`. Nunca alterar migrações antigas.
+Não mexer nos schemas `auth`, `storage`, `realtime`, `supabase_functions`, `vault`.
 
-## O que evitar
+### 4.5 Edge Functions
+Dependências pesadas com prefixo `npm:`. **Nunca retornar erro cru** ao cliente — sanitizar
+antes de responder (findings de segurança já corrigidos nesse sentido).
 
-- Não commitar chaves/segredos do Lovable Cloud ou do Google Calendar direto no código
-  (`VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` vêm de variáveis de ambiente; secrets
-  sensíveis ficam em Lovable Cloud → Secrets, não no repositório).
-- Não editar `src/integrations/supabase/types.ts` manualmente — é gerado a partir do schema.
-- Não misturar saldo `empresa` e `pessoal` em uma mesma soma/relatório sem intenção explícita.
-- Não remover o padrão de idioma em português do domínio (nomes de rotas, tipos, enums) só
-  porque "código costuma ser em inglês" — é uma decisão consciente do projeto.
+## 5. Armadilhas já enfrentadas (não repetir)
 
-## Fluxo de trabalho com o Claude
+- **Modais em cascata**: ao marcar "Atendido" pelo formulário, o card pai desmontava e matava
+  o modal seguinte. Solução: estado dos diálogos **elevado ao nível da página**
+  (`Index.tsx` / `Agendamentos.tsx`) + `mutateAsync` antes de abrir o próximo passo.
+- **Duplo clique gerando agenda duplicada**: manter a trava `isSubmitting` no `AppointmentForm`.
+- **Update parcial de cliente apagava campos** (`recurrence_days`, `birth_date`): sempre
+  enviar o objeto completo no update.
+- **Telefone duplicado**: validação normalizando para dígitos, em add **e** update.
+- **Etapa "Próxima manutenção" pós-atendimento foi removida a pedido — não reintroduzir.**
+- **`google_client_secret` nunca vai ao cliente** — expor apenas
+  `google_client_secret_configured: boolean`.
 
-Este projeto é sincronizado bidirecionalmente com o **Lovable** via GitHub. Isso significa:
+## 6. Checklist antes de entregar uma alteração
 
-- Alterações feitas por mim aqui (via commit/push) refletem de volta no editor do Lovable.
-- Alterações feitas no Lovable também aparecem aqui.
-- Evite reescrever arquivos inteiros sem necessidade — como o Lovable também versiona esse
-  código, mudanças menores e específicas reduzem o risco de conflito.
+- [ ] Li `BIBLIA.md` e nenhum guardrail foi violado (escopo empresa/pessoal, permuta, histórico).
+- [ ] Reutilizei hooks/componentes existentes em vez de criar paralelos.
+- [ ] Tipos atualizados em `src/types/index.ts`, se necessário.
+- [ ] Nova tabela → RLS + GRANTs na mesma migração.
+- [ ] Textos de UI em português, tom simples e direto.
+- [ ] Testado no viewport mobile.
+- [ ] `npm run lint` e `npm run build` passam.
+- [ ] Diff pequeno e localizado (sincronização com o Lovable).
+- [ ] `BIBLIA.md` atualizado se a mudança criou/alterou regra de negócio.
+
+## 7. Fluxo Lovable ↔ GitHub
+
+O projeto é editado nos dois lados. Antes de começar, **puxe as alterações** (o Lovable pode
+ter commitado). Depois de terminar, faça commit/push — o Lovable reflete automaticamente.
+Backend (tabelas, RLS, secrets, deploy de functions) é gerenciado pelo painel do Lovable
+(aba Cloud); via código, entregue a migração SQL em `supabase/migrations/`.
