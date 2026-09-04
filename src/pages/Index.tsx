@@ -15,6 +15,7 @@ import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
+import { useUserSettings } from '@/hooks/useUserSettings';
 import { useServices } from '@/hooks/useServices';
 import { Appointment } from '@/types';
 
