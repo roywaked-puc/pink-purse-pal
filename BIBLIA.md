@@ -80,6 +80,26 @@ próximos atendimentos e retornos a confirmar. Cards de agendamento mostram
   o formulário recalcula bruto → líquido conforme o tipo escolhido.
 - Conta e valor > 0 são obrigatórios.
 
+**Separação de caixa (empresa/pessoal) por atendimento** — decidido em ago/2026, ainda não
+implementado. Cada atendimento pago (não permuta) vai reservar automaticamente um valor fixo
+configurável para o caixa empresa (ex: R$ 40, pensado pra pagar contas), e o restante vai para
+o caixa pessoal (livre pra saque). A divisão reaproveita o campo `scope` já existente em
+`transactions` — não é um conceito novo, é uma automação sobre o campo que já existia. Regras:
+
+- Se o valor recebido for menor que a reserva configurada, 100% vai para o caixa empresa até a
+  reserva ser completada.
+- A regra soma por **agendamento**, não por movimentação isolada: se houver sinal + pagamento
+  final, o valor acumulado do agendamento é que decide a divisão.
+- Mudança futura no valor de reserva só afeta agendamentos que ainda não tiveram nenhum pagamento;
+  agendamentos já em andamento mantêm o valor de reserva vigente no primeiro pagamento deles.
+- Cancelamento/estorno de pagamento reverte a divisão.
+- A categoria da movimentação **não muda** com a divisão — mantém a categoria original escolhida
+  no recebimento (ex: "Serviços") em ambas as partes. Quem representa a divisão é o `scope`,
+  não a categoria.
+- A feature terá toggle liga/desliga em Configurações, desligada por padrão.
+- Implementação: divide o próprio lançamento manual que a usuária já cria (não gera lançamento
+  novo a partir de `paid_amount`), pra não contar o mesmo dinheiro duas vezes nos relatórios.
+
 ### 4.5 Clientes e Ficha (`/cliente/:id`)
 Dados cadastrais (telefone **único** — validação por dígitos), aniversário, recorrência,
 histórico financeiro, histórico de atendimentos, fotos, anamnese e aba CRM.
@@ -125,6 +145,9 @@ regras de CRM, regras de retenção, Google Calendar, troca de senha e exportaç
 6. Não excluir agendamento que já possui pagamentos vinculados.
 7. **CRM e Financeiro são módulos conceitualmente separados** — não misturar regras.
 8. Toda tabela nova precisa de RLS por `auth.uid()` **e** GRANTs antes de ir a produção.
+9. **Caixa empresa/pessoal** (a partir de ago/2026): `scope` não representa mais só
+   "de quem é esse dinheiro" de forma manual — passa também a ser alimentado por uma automação
+   de divisão de recebimentos de atendimento. Ver detalhe em 4.4.
 
 ## 6. Modelo de dados
 
