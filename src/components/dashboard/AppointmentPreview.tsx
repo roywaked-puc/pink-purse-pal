@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
+import { useUserSettings } from '@/hooks/useUserSettings';
 
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -90,6 +91,14 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
+  const { data: userSettings } = useUserSettings();
+  const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
+  const reserva = appointment.caixaReservaValorAplicado ?? userSettings?.caixa_reserva_valor ?? 0;
+  const showCaixaSplit =
+    caixaAtivo && !appointment.isPermuta && appointment.paidAmount > 0 && reserva > 0;
+  const caixaEmpresa = Math.min(appointment.paidAmount, reserva);
+  const caixaPessoal = appointment.paidAmount - caixaEmpresa;
+
   const hasBalance = appointment.paidAmount < appointment.amount;
   const canDelete = appointment.paidAmount === 0;
   const canComplete = appointment.confirmationStatus !== 'atendido' && appointment.confirmationStatus !== 'cancelado';
@@ -199,6 +208,11 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
             <p className="text-xs text-muted-foreground">
               Recebido: {formatCurrency(appointment.paidAmount)}
+            </p>
+          )}
+          {showCaixaSplit && (
+            <p className="text-xs text-muted-foreground">
+              Caixa empresa {formatCurrency(caixaEmpresa)} · Caixa pessoal {formatCurrency(caixaPessoal)}
             </p>
           )}
         </div>

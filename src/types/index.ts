@@ -56,6 +56,7 @@ export interface Appointment {
   googleEventId?: string;
   parentAppointmentId?: string;
   isPermuta?: boolean;
+  caixaReservaValorAplicado?: number;
 }
 
 export interface Category {

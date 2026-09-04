@@ -15,6 +15,7 @@ import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
+import { useUserSettings } from '@/hooks/useUserSettings';
 import { useServices } from '@/hooks/useServices';
 import { Appointment } from '@/types';
 
@@ -29,6 +30,8 @@ const Index = () => {
   } = useApp();
 
   const { data: services } = useServices();
+  const { data: userSettings } = useUserSettings();
+  const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
 
   const getClientPhone = (clientId: string) => getClientById(clientId)?.phone;
   const getServiceColor = (serviceId?: string) =>
@@ -217,14 +220,14 @@ const Index = () => {
       {balancesVisible ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <BalanceCard
-            title="Saldo da Empresa"
+            title={caixaAtivo ? "Caixa Empresa" : "Saldo da Empresa"}
             value={getBusinessBalance()}
             icon={Briefcase}
             variant="primary"
           />
           <div className="grid grid-cols-2 md:contents gap-3">
             <BalanceCard
-              title="Saldo Pessoal"
+              title={caixaAtivo ? "Caixa Pessoal" : "Saldo Pessoal"}
               value={getPersonalBalance()}
               icon={User}
               variant="secondary"
