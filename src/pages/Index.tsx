@@ -29,6 +29,8 @@ const Index = () => {
   } = useApp();
 
   const { data: services } = useServices();
+  const { data: userSettings } = useUserSettings();
+  const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
 
   const getClientPhone = (clientId: string) => getClientById(clientId)?.phone;
   const getServiceColor = (serviceId?: string) =>
