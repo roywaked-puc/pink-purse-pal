@@ -309,6 +309,7 @@ export type Database = {
       appointments: {
         Row: {
           amount: number
+          caixa_reserva_valor_aplicado: number | null
           client_id: string | null
           client_name: string
           confirmation_status: Database["public"]["Enums"]["confirmation_status_enum"]
@@ -328,6 +329,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          caixa_reserva_valor_aplicado?: number | null
           client_id?: string | null
           client_name: string
           confirmation_status?: Database["public"]["Enums"]["confirmation_status_enum"]
@@ -347,6 +349,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          caixa_reserva_valor_aplicado?: number | null
           client_id?: string | null
           client_name?: string
           confirmation_status?: Database["public"]["Enums"]["confirmation_status_enum"]
@@ -517,6 +520,8 @@ export type Database = {
           account_id: string | null
           amount: number
           appointment_id: string | null
+          caixa_amount_original: number | null
+          caixa_scope_original: string | null
           category: string
           category_id: string | null
           client_name: string | null
@@ -525,6 +530,7 @@ export type Database = {
           description: string | null
           gross_amount: number | null
           id: string
+          is_caixa_reserva_split: boolean
           payment_type: string | null
           scope: string
           type: string
@@ -536,6 +542,8 @@ export type Database = {
           account_id?: string | null
           amount?: number
           appointment_id?: string | null
+          caixa_amount_original?: number | null
+          caixa_scope_original?: string | null
           category: string
           category_id?: string | null
           client_name?: string | null
@@ -544,6 +552,7 @@ export type Database = {
           description?: string | null
           gross_amount?: number | null
           id?: string
+          is_caixa_reserva_split?: boolean
           payment_type?: string | null
           scope: string
           type: string
@@ -555,6 +564,8 @@ export type Database = {
           account_id?: string | null
           amount?: number
           appointment_id?: string | null
+          caixa_amount_original?: number | null
+          caixa_scope_original?: string | null
           category?: string
           category_id?: string | null
           client_name?: string | null
@@ -563,6 +574,7 @@ export type Database = {
           description?: string | null
           gross_amount?: number | null
           id?: string
+          is_caixa_reserva_split?: boolean
           payment_type?: string | null
           scope?: string
           type?: string
@@ -601,6 +613,8 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          caixa_reserva_ativo: boolean
+          caixa_reserva_valor: number
           created_at: string | null
           crm_confirm_days: number
           crm_inactive_days: number
@@ -622,6 +636,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          caixa_reserva_ativo?: boolean
+          caixa_reserva_valor?: number
           created_at?: string | null
           crm_confirm_days?: number
           crm_inactive_days?: number
@@ -643,6 +659,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          caixa_reserva_ativo?: boolean
+          caixa_reserva_valor?: number
           created_at?: string | null
           crm_confirm_days?: number
           crm_inactive_days?: number
@@ -670,7 +688,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      caixa_reserva_apply: {
+        Args: { p_appointment_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       anamnese_question_type:
