@@ -414,13 +414,16 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             </div>
 
             <div className="space-y-2">
-              <Label>Origem</Label>
+              <Label>Caixa</Label>
               <Input 
-                value={scope === 'empresa' ? 'Empresa' : scope === 'pessoal' ? 'Pessoal' : ''} 
+                value={scope === 'empresa' ? 'Caixa empresa' : scope === 'pessoal' ? 'Caixa pessoal' : ''} 
                 placeholder="Selecione uma categoria"
                 disabled 
                 className="bg-muted"
               />
+              <p className="text-xs text-muted-foreground">
+                De qual caixa o dinheiro sai ou entra (não é a conta bancária).
+              </p>
             </div>
           </div>
 

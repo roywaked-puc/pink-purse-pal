@@ -104,6 +104,7 @@ export function useAppointments() {
         googleEventId: a.google_event_id || undefined,
         parentAppointmentId: (a as any).parent_appointment_id || undefined,
         isPermuta: Boolean((a as any).is_permuta) || false,
+        caixaReservaValorAplicado: (a as any).caixa_reserva_valor_aplicado != null ? Number((a as any).caixa_reserva_valor_aplicado) : undefined,
       }));
     },
     enabled: !!user,
