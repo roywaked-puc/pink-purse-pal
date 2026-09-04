@@ -19,6 +19,8 @@ export interface UserSettings {
   crm_confirm_days: number;
   crm_vip_count: number;
   crm_monthly_goal: number;
+  caixa_reserva_ativo: boolean;
+  caixa_reserva_valor: number;
 }
 
 const DEFAULTS = {
