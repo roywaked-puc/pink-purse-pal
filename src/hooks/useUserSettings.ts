@@ -33,11 +33,13 @@ const DEFAULTS = {
   crm_confirm_days: 3,
   crm_vip_count: 10,
   crm_monthly_goal: 0,
+  caixa_reserva_ativo: false,
+  caixa_reserva_valor: 0,
 };
 
 // Safe column list — never select OAuth client secret or access/refresh tokens client-side.
 const SAFE_COLUMNS =
-  'id, user_id, google_calendar_enabled, google_client_id, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count, crm_monthly_goal';
+  'id, user_id, google_calendar_enabled, google_client_id, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count, crm_monthly_goal, caixa_reserva_ativo, caixa_reserva_valor';
 
 export function useUserSettings() {
   const { user } = useAuth();
@@ -81,6 +83,8 @@ export function useUserSettings() {
         crm_confirm_days: d.crm_confirm_days ?? DEFAULTS.crm_confirm_days,
         crm_vip_count: d.crm_vip_count ?? DEFAULTS.crm_vip_count,
         crm_monthly_goal: d.crm_monthly_goal ?? DEFAULTS.crm_monthly_goal,
+        caixa_reserva_ativo: d.caixa_reserva_ativo ?? DEFAULTS.caixa_reserva_ativo,
+        caixa_reserva_valor: Number(d.caixa_reserva_valor ?? DEFAULTS.caixa_reserva_valor),
       };
     },
     enabled: !!user,
