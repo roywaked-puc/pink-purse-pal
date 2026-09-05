@@ -92,83 +92,7 @@ export function AccountList() {
     }
   };
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsAdding(true)}
-          className="text-primary"
-        >
-          <Plus className="w-4 h-4 mr-1" />
-          Adicionar
-        </Button>
-      </div>
-
-      <div className="space-y-2">
-        {isAdding && (
-          <div className="p-3 rounded-lg bg-muted space-y-3 animate-fade-in">
-            <Input
-              value={newAccountName}
-              onChange={(e) => setNewAccountName(e.target.value)}
-              placeholder="Nome da conta"
-              autoFocus
-            />
-            <div className="flex items-center gap-2">
-              <Select value={newAccountType} onValueChange={(v) => setNewAccountType(v as Account['type'])}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="banco">Banco</SelectItem>
-                  <SelectItem value="maquininha">Maquininha</SelectItem>
-                  <SelectItem value="permuta">Permuta</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                value={newAccountFee}
-                onChange={(e) => setNewAccountFee(e.target.value)}
-                placeholder="Taxa %"
-                className="w-24"
-              />
-              <Button size="icon" variant="ghost" onClick={handleAdd}>
-                <Check className="w-4 h-4 text-success" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => setIsAdding(false)}>
-                <X className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {contasReais.map((account) => renderAccount(account))}
-      </div>
-
-      {contasPermuta.length > 0 && (
-        <div className="space-y-2 pt-2">
-          <div>
-            <p className="text-sm font-medium">Controle de Permutas</p>
-            <p className="text-xs text-muted-foreground">
-              Não entram no saldo geral — servem só para acompanhar trocas.
-            </p>
-          </div>
-          {contasPermuta.map((account) => renderAccount(account))}
-        </div>
-      )}
-
-      <AccountExtratoDrawer
-        account={extratoAccount}
-        open={!!extratoAccount}
-        onOpenChange={(o) => !o && setExtratoAccount(null)}
-      />
-PLACEHOLDER_END
-  const renderAccountBody = (account: Account) => {
+  const renderAccount = (account: Account) => {
           const config = typeConfig[account.type];
           const Icon = config.icon;
           const balance = getAccountBalance(account.id);
@@ -269,8 +193,83 @@ PLACEHOLDER_END
               )}
             </div>
           );
-        })}
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsAdding(true)}
+          className="text-primary"
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          Adicionar
+        </Button>
       </div>
+
+      <div className="space-y-2">
+        {isAdding && (
+          <div className="p-3 rounded-lg bg-muted space-y-3 animate-fade-in">
+            <Input
+              value={newAccountName}
+              onChange={(e) => setNewAccountName(e.target.value)}
+              placeholder="Nome da conta"
+              autoFocus
+            />
+            <div className="flex items-center gap-2">
+              <Select value={newAccountType} onValueChange={(v) => setNewAccountType(v as Account['type'])}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="banco">Banco</SelectItem>
+                  <SelectItem value="maquininha">Maquininha</SelectItem>
+                  <SelectItem value="permuta">Permuta</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={newAccountFee}
+                onChange={(e) => setNewAccountFee(e.target.value)}
+                placeholder="Taxa %"
+                className="w-24"
+              />
+              <Button size="icon" variant="ghost" onClick={handleAdd}>
+                <Check className="w-4 h-4 text-success" />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={() => setIsAdding(false)}>
+                <X className="w-4 h-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {contasReais.map((account) => renderAccount(account))}
+      </div>
+
+      {contasPermuta.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <div>
+            <p className="text-sm font-medium">Controle de Permutas</p>
+            <p className="text-xs text-muted-foreground">
+              Não entram no saldo geral — servem só para acompanhar trocas.
+            </p>
+          </div>
+          {contasPermuta.map((account) => renderAccount(account))}
+        </div>
+      )}
+
+      <AccountExtratoDrawer
+        account={extratoAccount}
+        open={!!extratoAccount}
+        onOpenChange={(o) => !o && setExtratoAccount(null)}
+      />
 
       <DeleteConfirmDialog
         open={!!deleteId}
