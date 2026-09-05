@@ -22,7 +22,7 @@ export function useAccounts() {
       return data.map(a => ({
         id: a.id,
         name: a.name,
-        type: a.type as 'dinheiro' | 'banco' | 'maquininha',
+        type: a.type as Account['type'],
         feePercentage: a.fee_percentage || 0,
       }));
     },

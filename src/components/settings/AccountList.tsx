@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Check, X, Wallet, Building2, CreditCard } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check, X, Wallet, Building2, CreditCard, ArrowLeftRight } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Account } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ const typeConfig = {
   dinheiro: { icon: Wallet, label: 'Dinheiro' },
   banco: { icon: Building2, label: 'Banco' },
   maquininha: { icon: CreditCard, label: 'Maquininha' },
+  permuta: { icon: ArrowLeftRight, label: 'Permuta' },
 };
 
 export function AccountList() {
@@ -118,6 +119,7 @@ export function AccountList() {
                   <SelectItem value="dinheiro">Dinheiro</SelectItem>
                   <SelectItem value="banco">Banco</SelectItem>
                   <SelectItem value="maquininha">Maquininha</SelectItem>
+                  <SelectItem value="permuta">Permuta</SelectItem>
                 </SelectContent>
               </Select>
               <Input
@@ -166,6 +168,7 @@ export function AccountList() {
                         <SelectItem value="dinheiro">Dinheiro</SelectItem>
                         <SelectItem value="banco">Banco</SelectItem>
                         <SelectItem value="maquininha">Maquininha</SelectItem>
+                        <SelectItem value="permuta">Permuta</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input

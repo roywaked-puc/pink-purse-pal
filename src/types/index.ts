@@ -69,7 +69,7 @@ export interface Category {
 export interface Account {
   id: string;
   name: string;
-  type: 'dinheiro' | 'banco' | 'maquininha';
+  type: 'dinheiro' | 'banco' | 'maquininha' | 'permuta';
   feePercentage?: number;
 }
 
