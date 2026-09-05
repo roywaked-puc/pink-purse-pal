@@ -613,6 +613,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          caixa_inicio_em: string | null
           caixa_reserva_ativo: boolean
           caixa_reserva_valor: number
           created_at: string | null
@@ -636,6 +637,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          caixa_inicio_em?: string | null
           caixa_reserva_ativo?: boolean
           caixa_reserva_valor?: number
           created_at?: string | null
@@ -659,6 +661,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          caixa_inicio_em?: string | null
           caixa_reserva_ativo?: boolean
           caixa_reserva_valor?: number
           created_at?: string | null

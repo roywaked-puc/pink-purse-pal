@@ -19,6 +19,8 @@ interface CaixaSaldoResumoProps {
   onMesChange?: (mes: Date) => void;
   /** Quando a separação de caixa está ativa nas configurações, usa nomes "Caixa". */
   caixaAtivo?: boolean;
+  /** Data em que a separação de caixa começou a valer (null = sem corte). */
+  inicioEm?: Date | null;
   /** Card extra opcional, adicionado ao final da grade (ex: Gastos do Mês na Home). */
   extraCard?: ReactNode;
 }
@@ -37,6 +39,7 @@ export function CaixaSaldoResumo({
   mostrarSeletorMes,
   onMesChange,
   caixaAtivo,
+  inicioEm,
   extraCard,
 }: CaixaSaldoResumoProps) {
   if (hidden) {
@@ -60,7 +63,9 @@ export function CaixaSaldoResumo({
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-muted-foreground">
-          Saldos acumulados até hoje
+          {inicioEm
+            ? `Saldos desde ${format(inicioEm, "dd/MM/yyyy", { locale: ptBR })}`
+            : 'Saldos acumulados até hoje'}
         </span>
         <div className="flex items-center gap-1">
           {mostrarSeletorMes && onMesChange && (

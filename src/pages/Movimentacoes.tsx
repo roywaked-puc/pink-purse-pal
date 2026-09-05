@@ -189,6 +189,7 @@ const Movimentacoes = () => {
         mostrarSeletorMes
         onMesChange={setMesResumo}
         caixaAtivo={caixaAtivo}
+        inicioEm={resumoCaixa.inicioEm}
       />
 
       {/* Transaction List */}
