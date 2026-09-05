@@ -214,6 +214,14 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    if (!service.trim()) {
+      toast.error('Escolha o serviço', {
+        description: 'Selecione a técnica e a faixa antes de salvar.',
+      });
+      return;
+    }
+
     
     const [hours, minutes] = time.split(':').map(Number);
     const fullDate = new Date(date);
