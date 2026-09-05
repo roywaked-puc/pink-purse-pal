@@ -218,38 +218,23 @@ const Index = () => {
       </div>
 
       {/* Saldos */}
-      {balancesVisible ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <CaixaSaldoResumo
+        saldoEmpresa={resumoCaixa.saldoEmpresa}
+        saldoPessoal={resumoCaixa.saldoPessoal}
+        entrouNoMes={resumoCaixa.entrouNoMes}
+        mesReferencia={new Date()}
+        hidden={!balancesVisible}
+        onToggle={toggleBalances}
+        caixaAtivo={caixaAtivo}
+        extraCard={
           <BalanceCard
-            title={caixaAtivo ? "Caixa Empresa" : "Saldo da Empresa"}
-            value={getBusinessBalance()}
-            icon={Briefcase}
-            variant="primary"
+            title="Gastos do Mês"
+            value={getMonthlyPersonalExpenses()}
+            icon={TrendingDown}
+            variant="accent"
           />
-          <div className="grid grid-cols-2 md:contents gap-3">
-            <BalanceCard
-              title={caixaAtivo ? "Caixa Pessoal" : "Saldo Pessoal"}
-              value={getPersonalBalance()}
-              icon={User}
-              variant="secondary"
-            />
-            <BalanceCard
-              title="Gastos do Mês"
-              value={getMonthlyPersonalExpenses()}
-              icon={TrendingDown}
-              variant="accent"
-            />
-          </div>
-        </div>
-      ) : (
-        <button
-          onClick={toggleBalances}
-          className="w-full mb-6 p-4 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center gap-2 text-muted-foreground hover:bg-muted transition-colors"
-        >
-          <Eye className="w-4 h-4" />
-          <span className="text-sm">Saldos ocultos — toque para exibir</span>
-        </button>
-      )}
+        }
+      />
 
       {/* Próximos */}
       {upcomingAppointments.length > 0 && (
