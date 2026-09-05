@@ -97,6 +97,18 @@ export function ServiceStepPicker({
     }
   }, [technique, availableTiers]);
 
+  // Colocação: só existe um serviço, seleciona automaticamente
+  useEffect(() => {
+    if (tier !== 'colocacao') return;
+    const svc = techniqueServices.find((s) => s.tierType === 'colocacao');
+    if (svc) {
+      onServiceTextChange(svc.description);
+      onServiceSelect(svc);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tier, techniqueServices]);
+
+
   // Etapa (c): pré-seleção da faixa com base nos dias corridos
   useEffect(() => {
     if (tier !== 'manutencao' || faixas.length === 0) return;
