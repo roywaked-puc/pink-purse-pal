@@ -226,6 +226,7 @@ const Index = () => {
         hidden={!balancesVisible}
         onToggle={toggleBalances}
         caixaAtivo={caixaAtivo}
+        inicioEm={resumoCaixa.inicioEm}
         extraCard={
           <BalanceCard
             title="Gastos do Mês"
