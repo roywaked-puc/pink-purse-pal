@@ -48,6 +48,7 @@ export function ServiceStepPicker({
   const [technique, setTechnique] = useState<string>('');
   const [tier, setTier] = useState<string>('');
   const [faixaId, setFaixaId] = useState<string>('');
+  const [tierSuggestion, setTierSuggestion] = useState<'primeira' | 'fora_prazo' | null>(null);
 
   const techniques = useMemo(() => {
     const set = new Set<string>();
@@ -90,12 +91,39 @@ export function ServiceStepPicker({
     return differenceInCalendarDays(date, new Date(previous.date));
   }, [appointments, selectedClientId, technique, date, services]);
 
+  // Maior dias_max entre as faixas de manutenção da técnica
+  const maxDiasManutencao = useMemo(
+    () => faixas.reduce((max, f) => Math.max(max, f.diasMax ?? 0), 0),
+    [faixas]
+  );
+
   // Etapa (b): oculta quando só existe um tipo
   useEffect(() => {
     if (technique && technique !== AVULSO_KEY && availableTiers.length === 1) {
       setTier(availableTiers[0]);
     }
   }, [technique, availableTiers]);
+
+  // Etapa (b): sugestão automática do tipo
+  // - sem atendimento anterior da técnica -> Colocação
+  // - último atendimento fora do prazo de qualquer manutenção -> Colocação (com aviso)
+  // - dentro do prazo -> Manutenção (a faixa é pré-selecionada na etapa seguinte)
+  useEffect(() => {
+    if (!technique || technique === AVULSO_KEY) return;
+    if (availableTiers.length <= 1) return;
+    if (tier) return;
+    if (!selectedClientId) return;
+    if (diasDesdeUltimo == null) {
+      setTier('colocacao');
+      setTierSuggestion('primeira');
+    } else if (maxDiasManutencao > 0 && diasDesdeUltimo > maxDiasManutencao) {
+      setTier('colocacao');
+      setTierSuggestion('fora_prazo');
+    } else {
+      setTier('manutencao');
+      setTierSuggestion(null);
+    }
+  }, [technique, availableTiers, tier, selectedClientId, diasDesdeUltimo, maxDiasManutencao]);
 
   // Colocação: só existe um serviço, seleciona automaticamente
   useEffect(() => {
@@ -131,6 +159,7 @@ export function ServiceStepPicker({
     setTechnique(value);
     setTier('');
     setFaixaId('');
+    setTierSuggestion(null);
     onServiceTextChange('');
     onServiceSelect(null);
   };
@@ -138,6 +167,7 @@ export function ServiceStepPicker({
   const handleTierChange = (value: string) => {
     setTier(value);
     setFaixaId('');
+    setTierSuggestion(null);
     if (value === 'colocacao') {
       const svc = techniqueServices.find((s) => s.tierType === 'colocacao');
       if (svc) {
@@ -197,6 +227,19 @@ export function ServiceStepPicker({
               ))}
             </SelectContent>
           </Select>
+          {tierSuggestion === 'primeira' && (
+            <p className="text-xs text-muted-foreground">
+              Primeiro atendimento desta técnica para esta cliente — sugerindo colocação. Você pode
+              trocar.
+            </p>
+          )}
+          {tierSuggestion === 'fora_prazo' && diasDesdeUltimo != null && (
+            <p className="text-xs text-muted-foreground">
+              Último atendimento desta técnica há {diasDesdeUltimo}{' '}
+              {diasDesdeUltimo === 1 ? 'dia' : 'dias'} — fora do prazo de manutenção, sugerindo
+              colocação. Você pode trocar.
+            </p>
+          )}
         </div>
       )}
 
