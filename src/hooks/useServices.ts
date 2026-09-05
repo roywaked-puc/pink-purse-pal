@@ -19,6 +19,11 @@ export function useServices() {
       
       if (error) throw sanitizeDbError(error);
       
+      const validTier = (value: unknown): 'avulso' | 'colocacao' | 'manutencao' | undefined => {
+        if (value === 'avulso' || value === 'colocacao' || value === 'manutencao') return value;
+        return undefined;
+      };
+
       return data.map(s => ({
         id: s.id,
         description: s.description,
@@ -27,7 +32,7 @@ export function useServices() {
         notes: s.notes || undefined,
         color: s.color || undefined,
         techniqueName: s.technique_name || undefined,
-        tierType: s.tier_type || undefined,
+        tierType: validTier(s.tier_type),
         diasMin: s.dias_min ?? undefined,
         diasMax: s.dias_max ?? undefined,
       }));
