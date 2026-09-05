@@ -369,8 +369,8 @@ export function ServiceList() {
               onOpenChange={() => toggleTechnique(name)}
               className="border rounded-lg bg-muted/30 overflow-hidden"
             >
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center justify-between p-3 text-left">
+              <CollapsibleTrigger asChild>
+                <button className="w-full flex items-center justify-between p-3 text-left">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
                       {name.charAt(0).toUpperCase()}
@@ -386,7 +386,7 @@ export function ServiceList() {
                     "h-4 w-4 text-muted-foreground transition-transform",
                     isOpen && "rotate-180"
                   )} />
-                </div>
+                </button>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="p-3 pt-0 space-y-4">
