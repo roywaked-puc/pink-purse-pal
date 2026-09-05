@@ -39,6 +39,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from './ClientAutocomplete';
 import { ServiceAutocomplete } from './ServiceAutocomplete';
+import { ServiceStepPicker } from './ServiceStepPicker';
+
 import { toast } from 'sonner';
 
 export interface AppointmentPrefill {
@@ -64,7 +66,7 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed, prefill }: AppointmentFormProps) {
-  const { appointments, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { appointments, services, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
   const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
   const { mutateAsync: addAppointmentAsync } = useAddAppointment();
   const [date, setDate] = useState<Date>(new Date());
