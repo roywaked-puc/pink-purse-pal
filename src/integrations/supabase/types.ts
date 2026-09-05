@@ -486,9 +486,13 @@ export type Database = {
           color: string | null
           created_at: string
           description: string
+          dias_max: number | null
+          dias_min: number | null
           duration: number
           id: string
           notes: string | null
+          technique_name: string | null
+          tier_type: string | null
           user_id: string
         }
         Insert: {
@@ -496,9 +500,13 @@ export type Database = {
           color?: string | null
           created_at?: string
           description: string
+          dias_max?: number | null
+          dias_min?: number | null
           duration?: number
           id?: string
           notes?: string | null
+          technique_name?: string | null
+          tier_type?: string | null
           user_id: string
         }
         Update: {
@@ -506,9 +514,13 @@ export type Database = {
           color?: string | null
           created_at?: string
           description?: string
+          dias_max?: number | null
+          dias_min?: number | null
           duration?: number
           id?: string
           notes?: string | null
+          technique_name?: string | null
+          tier_type?: string | null
           user_id?: string
         }
         Relationships: []

@@ -39,6 +39,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from './ClientAutocomplete';
 import { ServiceAutocomplete } from './ServiceAutocomplete';
+import { ServiceStepPicker } from './ServiceStepPicker';
+
 import { toast } from 'sonner';
 
 export interface AppointmentPrefill {
@@ -64,7 +66,7 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed, prefill }: AppointmentFormProps) {
-  const { appointments, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { appointments, services, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
   const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
   const { mutateAsync: addAppointmentAsync } = useAddAppointment();
   const [date, setDate] = useState<Date>(new Date());
@@ -212,6 +214,14 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    if (!service.trim()) {
+      toast.error('Escolha o serviço', {
+        description: 'Selecione a técnica e a faixa antes de salvar.',
+      });
+      return;
+    }
+
     
     const [hours, minutes] = time.split(':').map(Number);
     const fullDate = new Date(date);
@@ -395,17 +405,38 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Serviço</Label>
-            <ServiceAutocomplete
-              value={service}
-              onChange={setService}
-              onServiceSelect={handleServiceSelect}
-            />
-            {serviceNotes && (
-              <p className="text-xs text-muted-foreground">{serviceNotes}</p>
-            )}
-          </div>
+          {appointment ? (
+            <div className="space-y-2">
+              <Label>Serviço</Label>
+              <ServiceAutocomplete
+                value={service}
+                onChange={setService}
+                onServiceSelect={handleServiceSelect}
+              />
+              {serviceNotes && (
+                <p className="text-xs text-muted-foreground">{serviceNotes}</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <ServiceStepPicker
+                services={services}
+                appointments={appointments}
+                selectedClientId={selectedClientId}
+                date={date}
+                serviceText={service}
+                onServiceTextChange={setService}
+                onServiceSelect={handleServiceSelect}
+              />
+              {service && (
+                <p className="text-xs text-muted-foreground">Serviço: {service}</p>
+              )}
+              {serviceNotes && (
+                <p className="text-xs text-muted-foreground">{serviceNotes}</p>
+              )}
+            </div>
+          )}
+
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
