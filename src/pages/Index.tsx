@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
 import { isToday } from 'date-fns';
-import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } from 'lucide-react';
+import { TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
+import { CaixaSaldoResumo } from '@/components/ds/CaixaSaldoResumo';
 import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
 import { ReturnsToConfirmCard } from '@/components/dashboard/ReturnsToConfirmCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
