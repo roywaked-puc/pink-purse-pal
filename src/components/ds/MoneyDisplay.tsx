@@ -46,7 +46,7 @@ export function MoneyDisplay({
   return (
     <span
       className={cn(
-        "font-semibold tabular-nums tracking-tight",
+        "font-semibold tabular-nums tracking-tight whitespace-nowrap",
         sizeMap[size],
         variantMap[variant],
         className,
