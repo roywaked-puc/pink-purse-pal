@@ -24,8 +24,6 @@ import { Appointment } from '@/types';
 const Index = () => {
   const {
     appointments,
-    getBusinessBalance,
-    getPersonalBalance,
     getMonthlyPersonalExpenses,
     deleteAppointment,
     getClientById,
