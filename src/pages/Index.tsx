@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useServices } from '@/hooks/useServices';
+import { useCaixaSummary } from '@/hooks/useCaixaSummary';
 import { Appointment } from '@/types';
 
 const Index = () => {
@@ -33,6 +34,7 @@ const Index = () => {
   const { data: services } = useServices();
   const { data: userSettings } = useUserSettings();
   const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
+  const resumoCaixa = useCaixaSummary();
 
   const getClientPhone = (clientId: string) => getClientById(clientId)?.phone;
   const getServiceColor = (serviceId?: string) =>
