@@ -5,6 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useUserSettings, useUpdateUserSettings } from '@/hooks/useUserSettings';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 export function CaixaSettings() {
@@ -13,6 +23,7 @@ export function CaixaSettings() {
 
   const [ativo, setAtivo] = useState(false);
   const [valor, setValor] = useState('0');
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -21,21 +32,35 @@ export function CaixaSettings() {
     }
   }, [settings]);
 
+  // Primeira ativação: ainda não existe data de início gravada.
+  const primeiraAtivacao = ativo && !settings?.caixa_inicio_em;
+
+  const salvar = async () => {
+    const parsed = parseFloat(valor.replace(',', '.'));
+    try {
+      await mutateAsync({
+        caixa_reserva_ativo: ativo,
+        caixa_reserva_valor: isFinite(parsed) ? parsed : 0,
+        // Só grava a data de início na primeira ativação; nunca sobrescreve.
+        ...(primeiraAtivacao ? { caixa_inicio_em: new Date().toISOString() } : {}),
+      });
+      toast.success('Separação de caixa salva');
+    } catch (e: any) {
+      toast.error('Erro ao salvar', { description: e?.message });
+    }
+  };
+
   const handleSave = async () => {
     const parsed = parseFloat(valor.replace(',', '.'));
     if (ativo && (!isFinite(parsed) || parsed <= 0)) {
       toast.error('Informe um valor de reserva maior que zero');
       return;
     }
-    try {
-      await mutateAsync({
-        caixa_reserva_ativo: ativo,
-        caixa_reserva_valor: isFinite(parsed) ? parsed : 0,
-      });
-      toast.success('Separação de caixa salva');
-    } catch (e: any) {
-      toast.error('Erro ao salvar', { description: e?.message });
+    if (primeiraAtivacao) {
+      setConfirmOpen(true);
+      return;
     }
+    await salvar();
   };
 
   if (isLoading) {
@@ -80,6 +105,35 @@ export function CaixaSettings() {
         {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
         Salvar
       </Button>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Começar a separar o caixa agora?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A partir de agora, o saldo da Empresa e o Pessoal vão considerar apenas os lançamentos feitos daqui pra
+              frente — o saldo acumulado até hoje não será somado a esses cards.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setAtivo(false);
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setConfirmOpen(false);
+                await salvar();
+              }}
+            >
+              Ativar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
