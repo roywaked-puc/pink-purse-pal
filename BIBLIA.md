@@ -99,6 +99,19 @@ o caixa pessoal (livre pra saque). A divisão reaproveita o campo `scope` já ex
 - A feature terá toggle liga/desliga em Configurações, desligada por padrão.
 - Implementação: divide o próprio lançamento manual que a usuária já cria (não gera lançamento
   novo a partir de `paid_amount`), pra não contar o mesmo dinheiro duas vezes nos relatórios.
+- Exibição (decidido em ago/2026, ainda não implementado):
+  - As informações de caixa são mostradas em duas telas: Meu Dia (Home) e Movimentacoes
+    (Financeiro), via um componente único reutilizável (evitar duplicar implementação
+    entre as duas telas).
+  - Saldo caixa empresa e saldo caixa pessoal são sempre o valor atual/acumulado até
+    hoje — nunca seguem seletor de período, em nenhuma das duas telas.
+  - "Entrou no mês" tem comportamento diferente por tela: na Home é sempre o mês
+    corrente, sem seletor; em Movimentacoes existe um seletor de mês pequeno, local ao
+    bloco de resumo (não é filtro geral da tela e não afeta a lista de lançamentos
+    abaixo, que continua usando só os filtros de origem/categoria já existentes).
+  - Os valores seguem o mesmo padrão de privacidade já existente no app (bloco
+    oculto/revelado por toque, como o que já existe na Home) — nunca ficam expostos por
+    padrão, já que o app é usado perto de clientes durante atendimento.
 
 ### 4.5 Clientes e Ficha (`/cliente/:id`)
 Dados cadastrais (telefone **único** — validação por dígitos), aniversário, recorrência,
