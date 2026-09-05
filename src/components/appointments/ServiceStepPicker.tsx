@@ -159,6 +159,7 @@ export function ServiceStepPicker({
     setTechnique(value);
     setTier('');
     setFaixaId('');
+    setTierSuggestion(null);
     onServiceTextChange('');
     onServiceSelect(null);
   };
@@ -166,6 +167,7 @@ export function ServiceStepPicker({
   const handleTierChange = (value: string) => {
     setTier(value);
     setFaixaId('');
+    setTierSuggestion(null);
     if (value === 'colocacao') {
       const svc = techniqueServices.find((s) => s.tierType === 'colocacao');
       if (svc) {
