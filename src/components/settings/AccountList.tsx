@@ -119,6 +119,7 @@ export function AccountList() {
                   <SelectItem value="dinheiro">Dinheiro</SelectItem>
                   <SelectItem value="banco">Banco</SelectItem>
                   <SelectItem value="maquininha">Maquininha</SelectItem>
+                  <SelectItem value="permuta">Permuta</SelectItem>
                 </SelectContent>
               </Select>
               <Input
