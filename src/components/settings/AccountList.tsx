@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Check, X, Wallet, Building2, CreditCard, ArrowLeftRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check, X, Wallet, Building2, CreditCard, ArrowLeftRight, Receipt } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Account } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { AccountFeeTypes } from './AccountFeeTypes';
+import { AccountExtratoDrawer } from './AccountExtratoDrawer';
 import { cn } from '@/lib/utils';
 
 const formatCurrency = (value: number) => {
@@ -40,6 +41,10 @@ export function AccountList() {
   const [newAccountType, setNewAccountType] = useState<Account['type']>('banco');
   const [newAccountFee, setNewAccountFee] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [extratoAccount, setExtratoAccount] = useState<Account | null>(null);
+
+  const contasReais = accounts.filter((a) => a.type !== 'permuta');
+  const contasPermuta = accounts.filter((a) => a.type === 'permuta');
 
   const handleEdit = (account: Account) => {
     setEditingId(account.id);
@@ -142,7 +147,28 @@ export function AccountList() {
           </div>
         )}
 
-        {accounts.map((account) => {
+        {contasReais.map((account) => renderAccount(account))}
+      </div>
+
+      {contasPermuta.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <div>
+            <p className="text-sm font-medium">Controle de Permutas</p>
+            <p className="text-xs text-muted-foreground">
+              Não entram no saldo geral — servem só para acompanhar trocas.
+            </p>
+          </div>
+          {contasPermuta.map((account) => renderAccount(account))}
+        </div>
+      )}
+
+      <AccountExtratoDrawer
+        account={extratoAccount}
+        open={!!extratoAccount}
+        onOpenChange={(o) => !o && setExtratoAccount(null)}
+      />
+PLACEHOLDER_END
+  const renderAccountBody = (account: Account) => {
           const config = typeConfig[account.type];
           const Icon = config.icon;
           const balance = getAccountBalance(account.id);
@@ -188,7 +214,7 @@ export function AccountList() {
                       <X className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
-                  {editType === 'maquininha' && (
+                  {(editType === 'maquininha' || editType === 'banco') && (
                     <AccountFeeTypes accountId={account.id} />
                   )}
                 </div>
@@ -212,6 +238,17 @@ export function AccountList() {
                   )}>
                     {formatCurrency(balance)}
                   </p>
+                  {account.type === 'permuta' && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setExtratoAccount(account)}
+                      className="h-8 w-8"
+                      title="Ver extrato"
+                    >
+                      <Receipt className="w-4 h-4" />
+                    </Button>
+                  )}
                   <Button
                     size="icon"
                     variant="ghost"
