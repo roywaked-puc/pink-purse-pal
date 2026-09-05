@@ -227,6 +227,19 @@ export function ServiceStepPicker({
               ))}
             </SelectContent>
           </Select>
+          {tierSuggestion === 'primeira' && (
+            <p className="text-xs text-muted-foreground">
+              Primeiro atendimento desta técnica para esta cliente — sugerindo colocação. Você pode
+              trocar.
+            </p>
+          )}
+          {tierSuggestion === 'fora_prazo' && diasDesdeUltimo != null && (
+            <p className="text-xs text-muted-foreground">
+              Último atendimento desta técnica há {diasDesdeUltimo}{' '}
+              {diasDesdeUltimo === 1 ? 'dia' : 'dias'} — fora do prazo de manutenção, sugerindo
+              colocação. Você pode trocar.
+            </p>
+          )}
         </div>
       )}
 
