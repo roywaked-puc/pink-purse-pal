@@ -80,6 +80,10 @@ export interface Service {
   duration: number;
   notes?: string;
   color?: string;
+  techniqueName?: string;
+  tierType?: 'avulso' | 'colocacao' | 'manutencao';
+  diasMin?: number;
+  diasMax?: number;
 }
 
 export interface UserSettings {

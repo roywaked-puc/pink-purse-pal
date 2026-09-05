@@ -26,6 +26,10 @@ export function useServices() {
         duration: s.duration,
         notes: s.notes || undefined,
         color: s.color || undefined,
+        techniqueName: s.technique_name || undefined,
+        tierType: s.tier_type || undefined,
+        diasMin: s.dias_min ?? undefined,
+        diasMax: s.dias_max ?? undefined,
       }));
     },
     enabled: !!user,
