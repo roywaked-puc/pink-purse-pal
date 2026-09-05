@@ -178,6 +178,19 @@ const Movimentacoes = () => {
         </div>
       </div>
 
+      {/* Resumo de caixa (oculto por padrão) */}
+      <CaixaSaldoResumo
+        saldoEmpresa={resumoCaixa.saldoEmpresa}
+        saldoPessoal={resumoCaixa.saldoPessoal}
+        entrouNoMes={resumoCaixa.entrouNoMes}
+        mesReferencia={mesResumo}
+        hidden={!resumoVisible}
+        onToggle={toggleResumo}
+        mostrarSeletorMes
+        onMesChange={setMesResumo}
+        caixaAtivo={caixaAtivo}
+      />
+
       {/* Transaction List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filteredTransactions.length > 0 ? (
