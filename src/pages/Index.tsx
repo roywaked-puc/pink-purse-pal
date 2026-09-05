@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
 import { isToday } from 'date-fns';
-import { Briefcase, User, TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } from 'lucide-react';
+import { TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
+import { CaixaSaldoResumo } from '@/components/ds/CaixaSaldoResumo';
 import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
 import { ReturnsToConfirmCard } from '@/components/dashboard/ReturnsToConfirmCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
@@ -17,13 +18,12 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useServices } from '@/hooks/useServices';
+import { useCaixaSummary } from '@/hooks/useCaixaSummary';
 import { Appointment } from '@/types';
 
 const Index = () => {
   const {
     appointments,
-    getBusinessBalance,
-    getPersonalBalance,
     getMonthlyPersonalExpenses,
     deleteAppointment,
     getClientById,
@@ -32,6 +32,7 @@ const Index = () => {
   const { data: services } = useServices();
   const { data: userSettings } = useUserSettings();
   const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
+  const resumoCaixa = useCaixaSummary();
 
   const getClientPhone = (clientId: string) => getClientById(clientId)?.phone;
   const getServiceColor = (serviceId?: string) =>
@@ -217,38 +218,23 @@ const Index = () => {
       </div>
 
       {/* Saldos */}
-      {balancesVisible ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <CaixaSaldoResumo
+        saldoEmpresa={resumoCaixa.saldoEmpresa}
+        saldoPessoal={resumoCaixa.saldoPessoal}
+        entrouNoMes={resumoCaixa.entrouNoMes}
+        mesReferencia={new Date()}
+        hidden={!balancesVisible}
+        onToggle={toggleBalances}
+        caixaAtivo={caixaAtivo}
+        extraCard={
           <BalanceCard
-            title={caixaAtivo ? "Caixa Empresa" : "Saldo da Empresa"}
-            value={getBusinessBalance()}
-            icon={Briefcase}
-            variant="primary"
+            title="Gastos do Mês"
+            value={getMonthlyPersonalExpenses()}
+            icon={TrendingDown}
+            variant="accent"
           />
-          <div className="grid grid-cols-2 md:contents gap-3">
-            <BalanceCard
-              title={caixaAtivo ? "Caixa Pessoal" : "Saldo Pessoal"}
-              value={getPersonalBalance()}
-              icon={User}
-              variant="secondary"
-            />
-            <BalanceCard
-              title="Gastos do Mês"
-              value={getMonthlyPersonalExpenses()}
-              icon={TrendingDown}
-              variant="accent"
-            />
-          </div>
-        </div>
-      ) : (
-        <button
-          onClick={toggleBalances}
-          className="w-full mb-6 p-4 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center gap-2 text-muted-foreground hover:bg-muted transition-colors"
-        >
-          <Eye className="w-4 h-4" />
-          <span className="text-sm">Saldos ocultos — toque para exibir</span>
-        </button>
-      )}
+        }
+      />
 
       {/* Próximos */}
       {upcomingAppointments.length > 0 && (

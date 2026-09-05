@@ -16,6 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useApp } from '@/contexts/AppContext';
+import { useCaixaSummary } from '@/hooks/useCaixaSummary';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { CaixaSaldoResumo } from '@/components/ds/CaixaSaldoResumo';
 import { Transaction, TransactionScope } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,6 +34,21 @@ const Movimentacoes = () => {
   const [filterScope, setFilterScope] = useState<TransactionScope | 'todos'>('todos');
   const [filterCategory, setFilterCategory] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Resumo de caixa: estado de ocultar/revelar próprio desta tela + mês do "Entrou no mês"
+  const [resumoVisible, setResumoVisible] = useState(
+    () => localStorage.getItem('caixaResumoMovimentacoesVisible') === 'true',
+  );
+  const [mesResumo, setMesResumo] = useState(() => new Date());
+  const resumoCaixa = useCaixaSummary(mesResumo);
+  const { data: userSettings } = useUserSettings();
+  const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
+
+  const toggleResumo = () => {
+    const newState = !resumoVisible;
+    setResumoVisible(newState);
+    localStorage.setItem('caixaResumoMovimentacoesVisible', String(newState));
+  };
 
   // Helper para obter nome da conta a partir do ID
   const getAccountName = (accountId: string): string => {
@@ -159,6 +177,19 @@ const Movimentacoes = () => {
           </Select>
         </div>
       </div>
+
+      {/* Resumo de caixa (oculto por padrão) */}
+      <CaixaSaldoResumo
+        saldoEmpresa={resumoCaixa.saldoEmpresa}
+        saldoPessoal={resumoCaixa.saldoPessoal}
+        entrouNoMes={resumoCaixa.entrouNoMes}
+        mesReferencia={mesResumo}
+        hidden={!resumoVisible}
+        onToggle={toggleResumo}
+        mostrarSeletorMes
+        onMesChange={setMesResumo}
+        caixaAtivo={caixaAtivo}
+      />
 
       {/* Transaction List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
