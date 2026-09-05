@@ -395,17 +395,38 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Serviço</Label>
-            <ServiceAutocomplete
-              value={service}
-              onChange={setService}
-              onServiceSelect={handleServiceSelect}
-            />
-            {serviceNotes && (
-              <p className="text-xs text-muted-foreground">{serviceNotes}</p>
-            )}
-          </div>
+          {appointment ? (
+            <div className="space-y-2">
+              <Label>Serviço</Label>
+              <ServiceAutocomplete
+                value={service}
+                onChange={setService}
+                onServiceSelect={handleServiceSelect}
+              />
+              {serviceNotes && (
+                <p className="text-xs text-muted-foreground">{serviceNotes}</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <ServiceStepPicker
+                services={services}
+                appointments={appointments}
+                selectedClientId={selectedClientId}
+                date={date}
+                serviceText={service}
+                onServiceTextChange={setService}
+                onServiceSelect={handleServiceSelect}
+              />
+              {service && (
+                <p className="text-xs text-muted-foreground">Serviço: {service}</p>
+              )}
+              {serviceNotes && (
+                <p className="text-xs text-muted-foreground">{serviceNotes}</p>
+              )}
+            </div>
+          )}
+
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
