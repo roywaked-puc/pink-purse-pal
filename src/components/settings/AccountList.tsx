@@ -151,7 +151,7 @@ export function AccountList() {
                     <p className="font-medium">{account.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {config.label}
-                      {account.feePercentage && account.feePercentage > 0 && (
+                      {!!account.feePercentage && account.feePercentage > 0 && (
                         <span className="ml-2 text-warning">• Taxa: {account.feePercentage}%</span>
                       )}
                     </p>
