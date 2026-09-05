@@ -93,9 +93,9 @@ export function useCreateDefaultFeeTypes() {
     mutationFn: async (accountId: string) => {
       const { data: userData } = await supabase.auth.getUser();
       const defaults = [
-        { label: "Débito", order_index: 0 },
-        { label: "Crédito à vista", order_index: 1 },
-        { label: "Crédito parcelado", order_index: 2 },
+        { label: "Pix", order_index: 0 },
+        { label: "Débito", order_index: 1 },
+        { label: "Crédito", order_index: 2 },
       ];
       const { data, error } = await supabase
         .from("account_fee_types")
