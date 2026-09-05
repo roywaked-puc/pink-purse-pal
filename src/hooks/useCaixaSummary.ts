@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { endOfMonth, startOfMonth } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
+import { isPermutaTransaction } from '@/lib/accountBalance';
 import { useUserSettings } from '@/hooks/useUserSettings';
 
 export interface CaixaSummary {
@@ -22,7 +23,7 @@ export interface CaixaSummary {
  * Depois de ativada, só entram lançamentos criados a partir de `caixa_inicio_em`.
  */
 export function useCaixaSummary(mes: Date = new Date()): CaixaSummary {
-  const { transactions } = useApp();
+  const { transactions, accounts } = useApp();
   const { data: settings } = useUserSettings();
   const mesTime = mes.getTime();
 
@@ -40,6 +41,9 @@ export function useCaixaSummary(mes: Date = new Date()): CaixaSummary {
     const fim = endOfMonth(new Date(mesTime));
 
     for (const t of transactions) {
+      // Permutas não são dinheiro disponível — ficam fora do saldo geral.
+      if (isPermutaTransaction(t, accounts)) continue;
+
       // Corte pelo início do controle de caixa (quando ativo).
       if (corteTime !== null) {
         const criadoEm = (t.createdAt ?? t.date) as Date;
@@ -62,5 +66,5 @@ export function useCaixaSummary(mes: Date = new Date()): CaixaSummary {
       entrouNoMes,
       inicioEm: corteTime !== null ? new Date(corteTime) : null,
     };
-  }, [transactions, mesTime, corteTime]);
+  }, [transactions, accounts, mesTime, corteTime]);
 }

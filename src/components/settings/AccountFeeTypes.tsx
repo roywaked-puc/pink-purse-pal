@@ -55,7 +55,7 @@ export function AccountFeeTypes({ accountId }: AccountFeeTypesProps) {
       ) : feeTypes.length === 0 && !isAdding ? (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            Nenhum tipo de cobrança cadastrado para esta maquininha.
+            Nenhum tipo de cobrança cadastrado para esta conta.
           </p>
           <Button
             type="button"
@@ -70,11 +70,8 @@ export function AccountFeeTypes({ accountId }: AccountFeeTypesProps) {
             ) : (
               <Sparkles className="w-4 h-4 mr-1" />
             )}
-            Criar tipos padrão
+            Criar tipos padrão (Pix, Débito, Crédito)
           </Button>
-          <p className="text-[11px] text-muted-foreground text-center">
-            Débito, Crédito à vista e Crédito parcelado
-          </p>
         </div>
       ) : (
         <div className="space-y-2">

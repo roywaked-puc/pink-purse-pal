@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Check, X, Wallet, Building2, CreditCard, ArrowLeftRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check, X, Wallet, Building2, CreditCard, ArrowLeftRight, Receipt } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Account } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { AccountFeeTypes } from './AccountFeeTypes';
+import { AccountExtratoDrawer } from './AccountExtratoDrawer';
 import { cn } from '@/lib/utils';
 
 const formatCurrency = (value: number) => {
@@ -40,6 +41,10 @@ export function AccountList() {
   const [newAccountType, setNewAccountType] = useState<Account['type']>('banco');
   const [newAccountFee, setNewAccountFee] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [extratoAccount, setExtratoAccount] = useState<Account | null>(null);
+
+  const contasReais = accounts.filter((a) => a.type !== 'permuta');
+  const contasPermuta = accounts.filter((a) => a.type === 'permuta');
 
   const handleEdit = (account: Account) => {
     setEditingId(account.id);
@@ -85,6 +90,109 @@ export function AccountList() {
       deleteAccount(deleteId);
       setDeleteId(null);
     }
+  };
+
+  const renderAccount = (account: Account) => {
+          const config = typeConfig[account.type];
+          const Icon = config.icon;
+          const balance = getAccountBalance(account.id);
+
+          return (
+            <div
+              key={account.id}
+              className="p-3 rounded-lg bg-card border border-border"
+            >
+              {editingId === account.id ? (
+                <div className="space-y-3">
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-2">
+                    <Select value={editType} onValueChange={(v) => setEditType(v as Account['type'])}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                        <SelectItem value="banco">Banco</SelectItem>
+                        <SelectItem value="maquininha">Maquininha</SelectItem>
+                        <SelectItem value="permuta">Permuta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={editFee}
+                      onChange={(e) => setEditFee(e.target.value)}
+                      placeholder="Taxa %"
+                      className="w-24"
+                    />
+                    <Button size="icon" variant="ghost" onClick={handleSaveEdit}>
+                      <Check className="w-4 h-4 text-success" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={handleCancelEdit}>
+                      <X className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                  {(editType === 'maquininha' || editType === 'banco') && (
+                    <AccountFeeTypes accountId={account.id} />
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-muted">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{account.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {config.label}
+                      {!!account.feePercentage && account.feePercentage > 0 && (
+                        <span className="ml-2 text-warning">• Taxa: {account.feePercentage}%</span>
+                      )}
+                    </p>
+                  </div>
+                  <p className={cn(
+                    "font-semibold",
+                    balance >= 0 ? "text-success" : "text-destructive"
+                  )}>
+                    {formatCurrency(balance)}
+                  </p>
+                  {account.type === 'permuta' && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setExtratoAccount(account)}
+                      className="h-8 w-8"
+                      title="Ver extrato"
+                    >
+                      <Receipt className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleEdit(account)}
+                    className="h-8 w-8"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setDeleteId(account.id)}
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
   };
 
   return (
@@ -142,98 +250,26 @@ export function AccountList() {
           </div>
         )}
 
-        {accounts.map((account) => {
-          const config = typeConfig[account.type];
-          const Icon = config.icon;
-          const balance = getAccountBalance(account.id);
-
-          return (
-            <div
-              key={account.id}
-              className="p-3 rounded-lg bg-card border border-border"
-            >
-              {editingId === account.id ? (
-                <div className="space-y-3">
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    autoFocus
-                  />
-                  <div className="flex items-center gap-2">
-                    <Select value={editType} onValueChange={(v) => setEditType(v as Account['type'])}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                        <SelectItem value="banco">Banco</SelectItem>
-                        <SelectItem value="maquininha">Maquininha</SelectItem>
-                        <SelectItem value="permuta">Permuta</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      value={editFee}
-                      onChange={(e) => setEditFee(e.target.value)}
-                      placeholder="Taxa %"
-                      className="w-24"
-                    />
-                    <Button size="icon" variant="ghost" onClick={handleSaveEdit}>
-                      <Check className="w-4 h-4 text-success" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={handleCancelEdit}>
-                      <X className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                  {editType === 'maquininha' && (
-                    <AccountFeeTypes accountId={account.id} />
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{account.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {config.label}
-                      {account.feePercentage && account.feePercentage > 0 && (
-                        <span className="ml-2 text-warning">• Taxa: {account.feePercentage}%</span>
-                      )}
-                    </p>
-                  </div>
-                  <p className={cn(
-                    "font-semibold",
-                    balance >= 0 ? "text-success" : "text-destructive"
-                  )}>
-                    {formatCurrency(balance)}
-                  </p>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handleEdit(account)}
-                    className="h-8 w-8"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setDeleteId(account.id)}
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {contasReais.map((account) => renderAccount(account))}
       </div>
+
+      {contasPermuta.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <div>
+            <p className="text-sm font-medium">Controle de Permutas</p>
+            <p className="text-xs text-muted-foreground">
+              Não entram no saldo geral — servem só para acompanhar trocas.
+            </p>
+          </div>
+          {contasPermuta.map((account) => renderAccount(account))}
+        </div>
+      )}
+
+      <AccountExtratoDrawer
+        account={extratoAccount}
+        open={!!extratoAccount}
+        onOpenChange={(o) => !o && setExtratoAccount(null)}
+      />
 
       <DeleteConfirmDialog
         open={!!deleteId}
