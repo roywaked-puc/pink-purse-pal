@@ -17,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
+import { isPermutaTransaction } from '@/lib/accountBalance';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { BiGastos } from '@/components/relatorios/BiGastos';
@@ -56,7 +57,7 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
       balance += t.type === 'entrada' ? t.amount : -t.amount;
       return { ...t, runningBalance: balance };
     });
-  }, [filteredTransactions]);
+  }, [filteredTransactions, accounts, selectedAccount]);
 
   // Category summary
   const categorySummary = useMemo(() => {
@@ -105,6 +106,9 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
     };
 
     filteredTransactions.forEach(t => {
+      // Permutas não são dinheiro disponível — ficam fora do saldo geral,
+      // a não ser que a própria conta de permuta esteja filtrada.
+      if (selectedAccount === 'todos' && isPermutaTransaction(t, accounts)) return;
       if (t.type === 'entrada') {
         result[t.scope].entradas += t.amount;
       } else {
