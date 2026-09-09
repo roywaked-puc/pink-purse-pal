@@ -38,7 +38,7 @@ import { ClientPhotosTab } from '@/components/clients/ClientPhotosTab';
 import { PhotoLightbox } from '@/components/clients/PhotoLightbox';
 import { ClienteCrmTab } from '@/components/crm/ClienteCrmTab';
 import { ClienteAnamneseTab } from '@/components/anamnese/ClienteAnamneseTab';
-import { useClientPhotos } from '@/hooks/useClientPhotos';
+import { useClientPhotos, type ClientPhotoWithUrls } from '@/hooks/useClientPhotos';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
