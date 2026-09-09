@@ -359,6 +359,9 @@ function AppointmentDetailSheet({
 }) {
   const { data: userSettings } = useUserSettings();
   const { data: photos } = useClientPhotos(clientId);
+  const { accounts } = useApp();
+  const accountName = (t: Transaction) =>
+    accounts.find((a) => a.id === (t.accountId ?? t.account))?.name;
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
