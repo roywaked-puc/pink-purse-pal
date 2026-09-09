@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { format, addDays, isAfter, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -16,6 +16,10 @@ import {
   Hash,
   Images,
   ClipboardList,
+  ChevronRight,
+  Clock,
+  Camera,
+  Wallet,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -23,10 +27,22 @@ import { EmptyState } from '@/components/ds/EmptyState';
 import { StatusBadge } from '@/components/ds/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { ClientPhotosTab } from '@/components/clients/ClientPhotosTab';
+import { PhotoLightbox } from '@/components/clients/PhotoLightbox';
 import { ClienteCrmTab } from '@/components/crm/ClienteCrmTab';
 import { ClienteAnamneseTab } from '@/components/anamnese/ClienteAnamneseTab';
+import { useClientPhotos } from '@/hooks/useClientPhotos';
+import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
+import { cn } from '@/lib/utils';
+import type { Appointment, Transaction } from '@/types';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
