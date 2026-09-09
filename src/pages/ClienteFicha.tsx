@@ -547,7 +547,7 @@ function AppointmentDetailContent({
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(t.date), 'dd/MM/yyyy', { locale: ptBR })}
-                      {t.account ? ` · ${t.account}` : ''}
+                      {accountName(t) ? ` · ${accountName(t)}` : ''}
                     </p>
                     {t.description && (
                       <p className="text-sm truncate">{t.description}</p>
