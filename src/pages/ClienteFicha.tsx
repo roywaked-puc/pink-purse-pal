@@ -436,11 +436,7 @@ function AppointmentDetailContent({
   caixaEmpresa: number;
   caixaPessoal: number;
   entradas: Transaction[];
-  photos: ReturnType<typeof useClientPhotos>['data'] extends infer P
-    ? P extends Array<infer U>
-      ? U[]
-      : never
-    : never;
+  photos: ClientPhotoWithUrls[];
   onOpenPhoto: (index: number) => void;
 }) {
   return (
