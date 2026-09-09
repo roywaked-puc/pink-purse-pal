@@ -390,26 +390,7 @@ function AppointmentDetailSheet({
 
   return (
     <Sheet open={!!appointment} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="max-h-[92vh] rounded-t-3xl flex flex-col gap-0 p-0 sm:hidden"
-      >
-        <AppointmentDetailContent
-          appointment={appointment}
-          paymentStatus={paymentStatus}
-          remaining={remaining}
-          showCaixaSplit={showCaixaSplit}
-          caixaEmpresa={caixaEmpresa}
-          caixaPessoal={caixaPessoal}
-          entradas={entradas}
-          photos={appointmentPhotos}
-          onOpenPhoto={(i) => {
-            setLightboxIndex(i);
-            setLightboxOpen(true);
-          }}
-        />
-      </SheetContent>
-      <SheetContent side="right" className="hidden sm:flex sm:max-w-md flex-col gap-0 p-0">
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col gap-0 p-0">
         <AppointmentDetailContent
           appointment={appointment}
           paymentStatus={paymentStatus}
