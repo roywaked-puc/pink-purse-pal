@@ -52,6 +52,7 @@ export default function ClienteFicha() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { appointments, transactions, getClientById } = useApp();
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   const client = id ? getClientById(id) : undefined;
 
