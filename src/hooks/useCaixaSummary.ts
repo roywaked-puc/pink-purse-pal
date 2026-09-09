@@ -45,10 +45,9 @@ export function useCaixaSummary(mes: Date = new Date()): CaixaSummary {
       if (isPermutaTransaction(t, accounts)) continue;
 
       // Corte pelo início do controle de caixa (quando ativo).
-      if (corteTime !== null) {
-        const criadoEm = (t.createdAt ?? t.date) as Date;
-        if (new Date(criadoEm).getTime() < corteTime) continue;
-      }
+      // Usa a data do lançamento (não a de criação), para ficar comparável
+      // com o "Entrou no mês", que também é calculado pela data.
+      if (corteTime !== null && new Date(t.date).getTime() < corteTime) continue;
 
       const valor = t.type === 'entrada' ? t.amount : -t.amount;
       if (t.scope === 'empresa') saldoEmpresa += valor;
