@@ -306,6 +306,15 @@ export default function ClienteFicha() {
           <ClienteAnamneseTab clientId={client.id} />
         </TabsContent>
       </Tabs>
+
+      <AppointmentDetailSheet
+        appointment={selectedAppointment}
+        onOpenChange={(open) => !open && setSelectedAppointment(null)}
+        transactions={clientTransactions.filter(
+          (t) => t.appointmentId === selectedAppointment?.id,
+        )}
+        clientId={client.id}
+      />
     </MainLayout>
   );
 }
