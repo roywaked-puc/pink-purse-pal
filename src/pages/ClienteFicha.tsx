@@ -403,6 +403,7 @@ function AppointmentDetailSheet({
           caixaPessoal={caixaPessoal}
           entradas={entradas}
           photos={appointmentPhotos}
+          accountName={accountName}
           onOpenPhoto={(i) => {
             setLightboxIndex(i);
             setLightboxOpen(true);
@@ -430,6 +431,7 @@ function AppointmentDetailContent({
   caixaPessoal,
   entradas,
   photos,
+  accountName,
   onOpenPhoto,
 }: {
   appointment: Appointment;
@@ -440,6 +442,7 @@ function AppointmentDetailContent({
   caixaPessoal: number;
   entradas: Transaction[];
   photos: ClientPhotoWithUrls[];
+  accountName: (t: Transaction) => string | undefined;
   onOpenPhoto: (index: number) => void;
 }) {
   return (
