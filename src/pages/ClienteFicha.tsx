@@ -262,9 +262,11 @@ export default function ClienteFicha() {
                     }
 
                     return (
-                      <div
+                      <button
                         key={a.id}
-                        className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-3"
+                        type="button"
+                        onClick={() => setSelectedAppointment(a)}
+                        className="w-full text-left p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-3 transition-colors hover:bg-muted/50 hover:border-primary/40 cursor-pointer"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium">
@@ -280,8 +282,9 @@ export default function ClienteFicha() {
                           <span className="text-sm font-semibold text-primary">
                             {formatCurrency(a.amount)}
                           </span>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
-                      </div>
+                      </button>
                     );
                   });
                 })()}
