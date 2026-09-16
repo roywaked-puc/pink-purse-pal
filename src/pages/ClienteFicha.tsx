@@ -273,6 +273,7 @@ export default function ClienteFicha() {
                             {format(new Date(a.date), "dd 'de' MMM yyyy 'às' HH:mm", { locale: ptBR })}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">{a.service}</p>
+                          <MaintenanceBadge number={a.maintenanceNumber} className="mt-0.5" />
                           {daysLabel && (
                             <p className="text-[11px] text-muted-foreground mt-0.5">{daysLabel}</p>
                           )}
@@ -476,6 +477,7 @@ function AppointmentDetailContent({
                 Permuta
               </span>
             )}
+            <MaintenanceBadge number={appointment.maintenanceNumber} />
           </div>
         </section>
 

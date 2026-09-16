@@ -86,7 +86,15 @@ export function ReturnsToConfirmCard() {
                   className="p-3 rounded-lg border border-border bg-card space-y-2"
                 >
                   <div>
-                    <p className="font-medium text-sm">{a.clientName}</p>
+                    <p className="font-medium text-sm">
+                      {a.clientName}
+                      {a.maintenanceNumber && (
+                        <span className="font-normal text-muted-foreground">
+                          {' '}
+                          — {a.maintenanceNumber}ª manutenção
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(a.date), "EEE, dd/MM 'às' HH:mm", { locale: ptBR })} •{' '}
                       {a.service}
