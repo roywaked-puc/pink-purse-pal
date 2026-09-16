@@ -42,6 +42,7 @@ import { useClientPhotos, type ClientPhotoWithUrls } from '@/hooks/useClientPhot
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
+import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 import type { Appointment, Transaction } from '@/types';
 
 const formatCurrency = (value: number) =>
