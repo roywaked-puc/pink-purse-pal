@@ -102,9 +102,11 @@ export function useCrm() {
         daysSinceLastAttended,
         isInactive,
         isActive,
+        lastMaintenance,
+        currentMaintenanceNumber: lastMaintenance?.maintenanceNumber,
       };
     });
-  }, [clients, appointments, transactions, inactiveDays]);
+  }, [clients, appointments, transactions, inactiveDays, tierOf]);
 
   // CARD 1: Confirmações pendentes
   const pendingConfirmations = useMemo(() => {
