@@ -319,6 +319,7 @@ export type Database = {
           google_event_id: string | null
           id: string
           is_permuta: boolean
+          maintenance_number: number | null
           notes: string | null
           paid_amount: number
           parent_appointment_id: string | null
@@ -339,6 +340,7 @@ export type Database = {
           google_event_id?: string | null
           id?: string
           is_permuta?: boolean
+          maintenance_number?: number | null
           notes?: string | null
           paid_amount?: number
           parent_appointment_id?: string | null
@@ -359,6 +361,7 @@ export type Database = {
           google_event_id?: string | null
           id?: string
           is_permuta?: boolean
+          maintenance_number?: number | null
           notes?: string | null
           paid_amount?: number
           parent_appointment_id?: string | null

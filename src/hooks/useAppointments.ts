@@ -105,6 +105,7 @@ export function useAppointments() {
         parentAppointmentId: (a as any).parent_appointment_id || undefined,
         isPermuta: Boolean((a as any).is_permuta) || false,
         caixaReservaValorAplicado: (a as any).caixa_reserva_valor_aplicado != null ? Number((a as any).caixa_reserva_valor_aplicado) : undefined,
+        maintenanceNumber: (a as any).maintenance_number != null ? Number((a as any).maintenance_number) : undefined,
       }));
     },
     enabled: !!user,
@@ -136,6 +137,7 @@ export function useAddAppointment() {
           notes: appointment.notes,
           parent_appointment_id: appointment.parentAppointmentId,
           is_permuta: appointment.isPermuta ?? false,
+          maintenance_number: appointment.maintenanceNumber ?? null,
         })
         .select()
         .single();
@@ -212,6 +214,7 @@ export function useUpdateAppointment() {
           notes: appointment.notes,
           parent_appointment_id: appointment.parentAppointmentId,
           is_permuta: appointment.isPermuta ?? false,
+          maintenance_number: appointment.maintenanceNumber ?? null,
         })
         .eq('id', id)
         .select()

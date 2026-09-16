@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, HelpCircle, Receipt, Loader2 } from 'lucide-react';
@@ -84,6 +84,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const [confirmationStatus, setConfirmationStatus] = useState<ConfirmationStatus>('pendente');
   const [notes, setNotes] = useState('');
   const [isPermuta, setIsPermuta] = useState(false);
+  const [maintenanceNumber, setMaintenanceNumber] = useState<number | null>(null);
   const [showTransactions, setShowTransactions] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -100,6 +101,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       setConfirmationStatus(appointment.confirmationStatus);
       setNotes(appointment.notes || '');
       setIsPermuta(Boolean(appointment.isPermuta));
+      setMaintenanceNumber(appointment.maintenanceNumber ?? null);
       
       if (appointment.clientId) {
         setSelectedClientId(appointment.clientId);
@@ -160,7 +162,34 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
     setConfirmationStatus('pendente');
     setNotes('');
     setIsPermuta(false);
+    setMaintenanceNumber(null);
   };
+
+  // Serviço selecionado e se é de manutenção (para exibir "Qual manutenção?")
+  const selectedService = selectedServiceId ? getServiceById(selectedServiceId) : undefined;
+  const isManutencao = selectedService?.tierType === 'manutencao';
+
+  // Última manutenção anterior desta cliente (para o alerta leve de checagem)
+  const manutencaoAnterior = useMemo(() => {
+    if (!selectedClientId) return null;
+    return (
+      appointments
+        .filter((a) => a.clientId === selectedClientId)
+        .filter((a) => !appointment || a.id !== appointment.id)
+        .filter((a) => a.confirmationStatus !== 'cancelado')
+        .filter((a) => new Date(a.date) < date)
+        .filter((a) => {
+          const svc = a.serviceId ? services.find((s) => s.id === a.serviceId) : undefined;
+          return svc?.tierType === 'manutencao';
+        })
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] ?? null
+    );
+  }, [appointments, selectedClientId, appointment, date, services]);
+
+  const alertaManutencaoRepetida =
+    isManutencao &&
+    maintenanceNumber != null &&
+    manutencaoAnterior?.maintenanceNumber === maintenanceNumber;
 
   const handleClientSelect = (client: Client | null) => {
     if (client) {
@@ -287,6 +316,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
         duration: parseInt(duration) || 60,
         notes: notes.trim() || undefined,
         isPermuta,
+        maintenanceNumber: isManutencao && maintenanceNumber != null ? maintenanceNumber : undefined,
       };
 
       if (appointment) {
@@ -437,6 +467,33 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
             </div>
           )}
 
+          {isManutencao && (
+            <div className="space-y-2">
+              <Label>Qual manutenção?</Label>
+              <Select
+                value={maintenanceNumber != null ? String(maintenanceNumber) : 'nenhuma'}
+                onValueChange={(v) => setMaintenanceNumber(v === 'nenhuma' ? null : Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nenhuma">Não informar</SelectItem>
+                  <SelectItem value="1">1ª manutenção</SelectItem>
+                  <SelectItem value="2">2ª manutenção</SelectItem>
+                  <SelectItem value="3">3ª manutenção</SelectItem>
+                  <SelectItem value="4">4ª manutenção</SelectItem>
+                  <SelectItem value="5">5ª manutenção</SelectItem>
+                </SelectContent>
+              </Select>
+              {alertaManutencaoRepetida && (
+                <p className="text-xs text-amber-600">
+                  ⚠️ O atendimento anterior desta cliente também foi a {maintenanceNumber}ª
+                  manutenção — confirma que está certo?
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">

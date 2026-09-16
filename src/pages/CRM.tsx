@@ -45,6 +45,7 @@ type SheetType =
   | 'birthday'
   | 'active'
   | 'balance'
+  | 'fifthMaintenance'
   | 'productionFilter';
 
 const formatBRL = (v: number) =>
@@ -70,6 +71,7 @@ export default function CRM() {
     pendingPayments,
     vipClients,
     birthdaysThisMonth,
+    fifthMaintenanceClients,
     monthlyProduction,
     totals,
     settings,
@@ -212,6 +214,15 @@ export default function CRM() {
           onClick={() => setSheet('birthday')}
           tone="muted"
         />
+        <ActionCard
+          icon={RotateCcw}
+          emoji="🔁"
+          title="Na 5ª manutenção"
+          count={totals.fifthMaintenanceCount}
+          description="Fim do ciclo — direcionar para uma nova colocação"
+          onClick={() => setSheet('fifthMaintenance')}
+          tone="danger"
+        />
       </div>
 
 
@@ -348,6 +359,40 @@ export default function CRM() {
               >
                 <CalendarPlus className="w-4 h-4 mr-1" />
                 Agendar retorno
+              </Button>
+            </div>
+          </div>
+        ))}
+      </CrmListSheet>
+
+      {/* SHEET: Na 5ª manutenção */}
+      <CrmListSheet
+        open={sheet === 'fifthMaintenance'}
+        onOpenChange={(o) => !o && setSheet(null)}
+        title="🔁 Na 5ª manutenção"
+        description="Clientes no fim do ciclo, sem colocação futura agendada"
+      >
+        {fifthMaintenanceClients.length === 0 && (
+          <EmptyState
+            icon={CheckCircle2}
+            title="Nenhuma no fim do ciclo"
+            description="Nenhuma cliente está na 5ª manutenção sem nova colocação."
+          />
+        )}
+        {fifthMaintenanceClients.map((s) => (
+          <div key={s.client.id} className="p-3 border rounded-lg bg-card space-y-2">
+            <div>
+              <p className="font-medium text-sm">{s.client.name}</p>
+              <p className="text-xs text-muted-foreground">
+                5ª manutenção em{' '}
+                {format(new Date(s.lastMaintenance!.date), 'dd/MM/yyyy', { locale: ptBR })}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <WhatsAppButton phone={s.client.phone} message={waMessages.inactive(s.client.name)} />
+              <Button size="sm" onClick={() => navigate(`/agendamentos?clientId=${s.client.id}`)}>
+                <CalendarPlus className="w-4 h-4 mr-1" />
+                Agendar colocação
               </Button>
             </div>
           </div>

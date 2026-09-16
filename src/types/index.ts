@@ -57,6 +57,8 @@ export interface Appointment {
   parentAppointmentId?: string;
   isPermuta?: boolean;
   caixaReservaValorAplicado?: number;
+  /** Número da manutenção (1 a 5), escolhido manualmente pela profissional */
+  maintenanceNumber?: number;
 }
 
 export interface Category {

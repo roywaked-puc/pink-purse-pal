@@ -201,6 +201,14 @@ export function ClienteCrmTab({ clientId }: Props) {
           }
         />
         <ResumeRow
+          label="Manutenção atual"
+          value={
+            s.currentMaintenanceNumber
+              ? `${s.currentMaintenanceNumber}ª manutenção do ciclo`
+              : '—'
+          }
+        />
+        <ResumeRow
           label="Próxima manutenção"
           value={
             s.nextScheduled

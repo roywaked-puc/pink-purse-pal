@@ -42,6 +42,7 @@ import { useClientPhotos, type ClientPhotoWithUrls } from '@/hooks/useClientPhot
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
+import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 import type { Appointment, Transaction } from '@/types';
 
 const formatCurrency = (value: number) =>
@@ -273,6 +274,7 @@ export default function ClienteFicha() {
                             {format(new Date(a.date), "dd 'de' MMM yyyy 'às' HH:mm", { locale: ptBR })}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">{a.service}</p>
+                          <MaintenanceBadge number={a.maintenanceNumber} className="mt-0.5" />
                           {daysLabel && (
                             <p className="text-[11px] text-muted-foreground mt-0.5">{daysLabel}</p>
                           )}
@@ -476,6 +478,7 @@ function AppointmentDetailContent({
                 Permuta
               </span>
             )}
+            <MaintenanceBadge number={appointment.maintenanceNumber} />
           </div>
         </section>
 

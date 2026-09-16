@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 import { useApp } from '@/contexts/AppContext';
 
 interface MonthlyCalendarProps {
@@ -172,6 +173,11 @@ export function MonthlyCalendar({ appointments, onAppointmentClick }: MonthlyCal
                           <span className="text-[11px] truncate">
                             {appointment.clientName}
                           </span>
+                          <MaintenanceBadge
+                            number={appointment.maintenanceNumber}
+                            compact
+                            className="px-1"
+                          />
                         </div>
                       </button>
                     );

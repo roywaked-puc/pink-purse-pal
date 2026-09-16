@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
 import { useUserSettings } from '@/hooks/useUserSettings';
+import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -190,6 +191,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
             🔄 Retorno
           </span>
         )}
+        <MaintenanceBadge number={appointment.maintenanceNumber} />
       </div>
 
       {appointment.notes && (

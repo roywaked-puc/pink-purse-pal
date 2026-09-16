@@ -19,15 +19,25 @@ export interface ClientCrmStats {
   daysSinceLastAttended?: number;
   isInactive: boolean;
   isActive: boolean;
+  /** Último atendimento de manutenção (mais recente, não cancelado) */
+  lastMaintenance?: Appointment;
+  /** Número da manutenção atual do ciclo, se registrado */
+  currentMaintenanceNumber?: number;
 }
 
 export function useCrm() {
-  const { clients, appointments, transactions } = useApp();
+  const { clients, appointments, transactions, services } = useApp();
   const { data: settings } = useUserSettings();
 
   const inactiveDays = settings?.crm_inactive_days ?? 45;
   const confirmDays = settings?.crm_confirm_days ?? 3;
   const vipCount = settings?.crm_vip_count ?? 10;
+
+  // Tipo de faixa do serviço de cada agendamento (colocacao / manutencao / avulso)
+  const tierOf = useMemo(() => {
+    const byId = new Map(services.map((s) => [s.id, s]));
+    return (a: Appointment) => (a.serviceId ? byId.get(a.serviceId)?.tierType : undefined);
+  }, [services]);
 
   const stats = useMemo<ClientCrmStats[]>(() => {
     const today = new Date();
@@ -72,6 +82,11 @@ export function useCrm() {
         daysSinceLastAttended > inactiveDays;
       const isActive = !!lastAttended && !isInactive;
 
+      // cAppts já vem ordenado do mais recente para o mais antigo
+      const lastMaintenance = cAppts.find(
+        (a) => a.confirmationStatus !== 'cancelado' && tierOf(a) === 'manutencao',
+      );
+
       return {
         client,
         firstAppointment,
@@ -87,9 +102,11 @@ export function useCrm() {
         daysSinceLastAttended,
         isInactive,
         isActive,
+        lastMaintenance,
+        currentMaintenanceNumber: lastMaintenance?.maintenanceNumber,
       };
     });
-  }, [clients, appointments, transactions, inactiveDays]);
+  }, [clients, appointments, transactions, inactiveDays, tierOf]);
 
   // CARD 1: Confirmações pendentes
   const pendingConfirmations = useMemo(() => {
@@ -166,6 +183,29 @@ export function useCrm() {
       });
   }, [stats]);
 
+  // CARD: Na 5ª manutenção — fim do ciclo, precisa de nova colocação
+  const fifthMaintenanceClients = useMemo(() => {
+    const today = new Date();
+    return stats
+      .filter((s) => s.currentMaintenanceNumber === 5)
+      .filter((s) => {
+        const temColocacaoFutura = appointments.some(
+          (a) =>
+            a.clientId === s.client.id &&
+            a.confirmationStatus !== 'cancelado' &&
+            isAfter(new Date(a.date), today) &&
+            tierOf(a) === 'colocacao',
+        );
+        return !temColocacaoFutura;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.lastMaintenance!.date).getTime() -
+          new Date(a.lastMaintenance!.date).getTime(),
+      );
+  }, [stats, appointments, tierOf]);
+
+
   // CARD: Produção do mês
   const monthlyProduction = useMemo(() => {
     const today = new Date();
@@ -230,8 +270,17 @@ export function useCrm() {
       pendingConfirmationsCount: pendingConfirmations.length,
       vipCount: vipClients.length,
       birthdayCount: birthdaysThisMonth.length,
+      fifthMaintenanceCount: fifthMaintenanceClients.length,
     }),
-    [stats, inactiveClients, pendingReturns, pendingConfirmations, vipClients, birthdaysThisMonth],
+    [
+      stats,
+      inactiveClients,
+      pendingReturns,
+      pendingConfirmations,
+      vipClients,
+      birthdaysThisMonth,
+      fifthMaintenanceClients,
+    ],
   );
 
   return {
@@ -242,6 +291,7 @@ export function useCrm() {
     pendingPayments,
     vipClients,
     birthdaysThisMonth,
+    fifthMaintenanceClients,
     monthlyProduction,
     totals,
     settings: { inactiveDays, confirmDays, vipCount, monthlyGoal: settings?.crm_monthly_goal ?? 0 },
