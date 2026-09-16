@@ -172,6 +172,11 @@ export function MonthlyCalendar({ appointments, onAppointmentClick }: MonthlyCal
                           <span className="text-[11px] truncate">
                             {appointment.clientName}
                           </span>
+                          <MaintenanceBadge
+                            number={appointment.maintenanceNumber}
+                            compact
+                            className="px-1"
+                          />
                         </div>
                       </button>
                     );

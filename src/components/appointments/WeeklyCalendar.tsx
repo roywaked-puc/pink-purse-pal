@@ -17,6 +17,7 @@ import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApp } from '@/contexts/AppContext';
+import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 
 interface WeeklyCalendarProps {
   appointments: Appointment[];
@@ -236,6 +237,7 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                       <p className="text-[10px] text-muted-foreground truncate">
                         {appointment.service}
                       </p>
+                      <MaintenanceBadge number={appointment.maintenanceNumber} compact />
                       {appointment.notes && (
                         <div className="flex items-center gap-0.5 mt-0.5">
                           <FileText className="w-2.5 h-2.5 flex-shrink-0 text-muted-foreground" />
