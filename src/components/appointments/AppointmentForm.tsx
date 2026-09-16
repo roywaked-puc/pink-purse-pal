@@ -316,6 +316,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
         duration: parseInt(duration) || 60,
         notes: notes.trim() || undefined,
         isPermuta,
+        maintenanceNumber: isManutencao && maintenanceNumber != null ? maintenanceNumber : undefined,
       };
 
       if (appointment) {
@@ -466,6 +467,33 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
             </div>
           )}
 
+          {isManutencao && (
+            <div className="space-y-2">
+              <Label>Qual manutenção?</Label>
+              <Select
+                value={maintenanceNumber != null ? String(maintenanceNumber) : 'nenhuma'}
+                onValueChange={(v) => setMaintenanceNumber(v === 'nenhuma' ? null : Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nenhuma">Não informar</SelectItem>
+                  <SelectItem value="1">1ª manutenção</SelectItem>
+                  <SelectItem value="2">2ª manutenção</SelectItem>
+                  <SelectItem value="3">3ª manutenção</SelectItem>
+                  <SelectItem value="4">4ª manutenção</SelectItem>
+                  <SelectItem value="5">5ª manutenção</SelectItem>
+                </SelectContent>
+              </Select>
+              {alertaManutencaoRepetida && (
+                <p className="text-xs text-amber-600">
+                  ⚠️ O atendimento anterior desta cliente também foi a {maintenanceNumber}ª
+                  manutenção — confirma que está certo?
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
