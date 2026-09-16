@@ -19,10 +19,14 @@ export interface ClientCrmStats {
   daysSinceLastAttended?: number;
   isInactive: boolean;
   isActive: boolean;
+  /** Último atendimento de manutenção (mais recente, não cancelado) */
+  lastMaintenance?: Appointment;
+  /** Número da manutenção atual do ciclo, se registrado */
+  currentMaintenanceNumber?: number;
 }
 
 export function useCrm() {
-  const { clients, appointments, transactions } = useApp();
+  const { clients, appointments, transactions, services } = useApp();
   const { data: settings } = useUserSettings();
 
   const inactiveDays = settings?.crm_inactive_days ?? 45;
