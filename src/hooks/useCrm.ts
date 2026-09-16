@@ -82,6 +82,11 @@ export function useCrm() {
         daysSinceLastAttended > inactiveDays;
       const isActive = !!lastAttended && !isInactive;
 
+      // cAppts já vem ordenado do mais recente para o mais antigo
+      const lastMaintenance = cAppts.find(
+        (a) => a.confirmationStatus !== 'cancelado' && tierOf(a) === 'manutencao',
+      );
+
       return {
         client,
         firstAppointment,
