@@ -33,6 +33,12 @@ export function useCrm() {
   const confirmDays = settings?.crm_confirm_days ?? 3;
   const vipCount = settings?.crm_vip_count ?? 10;
 
+  // Tipo de faixa do serviço de cada agendamento (colocacao / manutencao / avulso)
+  const tierOf = useMemo(() => {
+    const byId = new Map(services.map((s) => [s.id, s]));
+    return (a: Appointment) => (a.serviceId ? byId.get(a.serviceId)?.tierType : undefined);
+  }, [services]);
+
   const stats = useMemo<ClientCrmStats[]>(() => {
     const today = new Date();
     return clients.map((client) => {
