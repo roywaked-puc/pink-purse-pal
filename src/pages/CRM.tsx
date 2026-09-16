@@ -45,6 +45,7 @@ type SheetType =
   | 'birthday'
   | 'active'
   | 'balance'
+  | 'fifthMaintenance'
   | 'productionFilter';
 
 const formatBRL = (v: number) =>
@@ -70,6 +71,7 @@ export default function CRM() {
     pendingPayments,
     vipClients,
     birthdaysThisMonth,
+    fifthMaintenanceClients,
     monthlyProduction,
     totals,
     settings,
@@ -211,6 +213,15 @@ export default function CRM() {
           description="Clientes que fazem aniversário neste mês"
           onClick={() => setSheet('birthday')}
           tone="muted"
+        />
+        <ActionCard
+          icon={RotateCcw}
+          emoji="🔁"
+          title="Na 5ª manutenção"
+          count={totals.fifthMaintenanceCount}
+          description="Fim do ciclo — direcionar para uma nova colocação"
+          onClick={() => setSheet('fifthMaintenance')}
+          tone="danger"
         />
       </div>
 
