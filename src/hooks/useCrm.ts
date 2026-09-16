@@ -183,6 +183,29 @@ export function useCrm() {
       });
   }, [stats]);
 
+  // CARD: Na 5ª manutenção — fim do ciclo, precisa de nova colocação
+  const fifthMaintenanceClients = useMemo(() => {
+    const today = new Date();
+    return stats
+      .filter((s) => s.currentMaintenanceNumber === 5)
+      .filter((s) => {
+        const temColocacaoFutura = appointments.some(
+          (a) =>
+            a.clientId === s.client.id &&
+            a.confirmationStatus !== 'cancelado' &&
+            isAfter(new Date(a.date), today) &&
+            tierOf(a) === 'colocacao',
+        );
+        return !temColocacaoFutura;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.lastMaintenance!.date).getTime() -
+          new Date(a.lastMaintenance!.date).getTime(),
+      );
+  }, [stats, appointments, tierOf]);
+
+
   // CARD: Produção do mês
   const monthlyProduction = useMemo(() => {
     const today = new Date();
@@ -247,8 +270,17 @@ export function useCrm() {
       pendingConfirmationsCount: pendingConfirmations.length,
       vipCount: vipClients.length,
       birthdayCount: birthdaysThisMonth.length,
+      fifthMaintenanceCount: fifthMaintenanceClients.length,
     }),
-    [stats, inactiveClients, pendingReturns, pendingConfirmations, vipClients, birthdaysThisMonth],
+    [
+      stats,
+      inactiveClients,
+      pendingReturns,
+      pendingConfirmations,
+      vipClients,
+      birthdaysThisMonth,
+      fifthMaintenanceClients,
+    ],
   );
 
   return {
@@ -259,6 +291,7 @@ export function useCrm() {
     pendingPayments,
     vipClients,
     birthdaysThisMonth,
+    fifthMaintenanceClients,
     monthlyProduction,
     totals,
     settings: { inactiveDays, confirmDays, vipCount, monthlyGoal: settings?.crm_monthly_goal ?? 0 },
