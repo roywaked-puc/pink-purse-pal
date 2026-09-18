@@ -7,6 +7,7 @@ import { useCategories, useAddCategory, useUpdateCategory, useDeleteCategory } f
 import { useAccounts, useAddAccount, useUpdateAccount, useDeleteAccount } from '@/hooks/useAccounts';
 import { useAppointments, useAddAppointment, useUpdateAppointment, useDeleteAppointment, useUpdateAppointmentPayment, useSubtractAppointmentPayment } from '@/hooks/useAppointments';
 import { useTransactions, useAddTransaction, useUpdateTransaction, useDeleteTransaction } from '@/hooks/useTransactions';
+import { isPermutaRelated } from '@/lib/accountBalance';
 
 interface AppContextType {
   transactions: Transaction[];
@@ -191,6 +192,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getAppointmentsWithBalance = useCallback((clientId?: string): Appointment[] => {
     return appointments.filter(a => {
+      // Permuta é troca de serviço — nunca gera movimentação financeira.
+      if (a.isPermuta) return false;
       const hasBalance = a.amount - a.paidAmount > 0;
       if (clientId) {
         return hasBalance && a.clientId === clientId;
@@ -255,6 +258,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     return transactions
       .filter(t => {
+        // Permuta (conta de permuta ou agendamento de permuta) não é dinheiro real.
+        if (isPermutaRelated(t, accounts, appointments)) return false;
         const tDate = new Date(t.date);
         return t.scope === 'pessoal' &&
           t.type === 'saida' &&
@@ -262,7 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           tDate.getFullYear() === currentYear;
       })
       .reduce((acc, t) => acc + t.amount, 0);
-  }, [transactions]);
+  }, [transactions, accounts, appointments]);
 
   const getAccountBalance = useCallback((accountId: string) => {
     const account = accounts.find(a => a.id === accountId);
