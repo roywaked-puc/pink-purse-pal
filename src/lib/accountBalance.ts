@@ -1,4 +1,4 @@
-import { Account, Transaction } from '@/types';
+import { Account, Appointment, Transaction } from '@/types';
 
 /**
  * Um lançamento pertence à conta quando aponta para o id dela
@@ -15,4 +15,18 @@ export function belongsToAccount(transaction: Transaction, account: Account): bo
 /** Contas de permuta não são dinheiro real — ficam fora do saldo geral. */
 export function isPermutaTransaction(transaction: Transaction, accounts: Account[]): boolean {
   return accounts.some((a) => a.type === 'permuta' && belongsToAccount(transaction, a));
+}
+
+/**
+ * Permuta em qualquer forma: conta de permuta OU lançamento vinculado a um
+ * agendamento marcado como permuta. Nada disso é dinheiro real.
+ */
+export function isPermutaRelated(
+  transaction: Transaction,
+  accounts: Account[],
+  appointments: Appointment[],
+): boolean {
+  if (isPermutaTransaction(transaction, accounts)) return true;
+  if (!transaction.appointmentId) return false;
+  return appointments.some((a) => a.id === transaction.appointmentId && a.isPermuta);
 }

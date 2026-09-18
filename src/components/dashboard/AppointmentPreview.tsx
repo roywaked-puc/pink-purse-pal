@@ -100,7 +100,8 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const caixaEmpresa = Math.min(appointment.paidAmount, reserva);
   const caixaPessoal = appointment.paidAmount - caixaEmpresa;
 
-  const hasBalance = appointment.paidAmount < appointment.amount;
+  // Permuta não gera recebimento — é troca de serviço.
+  const hasBalance = !appointment.isPermuta && appointment.paidAmount < appointment.amount;
   const canDelete = appointment.paidAmount === 0;
   const canComplete = appointment.confirmationStatus !== 'atendido' && appointment.confirmationStatus !== 'cancelado';
   const confirmationConfig = confirmationStatusConfig[appointment.confirmationStatus];
