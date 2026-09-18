@@ -23,6 +23,10 @@ interface CaixaSaldoResumoProps {
   inicioEm?: Date | null;
   /** Card extra opcional, adicionado ao final da grade (ex: Gastos do Mês na Home). */
   extraCard?: ReactNode;
+  /** Abre o detalhamento de cada card (opcional). */
+  onAbrirEmpresa?: () => void;
+  onAbrirPessoal?: () => void;
+  onAbrirEntrouNoMes?: () => void;
 }
 
 /**
@@ -41,6 +45,9 @@ export function CaixaSaldoResumo({
   caixaAtivo,
   inicioEm,
   extraCard,
+  onAbrirEmpresa,
+  onAbrirPessoal,
+  onAbrirEntrouNoMes,
 }: CaixaSaldoResumoProps) {
   if (hidden) {
     return (
