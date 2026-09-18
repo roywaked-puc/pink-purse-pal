@@ -92,6 +92,28 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
     return conta?.name ?? t.account;
   };
 
+  const nomeCliente = (t: Transaction): string | undefined => {
+    if (t.clientName) return t.clientName;
+    if (t.appointmentId) {
+      const appointment = appointments.find((a) => a.id === t.appointmentId);
+      if (appointment?.clientName) return appointment.clientName;
+    }
+    const desc = t.description || '';
+    const ultimoHifen = desc.lastIndexOf(' - ');
+    if (ultimoHifen > 0) {
+      const possivelNome = desc.slice(ultimoHifen + 3).trim();
+      if (possivelNome.length > 2) return possivelNome;
+    }
+    return undefined;
+  };
+
+  const descricaoSemCliente = (t: Transaction, cliente?: string): string | undefined => {
+    if (!t.description) return t.category;
+    if (!cliente) return t.description;
+    const padrao = new RegExp(`\\s*-\\s*${cliente.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+    return t.description.replace(padrao, '').trim() || t.category;
+  };
+
   const info = tipo ? titulos[tipo] : null;
   const mesLabel = format(mesReferencia, 'MMMM/yyyy', { locale: ptBR });
 
@@ -168,29 +190,40 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
             />
           ) : (
             <>
-              {itens.slice(0, visiveis).map((t) => (
-                <div
-                  key={t.id}
-                  className="flex items-start justify-between gap-3 p-3 rounded-lg bg-card border border-border"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {t.description || t.clientName || t.category}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {format(new Date(t.date), 'dd/MM/yyyy', { locale: ptBR })}
-                      {t.clientName && t.description ? ` • ${t.clientName}` : ''}
-                      {` • ${t.category}`}
-                      {nomeConta(t) ? ` • ${nomeConta(t)}` : ''}
-                    </p>
+              {itens.slice(0, visiveis).map((t) => {
+                const cliente = nomeCliente(t);
+                const descricao = descricaoSemCliente(t, cliente);
+                return (
+                  <div
+                    key={t.id}
+                    className="flex items-start justify-between gap-3 p-3 rounded-lg bg-card border border-border"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {descricao}
+                      </p>
+                      <p className="text-xs flex items-center min-w-0">
+                        {cliente && (
+                          <span className="font-medium text-foreground whitespace-nowrap shrink-0">
+                            {cliente}
+                          </span>
+                        )}
+                        <span className="text-muted-foreground truncate min-w-0">
+                          {cliente ? ' • ' : ''}
+                          {format(new Date(t.date), 'dd/MM/yyyy', { locale: ptBR })}
+                          {` • ${t.category}`}
+                          {nomeConta(t) ? ` • ${nomeConta(t)}` : ''}
+                        </span>
+                      </p>
+                    </div>
+                    <MoneyDisplay
+                      value={t.type === 'entrada' ? t.amount : -t.amount}
+                      size="sm"
+                      variant={t.type === 'entrada' ? 'positive' : 'negative'}
+                    />
                   </div>
-                  <MoneyDisplay
-                    value={t.type === 'entrada' ? t.amount : -t.amount}
-                    size="sm"
-                    variant={t.type === 'entrada' ? 'positive' : 'negative'}
-                  />
-                </div>
-              ))}
+                );
+              })}
 
               {itens.length > visiveis && (
                 <Button
