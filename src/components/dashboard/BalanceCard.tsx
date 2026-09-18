@@ -8,13 +8,19 @@ interface BalanceCardProps {
   icon: LucideIcon;
   variant?: 'primary' | 'secondary' | 'accent';
   hidden?: boolean;
+  /** Quando informado, o card vira um botão que abre o detalhamento. */
+  onClick?: () => void;
 }
 
-export function BalanceCard({ title, value, icon: Icon, variant = 'primary', hidden }: BalanceCardProps) {
+export function BalanceCard({ title, value, icon: Icon, variant = 'primary', hidden, onClick }: BalanceCardProps) {
+  const Wrapper = onClick ? 'button' : 'div';
   return (
-    <div
+    <Wrapper
+      onClick={onClick}
+      type={onClick ? 'button' : undefined}
       className={cn(
         "p-4 rounded-xl shadow-soft animate-fade-in",
+        onClick && "text-left w-full transition-transform active:scale-[0.98] hover:shadow-md",
         variant === 'primary' && "bg-primary text-primary-foreground",
         variant === 'secondary' && "bg-card border border-border text-card-foreground",
         variant === 'accent' && "bg-accent text-accent-foreground"
