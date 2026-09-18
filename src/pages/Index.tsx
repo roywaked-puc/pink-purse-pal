@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
 import { CaixaSaldoResumo } from '@/components/ds/CaixaSaldoResumo';
+import { CaixaDetalheDrawer, CaixaDetalheTipo } from '@/components/dashboard/CaixaDetalheDrawer';
 import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
 import { ReturnsToConfirmCard } from '@/components/dashboard/ReturnsToConfirmCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
@@ -48,6 +49,7 @@ const Index = () => {
   const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
   const [returnPrefill, setReturnPrefill] = useState<AppointmentPrefill | null>(null);
   const didOpenUpload = useRef(false);
+  const [detalheCaixa, setDetalheCaixa] = useState<CaixaDetalheTipo | null>(null);
   const [balancesVisible, setBalancesVisible] = useState(
     () => localStorage.getItem('balancesVisible') === 'true',
   );
@@ -227,14 +229,26 @@ const Index = () => {
         onToggle={toggleBalances}
         caixaAtivo={caixaAtivo}
         inicioEm={resumoCaixa.inicioEm}
+        onAbrirEmpresa={() => setDetalheCaixa('empresa')}
+        onAbrirPessoal={() => setDetalheCaixa('pessoal')}
+        onAbrirEntrouNoMes={() => setDetalheCaixa('entrouNoMes')}
         extraCard={
           <BalanceCard
             title="Gastos do Mês"
             value={getMonthlyPersonalExpenses()}
             icon={TrendingDown}
             variant="accent"
+            onClick={() => setDetalheCaixa('gastosDoMes')}
           />
         }
+      />
+
+      <CaixaDetalheDrawer
+        tipo={detalheCaixa}
+        mesReferencia={new Date()}
+        onOpenChange={(open) => {
+          if (!open) setDetalheCaixa(null);
+        }}
       />
 
       {/* Próximos */}
