@@ -119,6 +119,7 @@ export function CaixaSaldoResumo({
           value={saldoEmpresa}
           icon={Briefcase}
           variant="primary"
+          onClick={onAbrirEmpresa}
         />
         <div className="grid grid-cols-2 md:contents gap-3">
           <BalanceCard
@@ -126,12 +127,14 @@ export function CaixaSaldoResumo({
             value={saldoPessoal}
             icon={User}
             variant="secondary"
+            onClick={onAbrirPessoal}
           />
           <BalanceCard
             title={`Entrou no mês · ${mesLabel}`}
             value={entrouNoMes}
             icon={TrendingUp}
             variant="accent"
+            onClick={onAbrirEntrouNoMes}
           />
         </div>
         {extraCard}

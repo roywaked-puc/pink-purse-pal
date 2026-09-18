@@ -227,14 +227,26 @@ const Index = () => {
         onToggle={toggleBalances}
         caixaAtivo={caixaAtivo}
         inicioEm={resumoCaixa.inicioEm}
+        onAbrirEmpresa={() => setDetalheCaixa('empresa')}
+        onAbrirPessoal={() => setDetalheCaixa('pessoal')}
+        onAbrirEntrouNoMes={() => setDetalheCaixa('entrouNoMes')}
         extraCard={
           <BalanceCard
             title="Gastos do Mês"
             value={getMonthlyPersonalExpenses()}
             icon={TrendingDown}
             variant="accent"
+            onClick={() => setDetalheCaixa('gastosDoMes')}
           />
         }
+      />
+
+      <CaixaDetalheDrawer
+        tipo={detalheCaixa}
+        mesReferencia={new Date()}
+        onOpenChange={(open) => {
+          if (!open) setDetalheCaixa(null);
+        }}
       />
 
       {/* Próximos */}
