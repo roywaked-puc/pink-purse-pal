@@ -45,6 +45,6 @@ export function BalanceCard({ title, value, icon: Icon, variant = 'primary', hid
         </span>
       </div>
       <MoneyDisplay value={value} hidden={hidden} size="xl" className="font-bold" />
-    </div>
+    </Wrapper>
   );
 }
