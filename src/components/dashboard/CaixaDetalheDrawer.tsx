@@ -97,6 +97,8 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
 
   // O botão "voltar" do navegador deve apenas fechar o painel, sem sair da tela.
   const historicoRef = useRef(false);
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
 
   useEffect(() => {
     if (!tipo) return;
@@ -107,12 +109,12 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
     const aoVoltar = () => {
       historicoRef.current = false;
       setVisiveis(PAGINA);
-      onOpenChange(false);
+      onOpenChangeRef.current(false);
     };
 
     window.addEventListener('popstate', aoVoltar);
     return () => window.removeEventListener('popstate', aoVoltar);
-  }, [tipo, onOpenChange]);
+  }, [tipo]);
 
   const fechar = () => {
     setVisiveis(PAGINA);
