@@ -175,11 +175,11 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {t.clientName || t.description || t.category}
+                      {t.description || t.clientName || t.category}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {format(new Date(t.date), 'dd/MM/yyyy', { locale: ptBR })}
-                      {t.clientName && t.description ? ` • ${t.description}` : ''}
+                      {t.clientName && t.description ? ` • ${t.clientName}` : ''}
                       {` • ${t.category}`}
                       {nomeConta(t) ? ` • ${nomeConta(t)}` : ''}
                     </p>
