@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { endOfMonth, format, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -95,11 +95,43 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
   const info = tipo ? titulos[tipo] : null;
   const mesLabel = format(mesReferencia, 'MMMM/yyyy', { locale: ptBR });
 
+  // O botão "voltar" do navegador deve apenas fechar o painel, sem sair da tela.
+  const historicoRef = useRef(false);
+
+  useEffect(() => {
+    if (!tipo) return;
+
+    window.history.pushState({ caixaDetalheDrawer: true }, '');
+    historicoRef.current = true;
+
+    const aoVoltar = () => {
+      historicoRef.current = false;
+      setVisiveis(PAGINA);
+      onOpenChange(false);
+    };
+
+    window.addEventListener('popstate', aoVoltar);
+    return () => window.removeEventListener('popstate', aoVoltar);
+  }, [tipo, onOpenChange]);
+
+  const fechar = () => {
+    setVisiveis(PAGINA);
+    if (historicoRef.current) {
+      historicoRef.current = false;
+      window.history.back();
+      return;
+    }
+    onOpenChange(false);
+  };
+
   return (
     <Drawer
       open={!!tipo}
       onOpenChange={(open) => {
-        if (!open) setVisiveis(PAGINA);
+        if (!open) {
+          fechar();
+          return;
+        }
         onOpenChange(open);
       }}
     >
