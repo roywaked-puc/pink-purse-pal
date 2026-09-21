@@ -277,6 +277,7 @@ export default function ClienteFicha() {
                            <AppointmentChips
                              appointment={a}
                              service={a.serviceId ? getServiceById(a.serviceId) : undefined}
+                             compact
                              className="mt-0.5"
                            />
                           {daysLabel && (
