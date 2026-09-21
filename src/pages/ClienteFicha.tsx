@@ -25,6 +25,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { StatusBadge } from '@/components/ds/StatusBadge';
+import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -273,12 +274,12 @@ export default function ClienteFicha() {
                           <p className="text-sm font-medium">
                             {format(new Date(a.date), "dd 'de' MMM yyyy 'às' HH:mm", { locale: ptBR })}
                           </p>
-                           <p className="text-xs text-muted-foreground truncate">
-                             {getAppointmentDescription(
-                               a,
-                               a.serviceId ? getServiceById(a.serviceId) : undefined,
-                             )}
-                           </p>
+                           <AppointmentChips
+                             appointment={a}
+                             service={a.serviceId ? getServiceById(a.serviceId) : undefined}
+                             compact
+                             className="mt-0.5"
+                           />
                           {daysLabel && (
                             <p className="text-[11px] text-muted-foreground mt-0.5">{daysLabel}</p>
                           )}
