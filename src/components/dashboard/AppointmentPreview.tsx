@@ -11,7 +11,7 @@ import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 import { useApp } from '@/contexts/AppContext';
-import { getAppointmentDescription } from '@/lib/maintenance';
+import { AppointmentChips } from '@/components/ds/AppointmentChips';
 
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -95,10 +95,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
-  const serviceDescription = getAppointmentDescription(
-    appointment,
-    appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
-  );
+  const appointmentService = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
   const { data: userSettings } = useUserSettings();
   const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
   const reserva = appointment.caixaReservaValorAplicado ?? userSettings?.caixa_reserva_valor ?? 0;
@@ -211,9 +208,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
         </div>
       )}
 
-      <p className="text-sm text-muted-foreground truncate w-full mb-2">
-        {serviceDescription}
-      </p>
+      <AppointmentChips appointment={appointment} service={appointmentService} className="mb-2" />
 
       <div className="flex items-center justify-between">
         <div>
