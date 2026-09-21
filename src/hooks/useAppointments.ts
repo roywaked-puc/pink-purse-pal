@@ -27,6 +27,7 @@ async function syncToGoogleCalendar(appointment: {
   googleEventId?: string;
   serviceColor?: string;
   confirmationStatus?: string;
+  maintenanceNumber?: number;
 }): Promise<string | null> {
   try {
     const { data, error } = await supabase.functions.invoke('google-calendar', {
