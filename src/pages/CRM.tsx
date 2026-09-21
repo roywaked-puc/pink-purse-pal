@@ -111,6 +111,12 @@ export default function CRM() {
     return base.filter((a) => !!a.isPermuta === productionFilter.permuta);
   }, [productionFilter, monthlyProduction]);
 
+  const serviceDescription = (appointment: (typeof appointments)[number]) =>
+    getAppointmentDescription(
+      appointment,
+      appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
+    );
+
 
   const vipIds = useMemo(() => new Set(vipClients.map((v) => v.client.id)), [vipClients]);
 
@@ -311,7 +317,7 @@ export default function CRM() {
               <div>
                 <p className="font-medium text-sm">{a.clientName}</p>
                 <p className="text-xs text-muted-foreground">
-                   {dateStr} · {getAppointmentDescription(a, a.serviceId ? getServiceById(a.serviceId) : undefined)}
+                   {dateStr} · {serviceDescription(a)}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -352,10 +358,7 @@ export default function CRM() {
               <p className="font-medium text-sm">{s.client.name}</p>
               <p className="text-xs text-muted-foreground">
                 Último: {format(new Date(s.lastAttended!.date), "dd/MM/yyyy", { locale: ptBR })} ·{' '}
-                 {getAppointmentDescription(
-                   s.lastAttended!,
-                   s.lastAttended!.serviceId ? getServiceById(s.lastAttended!.serviceId) : undefined,
-                 )}
+                 {serviceDescription(s.lastAttended!)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -488,7 +491,7 @@ export default function CRM() {
                     </div>
                     <p className="text-xs text-muted-foreground">
                        {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} ·{' '}
-                       {getAppointmentDescription(a, a.serviceId ? getServiceById(a.serviceId) : undefined)}
+                       {serviceDescription(a)}
                     </p>
                   </div>
                 );
@@ -649,7 +652,7 @@ export default function CRM() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                    {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} ·{' '}
-                   {getAppointmentDescription(a, a.serviceId ? getServiceById(a.serviceId) : undefined)}
+                   {serviceDescription(a)}
                 </p>
               </div>
             );
