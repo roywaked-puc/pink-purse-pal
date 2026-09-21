@@ -118,6 +118,8 @@ export function useSyncAppointment() {
             amount: appointment.amount,
             duration: appointment.duration,
             notes: appointment.notes,
+            maintenanceNumber: appointment.maintenanceNumber,
+            confirmationStatus: appointment.confirmationStatus,
             googleEventId: appointment.googleEventId,
           },
         },

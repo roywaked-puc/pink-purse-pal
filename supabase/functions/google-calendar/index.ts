@@ -40,6 +40,19 @@ function getColorId(hex?: string): string | undefined {
   return hexToColorId[hex.toUpperCase()] || hexToColorId[hex];
 }
 
+// Aplica o número real da manutenção escolhido no app ao texto do serviço.
+// Sem número informado, o texto do serviço é mantido exatamente como está.
+function aplicarNumeroManutencao(service: string, maintenanceNumber?: number | null): string {
+  const numero = Number(maintenanceNumber);
+  if (!numero || numero < 1 || numero > 5) return service;
+
+  const padrao = /\d+\s*[ªa°º]?\s*manuten[çc][ãa]o/i;
+  if (padrao.test(service)) {
+    return service.replace(padrao, `${numero}ª manutenção`);
+  }
+  return `${service} - ${numero}ª manutenção`;
+}
+
 // Função para gerar prefixo visual baseado no status de confirmação
 function getStatusPrefix(status?: string): string {
   switch (status) {
@@ -246,7 +259,7 @@ Deno.serve(async (req) => {
         const statusPrefix = getStatusPrefix(appointment.confirmationStatus);
 
         const event: CalendarEvent = {
-          summary: `${statusPrefix}${appointment.clientName} - ${appointment.service}`,
+          summary: `${statusPrefix}${appointment.clientName} - ${aplicarNumeroManutencao(appointment.service, appointment.maintenanceNumber)}`,
           description: `Valor: R$ ${appointment.amount.toFixed(2)}${appointment.notes ? `\n\nObservações: ${appointment.notes}` : ''}`,
           start: {
             dateTime: startDate.toISOString(),
