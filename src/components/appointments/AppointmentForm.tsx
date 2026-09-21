@@ -38,7 +38,6 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from './ClientAutocomplete';
-import { ServiceAutocomplete } from './ServiceAutocomplete';
 import { ServiceStepPicker } from './ServiceStepPicker';
 
 import { toast } from 'sonner';
