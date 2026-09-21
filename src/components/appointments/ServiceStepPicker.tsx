@@ -23,6 +23,8 @@ interface ServiceStepPickerProps {
   onServiceSelect: (service: Service | null) => void;
   /** Serviço já salvo (edição): pré-preenche técnica, tipo e faixa. */
   initialService?: Service | null;
+  /** Edição de atendimento sem serviço cadastrado: abre direto no modo avulso. */
+  initialAvulso?: boolean;
 }
 
 const isTechnique = (s: Service) =>
@@ -47,6 +49,7 @@ export function ServiceStepPicker({
   onServiceTextChange,
   onServiceSelect,
   initialService,
+  initialAvulso,
 }: ServiceStepPickerProps) {
   const [technique, setTechnique] = useState<string>('');
   const [tier, setTier] = useState<string>('');
@@ -59,7 +62,10 @@ export function ServiceStepPicker({
     const id = initialService?.id ?? null;
     if (appliedInitialId.current === id) return;
     appliedInitialId.current = id;
-    if (!initialService) return;
+    if (!initialService) {
+      if (initialAvulso) setTechnique(AVULSO_KEY);
+      return;
+    }
     if (isTechnique(initialService)) {
       setTechnique(initialService.techniqueName as string);
       setTier(initialService.tierType as string);
