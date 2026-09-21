@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
-import { getAppointmentDescription } from '@/lib/maintenance';
+import { AppointmentChips } from '@/components/ds/AppointmentChips';
 
 interface AppointmentSelectorProps {
   appointments: Appointment[];
@@ -27,10 +27,10 @@ export const AppointmentSelector = React.forwardRef<HTMLDivElement, AppointmentS
         {appointments.map((appointment) => {
           const balance = appointment.amount - appointment.paidAmount;
           const isSelected = selectedId === appointment.id;
-          const serviceDescription = getAppointmentDescription(
-            appointment,
-            appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
-          );
+          const appointmentService = appointment.serviceId
+            ? getServiceById(appointment.serviceId)
+            : undefined;
+
           
           return (
             <button
@@ -49,7 +49,7 @@ export const AppointmentSelector = React.forwardRef<HTMLDivElement, AppointmentS
                   <p className="font-medium text-foreground">
                     {format(new Date(appointment.date), "dd/MM/yyyy 'às' HH:mm")}
                   </p>
-                  <p className="text-sm text-muted-foreground">{serviceDescription}</p>
+                  <AppointmentChips appointment={appointment} service={appointmentService} compact className="mt-0.5" />
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Total: R$ {appointment.amount.toFixed(2).replace('.', ',')}</p>

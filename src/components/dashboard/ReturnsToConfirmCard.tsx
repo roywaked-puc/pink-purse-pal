@@ -15,7 +15,7 @@ import { useUserSettings } from '@/hooks/useUserSettings';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { Appointment } from '@/types';
 import { AppointmentForm } from '@/components/appointments/AppointmentForm';
-import { getAppointmentDescription } from '@/lib/maintenance';
+import { AppointmentChips } from '@/components/ds/AppointmentChips';
 
 export function ReturnsToConfirmCard() {
   const { appointments, getClientById, getServiceById } = useApp();
@@ -71,10 +71,7 @@ export function ReturnsToConfirmCard() {
           </DialogHeader>
           <div className="space-y-2">
             {returnsToConfirm.map((a) => {
-              const serviceDescription = getAppointmentDescription(
-                a,
-                a.serviceId ? getServiceById(a.serviceId) : undefined,
-              );
+              const appointmentService = a.serviceId ? getServiceById(a.serviceId) : undefined;
               const phone = a.clientId ? getClientById(a.clientId)?.phone : undefined;
               const cleanPhone = phone?.replace(/\D/g, '') || '';
               const msg = encodeURIComponent(
@@ -95,9 +92,9 @@ export function ReturnsToConfirmCard() {
                       {a.clientName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(a.date), "EEE, dd/MM 'às' HH:mm", { locale: ptBR })} •{' '}
-                      {serviceDescription}
+                      {format(new Date(a.date), "EEE, dd/MM 'às' HH:mm", { locale: ptBR })}
                     </p>
+                    <AppointmentChips appointment={a} service={appointmentService} compact className="mt-0.5" />
                     {phone && (
                       <p className="text-xs text-muted-foreground">{phone}</p>
                     )}

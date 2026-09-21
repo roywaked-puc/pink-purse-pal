@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { format, addDays, isAfter, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -43,7 +43,6 @@ import { useClientPhotos, type ClientPhotoWithUrls } from '@/hooks/useClientPhot
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
-import { getAppointmentDescription } from '@/lib/maintenance';
 import type { Appointment, Transaction } from '@/types';
 
 const formatCurrency = (value: number) =>
@@ -410,10 +409,12 @@ function AppointmentDetailSheet({
           caixaPessoal={caixaPessoal}
           entradas={entradas}
           photos={appointmentPhotos}
-          serviceDescription={getAppointmentDescription(
-            appointment,
-            appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
-          )}
+          serviceDescription={
+            <AppointmentChips
+              appointment={appointment}
+              service={appointment.serviceId ? getServiceById(appointment.serviceId) : undefined}
+            />
+          }
           accountName={accountName}
           onOpenPhoto={(i) => {
             setLightboxIndex(i);
@@ -454,7 +455,7 @@ function AppointmentDetailContent({
   caixaPessoal: number;
   entradas: Transaction[];
   photos: ClientPhotoWithUrls[];
-  serviceDescription: string;
+  serviceDescription: ReactNode;
   accountName: (t: Transaction) => string | undefined;
   onOpenPhoto: (index: number) => void;
 }) {
@@ -473,7 +474,7 @@ function AppointmentDetailContent({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Serviço
           </p>
-           <p className="font-medium">{serviceDescription}</p>
+           <div className="font-medium">{serviceDescription}</div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />

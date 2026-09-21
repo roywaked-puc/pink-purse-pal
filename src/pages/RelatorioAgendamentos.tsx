@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ConfirmationStatus, PaymentStatus } from '@/types';
 import { getAppointmentDescription } from '@/lib/maintenance';
+import { AppointmentChips } from '@/components/ds/AppointmentChips';
 
 interface Props { embedded?: boolean }
 
@@ -527,7 +528,11 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
                           {a.clientName}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                           {serviceDescription(a)}
+                           <AppointmentChips
+                             appointment={a}
+                             service={a.serviceId ? services.find((service) => service.id === a.serviceId) : undefined}
+                             compact
+                           />
                         </TableCell>
                         <TableCell className="text-right text-sm">
                           {formatCurrency(a.amount)}

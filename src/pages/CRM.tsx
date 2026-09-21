@@ -30,7 +30,7 @@ import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { waMessages } from '@/lib/whatsapp';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { getAppointmentDescription } from '@/lib/maintenance';
+import { AppointmentChips } from '@/components/ds/AppointmentChips';
 
 type ProductionFilter = {
   kind: 'previsto' | 'realizado';
@@ -91,10 +91,7 @@ export default function CRM() {
         id: a.id,
         clientName: a.clientName,
         date: new Date(a.date),
-         service: getAppointmentDescription(
-           a,
-           a.serviceId ? getServiceById(a.serviceId) : undefined,
-         ),
+         appointment: a,
         amount: a.amount,
         paidAmount: a.paidAmount,
         pending: a.amount - a.paidAmount,
@@ -111,11 +108,16 @@ export default function CRM() {
     return base.filter((a) => !!a.isPermuta === productionFilter.permuta);
   }, [productionFilter, monthlyProduction]);
 
-  const serviceDescription = (appointment: (typeof appointments)[number]) =>
-    getAppointmentDescription(
-      appointment,
-      appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
-    );
+  const renderChips = (appointment: (typeof appointments)[number]) => (
+    <AppointmentChips
+      appointment={appointment}
+      service={appointment.serviceId ? getServiceById(appointment.serviceId) : undefined}
+      compact
+      className="mt-0.5"
+    />
+  );
+
+
 
 
   const vipIds = useMemo(() => new Set(vipClients.map((v) => v.client.id)), [vipClients]);
@@ -316,9 +318,8 @@ export default function CRM() {
             <div key={a.id} className="p-3 border rounded-lg bg-card space-y-2">
               <div>
                 <p className="font-medium text-sm">{a.clientName}</p>
-                <p className="text-xs text-muted-foreground">
-                   {dateStr} · {serviceDescription(a)}
-                </p>
+                <p className="text-xs text-muted-foreground">{dateStr}</p>
+                {renderChips(a)}
               </div>
               <div className="flex flex-wrap gap-2">
                 <WhatsAppButton
@@ -357,9 +358,9 @@ export default function CRM() {
             <div>
               <p className="font-medium text-sm">{s.client.name}</p>
               <p className="text-xs text-muted-foreground">
-                Último: {format(new Date(s.lastAttended!.date), "dd/MM/yyyy", { locale: ptBR })} ·{' '}
-                 {serviceDescription(s.lastAttended!)}
+                Último: {format(new Date(s.lastAttended!.date), "dd/MM/yyyy", { locale: ptBR })}
               </p>
+              {renderChips(s.lastAttended!)}
             </div>
             <div className="flex flex-wrap gap-2">
               <WhatsAppButton phone={s.client.phone} message={waMessages.return(s.client.name)} />
@@ -490,9 +491,9 @@ export default function CRM() {
                       <span className="text-sm font-semibold tabular-nums">{formatBRL(a.amount)}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                       {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} ·{' '}
-                       {serviceDescription(a)}
+                       {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })}
                     </p>
+                    {renderChips(a)}
                   </div>
                 );
               })}
@@ -610,8 +611,9 @@ export default function CRM() {
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {format(a.date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} · {a.service}
+              {format(a.date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
             </p>
+            {renderChips(a.appointment)}
             <p className="text-[11px] text-muted-foreground">
               Total {formatBRL(a.amount)} · Pago {formatBRL(a.paidAmount)}
             </p>
@@ -651,9 +653,9 @@ export default function CRM() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                   {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} ·{' '}
-                   {serviceDescription(a)}
+                   {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })}
                 </p>
+                {renderChips(a)}
               </div>
             );
           })
