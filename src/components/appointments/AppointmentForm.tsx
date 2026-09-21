@@ -38,7 +38,6 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from './ClientAutocomplete';
-import { ServiceAutocomplete } from './ServiceAutocomplete';
 import { ServiceStepPicker } from './ServiceStepPicker';
 
 import { toast } from 'sonner';
@@ -435,37 +434,28 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
             />
           </div>
 
-          {appointment ? (
-            <div className="space-y-2">
-              <Label>Serviço</Label>
-              <ServiceAutocomplete
-                value={service}
-                onChange={setService}
-                onServiceSelect={handleServiceSelect}
-              />
-              {serviceNotes && (
-                <p className="text-xs text-muted-foreground">{serviceNotes}</p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <ServiceStepPicker
-                services={services}
-                appointments={appointments}
-                selectedClientId={selectedClientId}
-                date={date}
-                serviceText={service}
-                onServiceTextChange={setService}
-                onServiceSelect={handleServiceSelect}
-              />
-              {service && (
-                <p className="text-xs text-muted-foreground">Serviço: {service}</p>
-              )}
-              {serviceNotes && (
-                <p className="text-xs text-muted-foreground">{serviceNotes}</p>
-              )}
-            </div>
-          )}
+          <div className="space-y-2">
+            <ServiceStepPicker
+              key={appointment?.id ?? 'novo'}
+              services={services}
+              appointments={appointments}
+              selectedClientId={selectedClientId}
+              date={date}
+              serviceText={service}
+              onServiceTextChange={setService}
+              onServiceSelect={handleServiceSelect}
+              initialService={
+                appointment?.serviceId ? getServiceById(appointment.serviceId) ?? null : null
+              }
+              initialAvulso={Boolean(appointment && !appointment.serviceId)}
+            />
+            {service && (
+              <p className="text-xs text-muted-foreground">Serviço: {service}</p>
+            )}
+            {serviceNotes && (
+              <p className="text-xs text-muted-foreground">{serviceNotes}</p>
+            )}
+          </div>
 
           {isManutencao && (
             <div className="space-y-2">

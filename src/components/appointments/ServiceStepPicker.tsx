@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { differenceInCalendarDays } from 'date-fns';
 import { Appointment, Service } from '@/types';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,10 @@ interface ServiceStepPickerProps {
   serviceText: string;
   onServiceTextChange: (value: string) => void;
   onServiceSelect: (service: Service | null) => void;
+  /** Serviço já salvo (edição): pré-preenche técnica, tipo e faixa. */
+  initialService?: Service | null;
+  /** Edição de atendimento sem serviço cadastrado: abre direto no modo avulso. */
+  initialAvulso?: boolean;
 }
 
 const isTechnique = (s: Service) =>
@@ -44,11 +48,37 @@ export function ServiceStepPicker({
   serviceText,
   onServiceTextChange,
   onServiceSelect,
+  initialService,
+  initialAvulso,
 }: ServiceStepPickerProps) {
   const [technique, setTechnique] = useState<string>('');
   const [tier, setTier] = useState<string>('');
   const [faixaId, setFaixaId] = useState<string>('');
   const [tierSuggestion, setTierSuggestion] = useState<'primeira' | 'fora_prazo' | null>(null);
+
+  // Edição: aplica o serviço já salvo nos três passos
+  const appliedInitialId = useRef<string | null>(null);
+  const jaInicializou = useRef(false);
+  useEffect(() => {
+    const id = initialService?.id ?? null;
+    if (jaInicializou.current && appliedInitialId.current === id) return;
+    jaInicializou.current = true;
+    appliedInitialId.current = id;
+    if (!initialService) {
+      if (initialAvulso) setTechnique(AVULSO_KEY);
+      return;
+    }
+    if (isTechnique(initialService)) {
+      setTechnique(initialService.techniqueName as string);
+      setTier(initialService.tierType as string);
+      setFaixaId(initialService.tierType === 'manutencao' ? initialService.id : '');
+    } else {
+      setTechnique(AVULSO_KEY);
+      setTier('');
+      setFaixaId('');
+    }
+    setTierSuggestion(null);
+  }, [initialService, initialAvulso]);
 
   const techniques = useMemo(() => {
     const set = new Set<string>();
@@ -129,7 +159,7 @@ export function ServiceStepPicker({
   useEffect(() => {
     if (tier !== 'colocacao') return;
     const svc = techniqueServices.find((s) => s.tierType === 'colocacao');
-    if (svc) {
+    if (svc && svc.id !== appliedInitialId.current) {
       onServiceTextChange(svc.description);
       onServiceSelect(svc);
     }
