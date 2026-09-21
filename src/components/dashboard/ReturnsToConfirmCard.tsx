@@ -15,9 +15,10 @@ import { useUserSettings } from '@/hooks/useUserSettings';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { Appointment } from '@/types';
 import { AppointmentForm } from '@/components/appointments/AppointmentForm';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 export function ReturnsToConfirmCard() {
-  const { appointments, getClientById } = useApp();
+  const { appointments, getClientById, getServiceById } = useApp();
   const { data: settings } = useUserSettings();
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const [open, setOpen] = useState(false);
@@ -70,6 +71,10 @@ export function ReturnsToConfirmCard() {
           </DialogHeader>
           <div className="space-y-2">
             {returnsToConfirm.map((a) => {
+              const serviceDescription = getAppointmentDescription(
+                a,
+                a.serviceId ? getServiceById(a.serviceId) : undefined,
+              );
               const phone = a.clientId ? getClientById(a.clientId)?.phone : undefined;
               const cleanPhone = phone?.replace(/\D/g, '') || '';
               const msg = encodeURIComponent(
@@ -88,16 +93,10 @@ export function ReturnsToConfirmCard() {
                   <div>
                     <p className="font-medium text-sm">
                       {a.clientName}
-                      {a.maintenanceNumber && (
-                        <span className="font-normal text-muted-foreground">
-                          {' '}
-                          — {a.maintenanceNumber}ª manutenção
-                        </span>
-                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(a.date), "EEE, dd/MM 'às' HH:mm", { locale: ptBR })} •{' '}
-                      {a.service}
+                      {serviceDescription}
                     </p>
                     {phone && (
                       <p className="text-xs text-muted-foreground">{phone}</p>

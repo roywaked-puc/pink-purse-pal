@@ -21,6 +21,7 @@ import {
 import { useApp } from '@/contexts/AppContext';
 import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
+import { getAppointmentDescription } from '@/lib/maintenance';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
 import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
@@ -181,6 +182,7 @@ const Agendamentos = () => {
     const canDelete = appointment.paidAmount === 0;
     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
     const serviceColor = service?.color;
+    const serviceDescription = getAppointmentDescription(appointment, service);
     const confirmationConfig = confirmationStatusConfig[appointment.confirmationStatus] || confirmationStatusConfig.pendente;
     const ConfirmationIcon = confirmationConfig.icon;
 
@@ -277,7 +279,7 @@ const Agendamentos = () => {
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">{appointment.service}</p>
+            <p className="text-sm text-muted-foreground">{serviceDescription}</p>
             <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
             {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
               <p className="text-xs text-muted-foreground">

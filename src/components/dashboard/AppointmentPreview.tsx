@@ -10,6 +10,8 @@ import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
+import { useApp } from '@/contexts/AppContext';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -86,12 +88,17 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
 };
 
 export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, onAttendanceCompleted, getClientPhone }: AppointmentPreviewProps) {
+  const { getServiceById } = useApp();
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
+  const serviceDescription = getAppointmentDescription(
+    appointment,
+    appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
+  );
   const { data: userSettings } = useUserSettings();
   const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
   const reserva = appointment.caixaReservaValorAplicado ?? userSettings?.caixa_reserva_valor ?? 0;
@@ -206,7 +213,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">{appointment.service}</p>
+          <p className="text-sm text-muted-foreground">{serviceDescription}</p>
           <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
           {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
             <p className="text-xs text-muted-foreground">

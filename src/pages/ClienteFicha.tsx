@@ -42,7 +42,7 @@ import { useClientPhotos, type ClientPhotoWithUrls } from '@/hooks/useClientPhot
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
-import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
+import { getAppointmentDescription } from '@/lib/maintenance';
 import type { Appointment, Transaction } from '@/types';
 
 const formatCurrency = (value: number) =>
@@ -52,7 +52,7 @@ const formatCurrency = (value: number) =>
 export default function ClienteFicha() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { appointments, transactions, getClientById } = useApp();
+  const { appointments, transactions, getClientById, getServiceById } = useApp();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   const client = id ? getClientById(id) : undefined;
@@ -273,8 +273,12 @@ export default function ClienteFicha() {
                           <p className="text-sm font-medium">
                             {format(new Date(a.date), "dd 'de' MMM yyyy 'às' HH:mm", { locale: ptBR })}
                           </p>
-                          <p className="text-xs text-muted-foreground truncate">{a.service}</p>
-                          <MaintenanceBadge number={a.maintenanceNumber} className="mt-0.5" />
+                           <p className="text-xs text-muted-foreground truncate">
+                             {getAppointmentDescription(
+                               a,
+                               a.serviceId ? getServiceById(a.serviceId) : undefined,
+                             )}
+                           </p>
                           {daysLabel && (
                             <p className="text-[11px] text-muted-foreground mt-0.5">{daysLabel}</p>
                           )}
@@ -361,7 +365,7 @@ function AppointmentDetailSheet({
 }) {
   const { data: userSettings } = useUserSettings();
   const { data: photos } = useClientPhotos(clientId);
-  const { accounts } = useApp();
+  const { accounts, getServiceById } = useApp();
   const accountName = (t: Transaction) =>
     accounts.find((a) => a.id === (t.accountId ?? t.account))?.name;
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -405,6 +409,10 @@ function AppointmentDetailSheet({
           caixaPessoal={caixaPessoal}
           entradas={entradas}
           photos={appointmentPhotos}
+          serviceDescription={getAppointmentDescription(
+            appointment,
+            appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
+          )}
           accountName={accountName}
           onOpenPhoto={(i) => {
             setLightboxIndex(i);
@@ -433,6 +441,7 @@ function AppointmentDetailContent({
   caixaPessoal,
   entradas,
   photos,
+  serviceDescription,
   accountName,
   onOpenPhoto,
 }: {
@@ -444,6 +453,7 @@ function AppointmentDetailContent({
   caixaPessoal: number;
   entradas: Transaction[];
   photos: ClientPhotoWithUrls[];
+  serviceDescription: string;
   accountName: (t: Transaction) => string | undefined;
   onOpenPhoto: (index: number) => void;
 }) {
@@ -462,7 +472,7 @@ function AppointmentDetailContent({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Serviço
           </p>
-          <p className="font-medium">{appointment.service}</p>
+           <p className="font-medium">{serviceDescription}</p>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
@@ -478,7 +488,6 @@ function AppointmentDetailContent({
                 Permuta
               </span>
             )}
-            <MaintenanceBadge number={appointment.maintenanceNumber} />
           </div>
         </section>
 

@@ -30,6 +30,7 @@ import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { waMessages } from '@/lib/whatsapp';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 type ProductionFilter = {
   kind: 'previsto' | 'realizado';
@@ -62,7 +63,7 @@ const filterChips: { value: string; label: string }[] = [
 
 export default function CRM() {
   const navigate = useNavigate();
-  const { getClientById, appointments } = useApp();
+  const { getClientById, getServiceById, appointments } = useApp();
   const {
     stats,
     pendingConfirmations,
@@ -90,13 +91,16 @@ export default function CRM() {
         id: a.id,
         clientName: a.clientName,
         date: new Date(a.date),
-        service: a.service,
+         service: getAppointmentDescription(
+           a,
+           a.serviceId ? getServiceById(a.serviceId) : undefined,
+         ),
         amount: a.amount,
         paidAmount: a.paidAmount,
         pending: a.amount - a.paidAmount,
       }))
       .sort((a, b) => b.pending - a.pending);
-  }, [appointments]);
+  }, [appointments, getServiceById]);
 
   const productionFilterList = useMemo(() => {
     if (!productionFilter) return [];
@@ -106,6 +110,12 @@ export default function CRM() {
         : monthlyProduction.attendedAppointments;
     return base.filter((a) => !!a.isPermuta === productionFilter.permuta);
   }, [productionFilter, monthlyProduction]);
+
+  const serviceDescription = (appointment: (typeof appointments)[number]) =>
+    getAppointmentDescription(
+      appointment,
+      appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
+    );
 
 
   const vipIds = useMemo(() => new Set(vipClients.map((v) => v.client.id)), [vipClients]);
@@ -307,7 +317,7 @@ export default function CRM() {
               <div>
                 <p className="font-medium text-sm">{a.clientName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {dateStr} · {a.service}
+                   {dateStr} · {serviceDescription(a)}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -348,7 +358,7 @@ export default function CRM() {
               <p className="font-medium text-sm">{s.client.name}</p>
               <p className="text-xs text-muted-foreground">
                 Último: {format(new Date(s.lastAttended!.date), "dd/MM/yyyy", { locale: ptBR })} ·{' '}
-                {s.lastAttended!.service}
+                 {serviceDescription(s.lastAttended!)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -480,7 +490,8 @@ export default function CRM() {
                       <span className="text-sm font-semibold tabular-nums">{formatBRL(a.amount)}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} · {a.service}
+                       {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} ·{' '}
+                       {serviceDescription(a)}
                     </p>
                   </div>
                 );
@@ -640,7 +651,8 @@ export default function CRM() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} · {a.service}
+                   {format(d, "dd/MM 'às' HH:mm", { locale: ptBR })} ·{' '}
+                   {serviceDescription(a)}
                 </p>
               </div>
             );

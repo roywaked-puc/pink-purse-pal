@@ -65,6 +65,8 @@ próximos atendimentos e retornos a confirmar. Cards de agendamento mostram
 - **Permuta** (`isPermuta`): troca de serviço sem dinheiro — não gera cobrança nem entra em
   métricas financeiras/metas.
 - **Trava de submit**: botão desabilita e mostra "Salvando..." para evitar agendas duplicadas.
+- A descrição visual do atendimento é montada pelo serviço estruturado atual (técnica, tipo,
+  faixa e número manual da manutenção); `appointments.service` permanece apenas como legado.
 - **Fluxo pós-atendimento**: ao marcar "Atendido" → abre o prompt de **fotos** → fim.
   A antiga etapa 2 ("Próxima manutenção" / `ScheduleReturnDialog`) foi **removida
   deliberadamente — não reintroduzir**.

@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 import { useApp } from '@/contexts/AppContext';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 interface MonthlyCalendarProps {
   appointments: Appointment[];
@@ -152,6 +153,7 @@ export function MonthlyCalendar({ appointments, onAppointmentClick }: MonthlyCal
                     const aptDate = new Date(appointment.date);
                     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
                     const serviceColor = service?.color;
+                    const serviceDescription = getAppointmentDescription(appointment, service);
                     const ConfirmationIcon = confirmationIcons[appointment.confirmationStatus] || Clock;
                     const confirmationColor = confirmationColors[appointment.confirmationStatus] || 'text-muted-foreground';
 
@@ -179,6 +181,9 @@ export function MonthlyCalendar({ appointments, onAppointmentClick }: MonthlyCal
                             className="px-1"
                           />
                         </div>
+                         <p className="text-[9px] text-muted-foreground truncate">
+                           {serviceDescription}
+                         </p>
                       </button>
                     );
                   })}

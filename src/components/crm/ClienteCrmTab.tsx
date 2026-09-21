@@ -16,6 +16,7 @@ import { useClientPhotos } from '@/hooks/useClientPhotos';
 import { useCrm, getClientStats } from '@/hooks/useCrm';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Badge } from '@/components/ui/badge';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -35,7 +36,7 @@ interface TimelineItem {
 }
 
 export function ClienteCrmTab({ clientId }: Props) {
-  const { appointments, transactions } = useApp();
+  const { appointments, transactions, getServiceById } = useApp();
   const { data: photos = [] } = useClientPhotos(clientId);
   const { stats } = useCrm();
   const s = getClientStats(stats, clientId);
@@ -78,7 +79,7 @@ export function ClienteCrmTab({ clientId }: Props) {
           displayDate: new Date(a.date),
           type: 'attended',
           title: 'Atendimento realizado',
-          detail: `${a.service} · ${formatBRL(a.amount)} · ${payStatus}`,
+           detail: `${getAppointmentDescription(a, a.serviceId ? getServiceById(a.serviceId) : undefined)} · ${formatBRL(a.amount)} · ${payStatus}`,
         });
       } else {
         items.push({
@@ -92,7 +93,7 @@ export function ClienteCrmTab({ clientId }: Props) {
               : a.confirmationStatus === 'confirmado'
                 ? 'Agendamento confirmado'
                 : 'Agendamento',
-          detail: `${a.service} · ${formatBRL(a.amount)}`,
+           detail: `${getAppointmentDescription(a, a.serviceId ? getServiceById(a.serviceId) : undefined)} · ${formatBRL(a.amount)}`,
         });
       }
     });
@@ -161,7 +162,7 @@ export function ClienteCrmTab({ clientId }: Props) {
     });
 
     return items.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
-  }, [appointments, transactions, photos, clientId]);
+  }, [appointments, transactions, photos, clientId, getServiceById]);
 
 
   if (!s) {
