@@ -410,6 +410,10 @@ function AppointmentDetailSheet({
           caixaPessoal={caixaPessoal}
           entradas={entradas}
           photos={appointmentPhotos}
+          serviceDescription={getAppointmentDescription(
+            appointment,
+            appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
+          )}
           accountName={accountName}
           onOpenPhoto={(i) => {
             setLightboxIndex(i);
@@ -438,6 +442,7 @@ function AppointmentDetailContent({
   caixaPessoal,
   entradas,
   photos,
+  serviceDescription,
   accountName,
   onOpenPhoto,
 }: {
@@ -449,6 +454,7 @@ function AppointmentDetailContent({
   caixaPessoal: number;
   entradas: Transaction[];
   photos: ClientPhotoWithUrls[];
+  serviceDescription: string;
   accountName: (t: Transaction) => string | undefined;
   onOpenPhoto: (index: number) => void;
 }) {
@@ -467,12 +473,7 @@ function AppointmentDetailContent({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Serviço
           </p>
-           <p className="font-medium">
-             {getAppointmentDescription(
-               appointment,
-               appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
-             )}
-           </p>
+           <p className="font-medium">{serviceDescription}</p>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />

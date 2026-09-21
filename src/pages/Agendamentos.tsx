@@ -27,7 +27,7 @@ import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePh
 import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
 
 
-const formatWhatsAppMessage = (appointment: Appointment, description: string) => {
+const formatWhatsAppMessage = (appointment: Appointment) => {
   const date = format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR });
   const time = format(new Date(appointment.date), "HH:mm");
 
@@ -37,7 +37,7 @@ Passando para lembrar do seu agendamento:
 
 📅 Data: ${date}
 ⏰ Horário: ${time}
-💅 Serviço: ${description}
+💅 Serviço: ${appointment.service}
 💰 Valor: ${formatCurrency(appointment.amount)}
 
 Em caso de imprevistos ou necessidade de cancelamento, por favor entre em contato por este WhatsApp o mais breve possível.
@@ -60,7 +60,7 @@ const getPaymentStatus = (appointment: Appointment) => {
   return 'nao_pago';
 };
 
-const formatGoogleCalendarUrl = (appointment: Appointment, description: string, durationMinutes: number = 60) => {
+const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: number = 60) => {
   const startDate = new Date(appointment.date);
   const endDate = addMinutes(startDate, durationMinutes);
   
@@ -68,8 +68,8 @@ const formatGoogleCalendarUrl = (appointment: Appointment, description: string, 
     return format(date, "yyyyMMdd'T'HHmmss");
   };
   
-  const title = encodeURIComponent(`${description} - ${appointment.clientName}`);
-  const details = encodeURIComponent(`Cliente: ${appointment.clientName}\nServiço: ${description}\nValor: ${formatCurrency(appointment.amount)}${appointment.notes ? `\nObservações: ${appointment.notes}` : ''}`);
+  const title = encodeURIComponent(`${appointment.service} - ${appointment.clientName}`);
+  const details = encodeURIComponent(`Cliente: ${appointment.clientName}\nServiço: ${appointment.service}\nValor: ${formatCurrency(appointment.amount)}${appointment.notes ? `\nObservações: ${appointment.notes}` : ''}`);
   const dates = `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`;
   
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
@@ -302,7 +302,7 @@ const Agendamentos = () => {
               asChild
               className="h-8 w-8 text-blue-600 hover:text-blue-700"
             >
-              <a href={formatGoogleCalendarUrl(appointment, serviceDescription, appointment.duration)} target="_blank" rel="noopener noreferrer">
+              <a href={formatGoogleCalendarUrl(appointment, appointment.duration)} target="_blank" rel="noopener noreferrer">
                 <CalendarPlus className="w-4 h-4" />
               </a>
             </Button>
@@ -310,7 +310,7 @@ const Agendamentos = () => {
               const clientPhone = getClientPhone(appointment.clientId || '');
               const hasPhone = clientPhone && clientPhone.length > 0;
               const cleanPhone = clientPhone?.replace(/\D/g, '') || '';
-              const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment, serviceDescription)}`;
+              const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment)}`;
               
               return hasPhone ? (
                 <Button

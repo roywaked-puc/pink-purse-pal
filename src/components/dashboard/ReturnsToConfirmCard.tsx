@@ -82,7 +82,7 @@ export function ReturnsToConfirmCard() {
                   new Date(a.date),
                   "dd/MM 'às' HH:mm",
                   { locale: ptBR },
-                )} para ${serviceDescription}. Posso confirmar? ✨`,
+                )} para ${a.service}. Posso confirmar? ✨`,
               );
               const wa = cleanPhone ? `https://wa.me/55${cleanPhone}?text=${msg}` : null;
               return (
