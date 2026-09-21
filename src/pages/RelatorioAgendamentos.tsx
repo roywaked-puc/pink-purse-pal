@@ -28,6 +28,7 @@ import { useServices } from '@/hooks/useServices';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ConfirmationStatus, PaymentStatus } from '@/types';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 interface Props { embedded?: boolean }
 
@@ -37,6 +38,11 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
   const { data: clients = [] } = useClients();
   const { data: services = [] } = useServices();
   const { toast } = useToast();
+  const serviceDescription = (appointment: (typeof appointments)[number]) =>
+    getAppointmentDescription(
+      appointment,
+      appointment.serviceId ? services.find((service) => service.id === appointment.serviceId) : undefined,
+    );
 
   // Filter states
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
@@ -159,7 +165,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
     const tableData = filteredAppointments.map(a => [
       format(new Date(a.date), 'dd/MM/yyyy HH:mm'),
       a.clientName,
-      a.service,
+       serviceDescription(a),
       `${a.duration} min`,
       getConfirmationLabel(a.confirmationStatus),
       formatCurrency(a.amount),
@@ -244,7 +250,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
       return [
         format(new Date(a.date), 'dd/MM/yyyy HH:mm'),
         a.clientName,
-        a.service,
+         serviceDescription(a),
         a.duration,
         getConfirmationLabel(a.confirmationStatus),
         a.amount.toFixed(2).replace('.', ','),
@@ -521,7 +527,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
                           {a.clientName}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {a.service}
+                           {serviceDescription(a)}
                         </TableCell>
                         <TableCell className="text-right text-sm">
                           {formatCurrency(a.amount)}
