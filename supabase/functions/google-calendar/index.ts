@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
         const statusPrefix = getStatusPrefix(appointment.confirmationStatus);
 
         const event: CalendarEvent = {
-          summary: `${statusPrefix}${appointment.clientName} - ${appointment.service}`,
+          summary: `${statusPrefix}${appointment.clientName} - ${aplicarNumeroManutencao(appointment.service, appointment.maintenanceNumber)}`,
           description: `Valor: R$ ${appointment.amount.toFixed(2)}${appointment.notes ? `\n\nObservações: ${appointment.notes}` : ''}`,
           start: {
             dateTime: startDate.toISOString(),
