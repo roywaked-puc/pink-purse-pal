@@ -151,7 +151,7 @@ export function ServiceStepPicker({
   useEffect(() => {
     if (tier !== 'colocacao') return;
     const svc = techniqueServices.find((s) => s.tierType === 'colocacao');
-    if (svc) {
+    if (svc && svc.id !== appliedInitialId.current) {
       onServiceTextChange(svc.description);
       onServiceSelect(svc);
     }
