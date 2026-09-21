@@ -170,6 +170,7 @@ export function useAddAppointment() {
           notes: data.notes || undefined,
           serviceColor,
           confirmationStatus: data.confirmation_status,
+          maintenanceNumber: (data as any).maintenance_number ?? undefined,
         });
         
         // Update appointment with Google Event ID if created and await completion
@@ -256,6 +257,7 @@ export function useUpdateAppointment() {
           googleEventId: freshData?.google_event_id || undefined,
           serviceColor,
           confirmationStatus: data.confirmation_status,
+          maintenanceNumber: (data as any).maintenance_number ?? undefined,
         });
         
         // Update appointment with Google Event ID if changed
@@ -441,6 +443,7 @@ export function useUpdateConfirmationStatus() {
           googleEventId: appointment.google_event_id,
           serviceColor,
           confirmationStatus: status,
+          maintenanceNumber: (appointment as any).maintenance_number ?? undefined,
         });
       }
     },
