@@ -211,9 +211,12 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
         </div>
       )}
 
+      <p className="text-sm text-muted-foreground truncate w-full mb-2">
+        {serviceDescription}
+      </p>
+
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">{serviceDescription}</p>
           <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
           {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
             <p className="text-xs text-muted-foreground">
