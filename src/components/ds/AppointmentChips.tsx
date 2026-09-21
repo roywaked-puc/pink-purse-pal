@@ -5,6 +5,8 @@ interface AppointmentChipsProps {
   appointment: Pick<Appointment, 'service' | 'maintenanceNumber'>;
   service?: Service | null;
   className?: string;
+  /** Versão reduzida para cards compactos (agenda semanal/mensal). */
+  compact?: boolean;
 }
 
 /**
@@ -12,10 +14,13 @@ interface AppointmentChipsProps {
  * técnica (texto normal) + chips de Tipo, Faixa de dias e Nº da manutenção.
  * Fallback: texto simples (appointment.service) para serviços avulsos/legados.
  */
-export function AppointmentChips({ appointment, service, className }: AppointmentChipsProps) {
+export function AppointmentChips({ appointment, service, className, compact }: AppointmentChipsProps) {
+  const textSize = compact ? 'text-[10px]' : 'text-sm';
+  const chipSize = compact ? 'text-[9px] px-1.5 py-0' : 'text-[11px] px-2 py-0.5';
+
   if (!service?.techniqueName || !service.tierType || service.tierType === 'avulso') {
     return (
-      <p className={cn('text-sm text-muted-foreground truncate w-full', className)}>
+      <p className={cn(textSize, 'text-muted-foreground truncate w-full', className)}>
         {appointment.service}
       </p>
     );
@@ -35,18 +40,18 @@ export function AppointmentChips({ appointment, service, className }: Appointmen
 
   return (
     <div className={cn('w-full', className)}>
-      <p className="text-sm font-medium truncate w-full">{service.techniqueName}</p>
-      <div className="flex flex-wrap gap-1 mt-1">
-        <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+      <p className={cn(textSize, 'font-medium truncate w-full')}>{service.techniqueName}</p>
+      <div className={cn('flex flex-wrap', compact ? 'gap-0.5 mt-0.5' : 'gap-1 mt-1')}>
+        <span className={cn('inline-flex items-center font-medium rounded-full bg-muted text-muted-foreground', chipSize)}>
           {isManutencao ? 'Manutenção' : 'Colocação'}
         </span>
         {faixa && (
-          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+          <span className={cn('inline-flex items-center font-medium rounded-full bg-muted text-muted-foreground', chipSize)}>
             {faixa}
           </span>
         )}
         {showMaintenanceChip && (
-          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+          <span className={cn('inline-flex items-center font-medium rounded-full bg-primary/15 text-primary', chipSize)}>
             {appointment.maintenanceNumber}ª manutenção
           </span>
         )}
