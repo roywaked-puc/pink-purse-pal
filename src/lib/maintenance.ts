@@ -1,4 +1,4 @@
-import { Service } from '@/types';
+import { Appointment, Service } from '@/types';
 
 const normalize = (s: string) =>
   s
@@ -23,6 +23,35 @@ export function extractDaysFromName(name: string): number | null {
 export function isMaintenanceName(name: string): boolean {
   const n = normalize(name);
   return MAINTENANCE_KEYWORDS.some((k) => n.includes(k));
+}
+
+/** Monta a descrição visual do atendimento a partir do serviço estruturado atual. */
+export function getAppointmentDescription(
+  appointment: Pick<Appointment, 'service' | 'maintenanceNumber'>,
+  service?: Service | null,
+): string {
+  if (!service?.techniqueName || !service.tierType || service.tierType === 'avulso') {
+    return appointment.service;
+  }
+
+  const parts = [
+    service.techniqueName,
+    service.tierType === 'manutencao' ? 'Manutenção' : 'Colocação',
+  ];
+
+  if (service.diasMin != null && service.diasMax != null) {
+    parts.push(`Faixa ${service.diasMin}–${service.diasMax} dias`);
+  } else if (service.diasMax != null) {
+    parts.push(`Faixa até ${service.diasMax} dias`);
+  } else if (service.diasMin != null) {
+    parts.push(`Faixa a partir de ${service.diasMin} dias`);
+  }
+
+  if (service.tierType === 'manutencao' && appointment.maintenanceNumber != null) {
+    parts.push(`${appointment.maintenanceNumber}ª manutenção`);
+  }
+
+  return parts.join(' · ');
 }
 
 /**

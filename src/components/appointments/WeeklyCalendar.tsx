@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApp } from '@/contexts/AppContext';
 import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 interface WeeklyCalendarProps {
   appointments: Appointment[];
@@ -204,6 +205,7 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                   const endTime = addMinutes(aptDate, appointment.duration);
                     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
                     const serviceColor = service?.color;
+                    const serviceDescription = getAppointmentDescription(appointment, service);
                     const ConfirmationIcon = confirmationIcons[appointment.confirmationStatus] || Clock;
                     const confirmationColor = confirmationColors[appointment.confirmationStatus] || 'text-muted-foreground';
                     
@@ -235,7 +237,7 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                         </span>
                       </div>
                       <p className="text-[10px] text-muted-foreground truncate">
-                        {appointment.service}
+                         {serviceDescription}
                       </p>
                       <MaintenanceBadge number={appointment.maintenanceNumber} compact />
                       {appointment.notes && (

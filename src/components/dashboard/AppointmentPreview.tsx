@@ -10,6 +10,8 @@ import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
+import { useApp } from '@/contexts/AppContext';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -49,7 +51,7 @@ const statusLabels = {
   sinal: 'Sinal',
 };
 
-const formatWhatsAppMessage = (appointment: Appointment) => {
+const formatWhatsAppMessage = (appointment: Appointment, description: string) => {
   const date = format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR });
   const time = format(new Date(appointment.date), "HH:mm");
 
@@ -59,7 +61,7 @@ Passando para lembrar do seu agendamento:
 
 📅 Data: ${date}
 ⏰ Horário: ${time}
-💅 Serviço: ${appointment.service}
+💅 Serviço: ${description}
 💰 Valor: ${formatCurrency(appointment.amount)}
 
 Em caso de imprevistos ou necessidade de cancelamento, por favor entre em contato por este WhatsApp o mais breve possível.
@@ -69,7 +71,7 @@ Aguardamos você! ✨`;
   return encodeURIComponent(message);
 };
 
-const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: number = 60) => {
+const formatGoogleCalendarUrl = (appointment: Appointment, description: string, durationMinutes: number = 60) => {
   const startDate = new Date(appointment.date);
   const endDate = addMinutes(startDate, durationMinutes);
   
@@ -78,20 +80,25 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
     return format(date, "yyyyMMdd'T'HHmmss");
   };
   
-  const title = encodeURIComponent(`${appointment.clientName} - ${appointment.service}`);
-  const details = encodeURIComponent(`Cliente: ${appointment.clientName}\nServiço: ${appointment.service}\nValor: ${formatCurrency(appointment.amount)}`);
+  const title = encodeURIComponent(`${appointment.clientName} - ${description}`);
+  const details = encodeURIComponent(`Cliente: ${appointment.clientName}\nServiço: ${description}\nValor: ${formatCurrency(appointment.amount)}`);
   const dates = `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`;
   
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
 };
 
 export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, onAttendanceCompleted, getClientPhone }: AppointmentPreviewProps) {
+  const { getServiceById } = useApp();
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
+  const serviceDescription = getAppointmentDescription(
+    appointment,
+    appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
+  );
   const { data: userSettings } = useUserSettings();
   const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
   const reserva = appointment.caixaReservaValorAplicado ?? userSettings?.caixa_reserva_valor ?? 0;
@@ -110,7 +117,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const clientPhone = getClientPhone?.(appointment.clientId || '');
   const hasPhone = clientPhone && clientPhone.length > 0;
   const cleanPhone = clientPhone?.replace(/\D/g, '') || '';
-  const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment)}`;
+  const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment, serviceDescription)}`;
 
   const handleQuickComplete = () => {
     updateStatus({ id: appointment.id, status: 'atendido' });
@@ -206,7 +213,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">{appointment.service}</p>
+          <p className="text-sm text-muted-foreground">{serviceDescription}</p>
           <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
           {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
             <p className="text-xs text-muted-foreground">
@@ -242,7 +249,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
             <a 
               href={appointment.googleEventId 
                 ? 'https://calendar.google.com' 
-                : formatGoogleCalendarUrl(appointment, appointment.duration)
+                : formatGoogleCalendarUrl(appointment, serviceDescription, appointment.duration)
               } 
               target="_blank" 
               rel="noopener noreferrer"

@@ -2,6 +2,8 @@ import React from 'react';
 import { format } from 'date-fns';
 import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
+import { useApp } from '@/contexts/AppContext';
+import { getAppointmentDescription } from '@/lib/maintenance';
 
 interface AppointmentSelectorProps {
   appointments: Appointment[];
@@ -11,6 +13,7 @@ interface AppointmentSelectorProps {
 
 export const AppointmentSelector = React.forwardRef<HTMLDivElement, AppointmentSelectorProps>(
   ({ appointments, selectedId, onSelect }, ref) => {
+    const { getServiceById } = useApp();
     if (appointments.length === 0) {
       return (
         <p className="text-sm text-muted-foreground py-2">
@@ -24,6 +27,10 @@ export const AppointmentSelector = React.forwardRef<HTMLDivElement, AppointmentS
         {appointments.map((appointment) => {
           const balance = appointment.amount - appointment.paidAmount;
           const isSelected = selectedId === appointment.id;
+          const serviceDescription = getAppointmentDescription(
+            appointment,
+            appointment.serviceId ? getServiceById(appointment.serviceId) : undefined,
+          );
           
           return (
             <button
@@ -42,7 +49,7 @@ export const AppointmentSelector = React.forwardRef<HTMLDivElement, AppointmentS
                   <p className="font-medium text-foreground">
                     {format(new Date(appointment.date), "dd/MM/yyyy 'às' HH:mm")}
                   </p>
-                  <p className="text-sm text-muted-foreground">{appointment.service}</p>
+                  <p className="text-sm text-muted-foreground">{serviceDescription}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Total: R$ {appointment.amount.toFixed(2).replace('.', ',')}</p>
