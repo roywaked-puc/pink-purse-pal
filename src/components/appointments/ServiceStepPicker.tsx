@@ -58,9 +58,11 @@ export function ServiceStepPicker({
 
   // Edição: aplica o serviço já salvo nos três passos
   const appliedInitialId = useRef<string | null>(null);
+  const jaInicializou = useRef(false);
   useEffect(() => {
     const id = initialService?.id ?? null;
-    if (appliedInitialId.current === id) return;
+    if (jaInicializou.current && appliedInitialId.current === id) return;
+    jaInicializou.current = true;
     appliedInitialId.current = id;
     if (!initialService) {
       if (initialAvulso) setTechnique(AVULSO_KEY);
