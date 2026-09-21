@@ -44,6 +44,7 @@ async function syncToGoogleCalendar(appointment: {
           googleEventId: appointment.googleEventId,
           serviceColor: appointment.serviceColor,
           confirmationStatus: appointment.confirmationStatus,
+          maintenanceNumber: appointment.maintenanceNumber,
         },
       },
     });
