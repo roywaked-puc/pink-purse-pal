@@ -448,6 +448,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
               initialService={
                 appointment?.serviceId ? getServiceById(appointment.serviceId) ?? null : null
               }
+              initialAvulso={Boolean(appointment && !appointment.serviceId)}
             />
             {service && (
               <p className="text-xs text-muted-foreground">Serviço: {service}</p>

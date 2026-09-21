@@ -78,7 +78,7 @@ export function ServiceStepPicker({
       setFaixaId('');
     }
     setTierSuggestion(null);
-  }, [initialService]);
+  }, [initialService, initialAvulso]);
 
   const techniques = useMemo(() => {
     const set = new Set<string>();
