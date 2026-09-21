@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -16,7 +16,7 @@ import { useClientPhotos } from '@/hooks/useClientPhotos';
 import { useCrm, getClientStats } from '@/hooks/useCrm';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Badge } from '@/components/ui/badge';
-import { getAppointmentDescription } from '@/lib/maintenance';
+import { AppointmentChips } from '@/components/ds/AppointmentChips';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -31,7 +31,7 @@ interface TimelineItem {
   displayDate: Date;
   type: 'attended' | 'scheduled' | 'payment' | 'photo' | 'return';
   title: string;
-  detail?: string;
+  detail?: ReactNode;
   coveredDates?: Date[];
 }
 
@@ -79,7 +79,16 @@ export function ClienteCrmTab({ clientId }: Props) {
           displayDate: new Date(a.date),
           type: 'attended',
           title: 'Atendimento realizado',
-           detail: `${getAppointmentDescription(a, a.serviceId ? getServiceById(a.serviceId) : undefined)} · ${formatBRL(a.amount)} · ${payStatus}`,
+           detail: (
+             <>
+               <AppointmentChips
+                 appointment={a}
+                 service={a.serviceId ? getServiceById(a.serviceId) : undefined}
+                 compact
+               />
+               <span className="block mt-0.5">{formatBRL(a.amount)} · {payStatus}</span>
+             </>
+           ),
         });
       } else {
         items.push({
@@ -93,7 +102,16 @@ export function ClienteCrmTab({ clientId }: Props) {
               : a.confirmationStatus === 'confirmado'
                 ? 'Agendamento confirmado'
                 : 'Agendamento',
-           detail: `${getAppointmentDescription(a, a.serviceId ? getServiceById(a.serviceId) : undefined)} · ${formatBRL(a.amount)}`,
+           detail: (
+             <>
+               <AppointmentChips
+                 appointment={a}
+                 service={a.serviceId ? getServiceById(a.serviceId) : undefined}
+                 compact
+               />
+               <span className="block mt-0.5">{formatBRL(a.amount)}</span>
+             </>
+           ),
         });
       }
     });
@@ -325,7 +343,7 @@ function TimelineEntry({ item }: { item: TimelineItem }) {
         </div>
 
         <p className="font-medium text-sm">{item.title}</p>
-        {item.detail && <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>}
+        {item.detail && <div className="text-xs text-muted-foreground mt-0.5">{item.detail}</div>}
       </div>
     </div>
   );
