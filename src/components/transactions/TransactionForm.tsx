@@ -33,6 +33,7 @@ import { ClientAutocomplete } from '@/components/appointments/ClientAutocomplete
 import { AppointmentSelector } from './AppointmentSelector';
 import { useToast } from '@/hooks/use-toast';
 import { useAccountFeeTypes } from '@/hooks/useAccountFeeTypes';
+import { useAddAccount } from '@/hooks/useAccounts';
 
 interface TransactionFormProps {
   open: boolean;
@@ -60,6 +61,19 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     return contaId && accounts.some(a => a.id === contaId) ? contaId : '';
   };
   const { toast } = useToast();
+  const { mutateAsync: addAccountAsync } = useAddAccount();
+  const NOVA_CONTA_PERMUTA = '__nova_permuta__';
+  const handleAccountChange = async (value: string) => {
+    if (value !== NOVA_CONTA_PERMUTA) return setAccount(value);
+    const name = window.prompt('Nome da nova conta de permuta:')?.trim();
+    if (!name) return;
+    try {
+      const id = await addAccountAsync({ name, type: 'permuta', feePercentage: 0 });
+      setAccount(id);
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e?.message || 'Não foi possível criar a conta.', variant: 'destructive' });
+    }
+  };
   
   const [date, setDate] = useState<Date>(new Date());
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -530,7 +544,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
 
           <div className="space-y-2">
             <Label>Conta / Banco <span className="text-destructive">*</span></Label>
-            <Select value={account} onValueChange={setAccount}>
+            <Select value={account} onValueChange={handleAccountChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
@@ -543,6 +557,9 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
                     {acc.name}
                   </SelectItem>
                 ))}
+                {selectedAppointment?.isPermuta && (
+                  <SelectItem value={NOVA_CONTA_PERMUTA}>+ Criar nova conta de permuta</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
