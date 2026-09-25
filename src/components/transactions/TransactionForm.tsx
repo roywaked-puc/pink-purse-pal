@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Repeat } from 'lucide-react';
 import { Transaction, TransactionType, TransactionScope, Appointment, Client } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -446,7 +446,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={cn("grid gap-3", !permutaMode && "grid-cols-2")}>
             <div className="space-y-2">
               <Label>Tipo</Label>
               <Input 
@@ -457,18 +457,20 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Caixa</Label>
-              <Input 
-                value={scope === 'empresa' ? 'Caixa empresa' : scope === 'pessoal' ? 'Caixa pessoal' : ''} 
-                placeholder="Selecione uma categoria"
-                disabled 
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground">
-                De qual caixa o dinheiro sai ou entra (não é a conta bancária).
-              </p>
-            </div>
+            {!permutaMode && (
+              <div className="space-y-2">
+                <Label>Caixa</Label>
+                <Input 
+                  value={scope === 'empresa' ? 'Caixa empresa' : scope === 'pessoal' ? 'Caixa pessoal' : ''} 
+                  placeholder="Selecione uma categoria"
+                  disabled 
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">
+                  De qual caixa o dinheiro sai ou entra (não é a conta bancária).
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Checkbox para vincular a agendamento (apenas para entradas e novas transações) */}
@@ -567,15 +569,15 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {(selectedAppointment?.isPermuta
-                  ? accounts.filter((a) => a.type === 'permuta' || a.id === account)
+                {(permutaMode
+                  ? accounts.filter((a) => a.type === 'permuta')
                   : accounts
                 ).map((acc) => (
                   <SelectItem key={acc.id} value={acc.id}>
                     {acc.name}
                   </SelectItem>
                 ))}
-                {selectedAppointment?.isPermuta && (
+                {permutaMode && (
                   <SelectItem value={NOVA_CONTA_PERMUTA}>+ Criar nova conta de permuta</SelectItem>
                 )}
               </SelectContent>
