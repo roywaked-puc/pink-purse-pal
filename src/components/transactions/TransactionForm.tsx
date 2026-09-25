@@ -535,7 +535,10 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {accounts.map((acc) => (
+                {(selectedAppointment?.isPermuta
+                  ? accounts.filter((a) => a.type === 'permuta' || a.id === account)
+                  : accounts
+                ).map((acc) => (
                   <SelectItem key={acc.id} value={acc.id}>
                     {acc.name}
                   </SelectItem>

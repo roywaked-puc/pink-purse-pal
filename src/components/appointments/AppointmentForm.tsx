@@ -3,6 +3,7 @@ import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, HelpCircle, Receipt, Loader2 } from 'lucide-react';
 import { AppointmentTransactionsDialog } from './AppointmentTransactionsDialog';
+import { TransactionForm } from '@/components/transactions/TransactionForm';
 import {
   Tooltip,
   TooltipContent,
@@ -85,6 +86,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const [isPermuta, setIsPermuta] = useState(false);
   const [maintenanceNumber, setMaintenanceNumber] = useState<number | null>(null);
   const [showTransactions, setShowTransactions] = useState(false);
+  const [showPermutaPayment, setShowPermutaPayment] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -585,6 +587,16 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                     Recebido: R$ {appointment.paidAmount.toFixed(2).replace('.', ',')} de R$ {appointment.amount.toFixed(2).replace('.', ',')}
                   </p>
                 )}
+                {isPermuta && appointment.paidAmount < appointment.amount && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setShowPermutaPayment(true)}
+                    className="w-full"
+                  >
+                    Marcar permuta como quitada
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"
@@ -640,6 +652,16 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
           appointmentId={appointment.id}
           open={showTransactions}
           onOpenChange={setShowTransactions}
+        />
+      )}
+      {appointment && showPermutaPayment && (
+        <TransactionForm
+          open={showPermutaPayment}
+          onOpenChange={(o) => {
+            setShowPermutaPayment(o);
+            if (!o) onOpenChange(false);
+          }}
+          prefilledAppointment={{ ...appointment, isPermuta: true }}
         />
       )}
     </Dialog>
