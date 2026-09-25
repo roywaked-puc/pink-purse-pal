@@ -85,6 +85,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
   const [isPermuta, setIsPermuta] = useState(false);
   const [maintenanceNumber, setMaintenanceNumber] = useState<number | null>(null);
   const [showTransactions, setShowTransactions] = useState(false);
+  const [showPermutaPayment, setShowPermutaPayment] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -584,6 +585,16 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
                   <p className="text-xs text-muted-foreground">
                     Recebido: R$ {appointment.paidAmount.toFixed(2).replace('.', ',')} de R$ {appointment.amount.toFixed(2).replace('.', ',')}
                   </p>
+                )}
+                {isPermuta && appointment.paidAmount < appointment.amount && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setShowPermutaPayment(true)}
+                    className="w-full"
+                  >
+                    Marcar permuta como quitada
+                  </Button>
                 )}
                 <Button
                   type="button"
