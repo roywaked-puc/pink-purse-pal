@@ -35,19 +35,22 @@ export function useAddAccount() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (account: Omit<Account, 'id'>) => {
+    mutationFn: async (account: Omit<Account, 'id'>): Promise<string> => {
       if (!user) throw new Error('Not authenticated');
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('accounts')
         .insert({
           user_id: user.id,
           name: account.name,
           type: account.type,
           fee_percentage: account.feePercentage || 0,
-        });
+        })
+        .select('id')
+        .single();
       
       if (error) throw sanitizeDbError(error);
+      return data.id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
