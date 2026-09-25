@@ -38,6 +38,8 @@ export interface Client {
   notes?: string;
   recurrenceDays?: number;
   birthDate?: string; // ISO date 'YYYY-MM-DD'
+  /** Conta (type='permuta') padrão; preenchida = cliente costuma pagar em permuta */
+  contaPermutaPadraoId?: string;
 }
 
 export interface Appointment {

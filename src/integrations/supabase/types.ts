@@ -453,6 +453,7 @@ export type Database = {
       clients: {
         Row: {
           birth_date: string | null
+          conta_permuta_padrao_id: string | null
           created_at: string
           id: string
           name: string
@@ -463,6 +464,7 @@ export type Database = {
         }
         Insert: {
           birth_date?: string | null
+          conta_permuta_padrao_id?: string | null
           created_at?: string
           id?: string
           name: string
@@ -473,6 +475,7 @@ export type Database = {
         }
         Update: {
           birth_date?: string | null
+          conta_permuta_padrao_id?: string | null
           created_at?: string
           id?: string
           name?: string
@@ -481,7 +484,15 @@ export type Database = {
           recurrence_days?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_conta_permuta_padrao_id_fkey"
+            columns: ["conta_permuta_padrao_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {

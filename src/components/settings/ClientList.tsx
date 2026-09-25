@@ -14,14 +14,28 @@ import {
 } from '@/components/ui/dialog';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { useClients, useAddClient, useUpdateClient, useDeleteClient } from '@/hooks/useClients';
+import { useAccounts, useAddAccount } from '@/hooks/useAccounts';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Client } from '@/types';
 import { toast } from 'sonner';
 
+const NOVA_CONTA = '__nova__';
+
 export function ClientList() {
   const { data: clients = [] } = useClients();
+  const { data: accounts = [] } = useAccounts();
+  const addAccount = useAddAccount();
   const addClient = useAddClient();
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
+  const permutaAccounts = accounts.filter((a) => a.type === 'permuta');
 
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -33,6 +47,9 @@ export function ClientList() {
   const [notes, setNotes] = useState('');
   const [recurrenceDays, setRecurrenceDays] = useState<string>('');
   const [birthDate, setBirthDate] = useState<string>('');
+  const [pagaPermuta, setPagaPermuta] = useState(false);
+  const [contaPermutaId, setContaPermutaId] = useState('');
+  const [novaContaNome, setNovaContaNome] = useState('');
 
   const resetForm = () => {
     setName('');
@@ -40,6 +57,9 @@ export function ClientList() {
     setNotes('');
     setRecurrenceDays('');
     setBirthDate('');
+    setPagaPermuta(false);
+    setContaPermutaId('');
+    setNovaContaNome('');
     setEditingClient(null);
   };
 
@@ -55,7 +75,26 @@ export function ClientList() {
     setNotes(client.notes || '');
     setRecurrenceDays(client.recurrenceDays ? String(client.recurrenceDays) : '');
     setBirthDate(client.birthDate || '');
+    setPagaPermuta(Boolean(client.contaPermutaPadraoId));
+    setContaPermutaId(client.contaPermutaPadraoId || '');
+    setNovaContaNome('');
     setFormOpen(true);
+  };
+
+  const handleCriarContaPermuta = async () => {
+    const nome = novaContaNome.trim();
+    if (!nome) {
+      toast.error('Digite o nome da nova conta de permuta');
+      return;
+    }
+    try {
+      const id = await addAccount.mutateAsync({ name: nome, type: 'permuta', feePercentage: 0 });
+      setContaPermutaId(id);
+      setNovaContaNome('');
+      toast.success('Conta de permuta criada');
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao criar conta');
+    }
   };
 
   const handleDelete = (client: Client) => {
@@ -71,6 +110,11 @@ export function ClientList() {
       return;
     }
 
+    if (pagaPermuta && (!contaPermutaId || contaPermutaId === NOVA_CONTA)) {
+      toast.error('Escolha o banco padrão para permuta');
+      return;
+    }
+
     const recurrence = recurrenceDays.trim() ? parseInt(recurrenceDays, 10) : undefined;
     const payload = {
       name: name.trim(),
@@ -78,6 +122,7 @@ export function ClientList() {
       notes: notes.trim() || undefined,
       recurrenceDays: recurrence && recurrence > 0 ? recurrence : undefined,
       birthDate: birthDate || undefined,
+      contaPermutaPadraoId: pagaPermuta ? contaPermutaId : undefined,
     };
 
     try {
@@ -237,6 +282,52 @@ export function ClientList() {
               <p className="text-xs text-muted-foreground">
                 Usado para o aniversariante do mês no CRM.
               </p>
+            </div>
+
+            <div className="space-y-2 rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="paga-permuta"
+                  checked={pagaPermuta}
+                  onCheckedChange={(v) => setPagaPermuta(v === true)}
+                />
+                <Label htmlFor="paga-permuta" className="cursor-pointer">
+                  Cliente costuma pagar em permuta
+                </Label>
+              </div>
+              {pagaPermuta && (
+                <div className="space-y-2 pt-1">
+                  <Label>Banco padrão para permuta <span className="text-destructive">*</span></Label>
+                  <Select value={contaPermutaId} onValueChange={setContaPermutaId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha a conta de permuta" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {permutaAccounts.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                      ))}
+                      <SelectItem value={NOVA_CONTA}>+ Criar nova conta de permuta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {contaPermutaId === NOVA_CONTA && (
+                    <div className="flex gap-2">
+                      <Input
+                        value={novaContaNome}
+                        onChange={(e) => setNovaContaNome(e.target.value)}
+                        placeholder="Nome da conta (livre)"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleCriarContaPermuta}
+                        disabled={addAccount.isPending}
+                      >
+                        Criar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

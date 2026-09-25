@@ -1,0 +1,2 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS conta_permuta_padrao_id uuid REFERENCES public.accounts(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_clients_conta_permuta_padrao_id ON public.clients(conta_permuta_padrao_id);
