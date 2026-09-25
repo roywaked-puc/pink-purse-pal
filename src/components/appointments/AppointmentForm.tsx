@@ -131,7 +131,10 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
         setDate(prefill.date);
         setTime(format(prefill.date, 'HH:mm'));
       }
-      if (prefill.clientId) setSelectedClientId(prefill.clientId);
+      if (prefill.clientId) {
+        setSelectedClientId(prefill.clientId);
+        if (getClientById(prefill.clientId)?.contaPermutaPadraoId) setIsPermuta(true);
+      }
       if (prefill.clientName) setClientName(prefill.clientName);
       if (prefill.clientPhone) setClientPhone(prefill.clientPhone);
       if (prefill.clientNotes) setClientNotes(prefill.clientNotes);
@@ -195,6 +198,8 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       setSelectedClientId(client.id);
       setClientPhone(client.phone);
       setClientNotes(client.notes || '');
+      // Novo agendamento: pré-marca permuta se a cliente costuma pagar assim (editável)
+      if (!appointment) setIsPermuta(Boolean(client.contaPermutaPadraoId));
     } else {
       setSelectedClientId(null);
       setClientPhone('');
@@ -281,6 +286,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
           notes: clientNotes,
           recurrenceDays: existingClient?.recurrenceDays,
           birthDate: existingClient?.birthDate,
+          contaPermutaPadraoId: existingClient?.contaPermutaPadraoId,
         });
       } else if (clientName.trim()) {
         // Cria novo cliente e aguarda o ID real do banco

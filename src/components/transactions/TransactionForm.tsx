@@ -49,8 +49,16 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     addTransaction, 
     updateTransaction,
     getAppointmentsWithBalance,
-    updateAppointmentPayment 
+    updateAppointmentPayment,
+    getClientById,
   } = useApp();
+
+  // Conta padrão de permuta do cliente (vínculo por ID, nunca por nome)
+  const getDefaultPermutaAccount = (appt: Appointment | null | undefined): string => {
+    if (!appt?.isPermuta || !appt.clientId) return '';
+    const contaId = getClientById(appt.clientId)?.contaPermutaPadraoId;
+    return contaId && accounts.some(a => a.id === contaId) ? contaId : '';
+  };
   const { toast } = useToast();
   
   const [date, setDate] = useState<Date>(new Date());
@@ -202,6 +210,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setAmount(balance.toFixed(2));
       setDescription(`${prefilledAppointment.service} - ${prefilledAppointment.clientName}`);
       setPaymentType('pagamento');
+      const contaPermuta = getDefaultPermutaAccount(prefilledAppointment);
+      if (contaPermuta) setAccount(contaPermuta);
     } else {
       resetForm();
     }
@@ -212,6 +222,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     if (selectedAppointment && !transaction) {
       setAmount(balanceToReceive.toFixed(2));
       setDescription(`${selectedAppointment.service} - ${selectedAppointment.clientName}`);
+      const contaPermuta = getDefaultPermutaAccount(selectedAppointment);
+      if (contaPermuta) setAccount((prev) => prev || contaPermuta);
     }
   }, [selectedAppointment, balanceToReceive, transaction]);
 

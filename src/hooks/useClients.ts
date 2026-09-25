@@ -26,6 +26,7 @@ export function useClients() {
         notes: c.notes || undefined,
         recurrenceDays: c.recurrence_days ?? undefined,
         birthDate: c.birth_date ?? undefined,
+        contaPermutaPadraoId: c.conta_permuta_padrao_id ?? undefined,
       }));
     },
     enabled: !!user,
@@ -60,6 +61,7 @@ export function useAddClient() {
           notes: client.notes,
           recurrence_days: client.recurrenceDays ?? null,
           birth_date: client.birthDate ?? null,
+          conta_permuta_padrao_id: client.contaPermutaPadraoId ?? null,
         } as any)
         .select('id')
         .single();
@@ -96,6 +98,7 @@ export function useUpdateClient() {
           notes: client.notes,
           recurrence_days: client.recurrenceDays ?? null,
           birth_date: client.birthDate ?? null,
+          conta_permuta_padrao_id: client.contaPermutaPadraoId ?? null,
         } as any)
         .eq('id', id);
 
