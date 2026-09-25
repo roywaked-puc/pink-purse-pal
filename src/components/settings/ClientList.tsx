@@ -284,6 +284,52 @@ export function ClientList() {
               </p>
             </div>
 
+            <div className="space-y-2 rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="paga-permuta"
+                  checked={pagaPermuta}
+                  onCheckedChange={(v) => setPagaPermuta(v === true)}
+                />
+                <Label htmlFor="paga-permuta" className="cursor-pointer">
+                  Cliente costuma pagar em permuta
+                </Label>
+              </div>
+              {pagaPermuta && (
+                <div className="space-y-2 pt-1">
+                  <Label>Banco padrão para permuta <span className="text-destructive">*</span></Label>
+                  <Select value={contaPermutaId} onValueChange={setContaPermutaId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha a conta de permuta" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {permutaAccounts.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                      ))}
+                      <SelectItem value={NOVA_CONTA}>+ Criar nova conta de permuta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {contaPermutaId === NOVA_CONTA && (
+                    <div className="flex gap-2">
+                      <Input
+                        value={novaContaNome}
+                        onChange={(e) => setNovaContaNome(e.target.value)}
+                        placeholder="Nome da conta (livre)"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleCriarContaPermuta}
+                        disabled={addAccount.isPending}
+                      >
+                        Criar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label>Observação</Label>
               <Textarea
