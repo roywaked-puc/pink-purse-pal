@@ -3,6 +3,7 @@ import { format, addMinutes, areIntervalsOverlapping } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, HelpCircle, Receipt, Loader2 } from 'lucide-react';
 import { AppointmentTransactionsDialog } from './AppointmentTransactionsDialog';
+import { TransactionForm } from '@/components/transactions/TransactionForm';
 import {
   Tooltip,
   TooltipContent,
@@ -651,6 +652,16 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
           appointmentId={appointment.id}
           open={showTransactions}
           onOpenChange={setShowTransactions}
+        />
+      )}
+      {appointment && showPermutaPayment && (
+        <TransactionForm
+          open={showPermutaPayment}
+          onOpenChange={(o) => {
+            setShowPermutaPayment(o);
+            if (!o) onOpenChange(false);
+          }}
+          prefilledAppointment={{ ...appointment, isPermuta: true }}
         />
       )}
     </Dialog>
