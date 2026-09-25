@@ -124,6 +124,9 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
 
   const { data: feeTypes = [] } = useAccountFeeTypes(account || undefined);
 
+  // Modo permuta: o atendimento vinculado é permuta (recebimento manual em conta de permuta)
+  const permutaMode = !!selectedAppointment?.isPermuta;
+
   const accountFeeTypes = useMemo(
     () => feeTypes.filter(ft => ft.accountId === account),
     [feeTypes, account]
