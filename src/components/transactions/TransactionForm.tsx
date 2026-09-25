@@ -127,6 +127,14 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   // Modo permuta: o atendimento vinculado é permuta (recebimento manual em conta de permuta)
   const permutaMode = !!selectedAppointment?.isPermuta;
 
+  // Em modo permuta, nunca manter uma conta que não seja type = 'permuta'
+  useEffect(() => {
+    if (permutaMode && account) {
+      const acc = accounts.find((a) => a.id === account);
+      if (acc && acc.type !== 'permuta') setAccount('');
+    }
+  }, [permutaMode, account, accounts]);
+
   const accountFeeTypes = useMemo(
     () => feeTypes.filter(ft => ft.accountId === account),
     [feeTypes, account]
@@ -385,6 +393,13 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             {transaction ? 'Editar Movimentação' : 'Nova Movimentação'}
           </DialogTitle>
         </DialogHeader>
+
+        {permutaMode && (
+          <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/15 px-3 py-2 text-sm font-medium text-primary">
+            <Repeat className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Este atendimento é permuta — o lançamento vai apenas para o extrato da conta de permuta, fora do caixa empresa/pessoal.</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
