@@ -20,10 +20,6 @@ export function useServices() {
       
       if (error) throw sanitizeDbError(error);
       
-      const validTier = (value: unknown): 'avulso' | 'colocacao' | 'manutencao' | undefined => {
-        if (value === 'avulso' || value === 'colocacao' || value === 'manutencao') return value;
-        return undefined;
-      };
 
       // Técnica/tipo/faixa derivados das colunas estruturadas (possui_manutencao, servico_pai_id, manutencao_ate_dias)
       const byId = new Map(data.map(s => [s.id, s]));
