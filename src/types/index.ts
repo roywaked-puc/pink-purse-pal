@@ -88,6 +88,12 @@ export interface Service {
   tierType?: 'avulso' | 'colocacao' | 'manutencao';
   diasMin?: number;
   diasMax?: number;
+  /** Serviço principal com faixas de manutenção por dias */
+  possuiManutencao?: boolean;
+  /** Preenchido quando este serviço é uma faixa de manutenção de outro */
+  servicoPaiId?: string;
+  /** Último dia da faixa (o início é o fim da faixa anterior + 1) */
+  manutencaoAteDias?: number;
 }
 
 export interface UserSettings {
