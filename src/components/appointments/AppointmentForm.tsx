@@ -297,16 +297,8 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
         });
       }
 
-      let serviceId = selectedServiceId;
-
-      // Se digitou serviço novo, cria automaticamente e aguarda o ID real
-      if (!selectedServiceId && service.trim() && parseFloat(amount) > 0) {
-        serviceId = await addServiceAsync({
-          description: service.trim(),
-          amount: parseFloat(amount),
-          duration: 60, // Duração padrão de 1 hora para novos serviços
-        });
-      }
+      // Texto livre ("Usar '<texto>' como serviço avulso") salva sem vínculo com o catálogo
+      const serviceId = selectedServiceId;
 
       const data = {
         date: fullDate,

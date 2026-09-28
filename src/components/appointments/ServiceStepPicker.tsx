@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ServiceAutocomplete } from './ServiceAutocomplete';
+import { AvulsoServiceCombobox } from './AvulsoServiceCombobox';
 
 const AVULSO_KEY = '__avulso__';
 
@@ -34,9 +34,8 @@ const formatCurrency = (value: number) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const faixaLabel = (s: Service) => {
-  if (s.diasMin != null && s.diasMax != null) return `${s.diasMin}–${s.diasMax} dias`;
-  if (s.diasMax != null) return `até ${s.diasMax} dias`;
-  if (s.diasMin != null) return `a partir de ${s.diasMin} dias`;
+  if (s.diasMin != null && s.diasMax != null) return `De ${s.diasMin} até ${s.diasMax} dias`;
+  if (s.diasMax != null) return `Até ${s.diasMax} dias`;
   return s.description;
 };
 
@@ -55,6 +54,9 @@ export function ServiceStepPicker({
   const [tier, setTier] = useState<string>('');
   const [faixaId, setFaixaId] = useState<string>('');
   const [tierSuggestion, setTierSuggestion] = useState<'primeira' | 'fora_prazo' | null>(null);
+  const [avulsoSelectedId, setAvulsoSelectedId] = useState<string | null>(
+    initialService && !isTechnique(initialService) ? initialService.id : null,
+  );
 
   // Edição: aplica o serviço já salvo nos três passos
   const appliedInitialId = useRef<string | null>(null);
@@ -301,10 +303,20 @@ export function ServiceStepPicker({
       {showAvulso && (
         <div className="space-y-2">
           <Label>Serviço</Label>
-          <ServiceAutocomplete
+          <AvulsoServiceCombobox
+            services={services}
             value={serviceText}
-            onChange={onServiceTextChange}
-            onServiceSelect={onServiceSelect}
+            selectedId={avulsoSelectedId}
+            onSelect={(svc) => {
+              setAvulsoSelectedId(svc.id);
+              onServiceTextChange(svc.description);
+              onServiceSelect(svc);
+            }}
+            onFreeText={(text) => {
+              setAvulsoSelectedId(null);
+              onServiceTextChange(text);
+              onServiceSelect(null);
+            }}
           />
         </div>
       )}
