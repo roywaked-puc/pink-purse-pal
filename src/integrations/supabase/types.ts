@@ -504,7 +504,10 @@ export type Database = {
           dias_min: number | null
           duration: number
           id: string
+          manutencao_ate_dias: number | null
           notes: string | null
+          possui_manutencao: boolean
+          servico_pai_id: string | null
           technique_name: string | null
           tier_type: string | null
           user_id: string
@@ -518,7 +521,10 @@ export type Database = {
           dias_min?: number | null
           duration?: number
           id?: string
+          manutencao_ate_dias?: number | null
           notes?: string | null
+          possui_manutencao?: boolean
+          servico_pai_id?: string | null
           technique_name?: string | null
           tier_type?: string | null
           user_id: string
@@ -532,12 +538,23 @@ export type Database = {
           dias_min?: number | null
           duration?: number
           id?: string
+          manutencao_ate_dias?: number | null
           notes?: string | null
+          possui_manutencao?: boolean
+          servico_pai_id?: string | null
           technique_name?: string | null
           tier_type?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_servico_pai_id_fkey"
+            columns: ["servico_pai_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
