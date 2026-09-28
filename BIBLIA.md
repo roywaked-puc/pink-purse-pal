@@ -2,7 +2,7 @@
 
 > Documento **de produto e domínio**: o "o quê" e o "porquê".
 > Para regras de execução/código do agente, veja `CLAUDE.md`.
-> Última revisão: agosto/2026.
+> Última revisão: setembro/2026.
 
 ---
 
@@ -67,6 +67,11 @@ próximos atendimentos e retornos a confirmar. Cards de agendamento mostram
 - **Trava de submit**: botão desabilita e mostra "Salvando..." para evitar agendas duplicadas.
 - A descrição visual do atendimento é montada pelo serviço estruturado atual (técnica, tipo,
   faixa e número manual da manutenção); `appointments.service` permanece apenas como legado.
+- **Seleção de serviço** (decidido em set/2026, em implementação): serviços com manutenção
+  seguem o fluxo Técnica → Colocação/Manutenção → Faixa de dias → Qual manutenção (1ª, 2ª…
+  informado no agendamento, não no cadastro). Serviços sem manutenção (`tier_type = 'avulso'`)
+  aparecem numa **lista pesquisável** que preenche `service_id`, valor e duração; texto livre
+  fica só como último recurso para algo fora do catálogo.
 - **Fluxo pós-atendimento**: ao marcar "Atendido" → abre o prompt de **fotos** → fim.
   A antiga etapa 2 ("Próxima manutenção" / `ScheduleReturnDialog`) foi **removida
   deliberadamente — não reintroduzir**.
@@ -149,6 +154,21 @@ Exportação CSV e PDF (jsPDF; extrato financeiro em paisagem).
 Contas (+ tipos de cobrança), categorias, clientes, serviços, templates de anamnese,
 regras de CRM, regras de retenção, Google Calendar, troca de senha e exportação de dados.
 
+**Cadastro de serviços** (decidido em set/2026, em implementação):
+- A usuária cadastra **um serviço** (ex: "Volume Russo") com nome, valor, duração, cor e a chave
+  **"Possui manutenção"**. Não existe escolha de "avulso/colocação" na tela — isso é derivado.
+- Chave desligada → um registro `tier_type = 'avulso'`.
+- Chave ligada → o serviço vira uma técnica (`technique_name`): o próprio valor é o da
+  aplicação (`tier_type = 'colocacao'`) e surge a aba **Manutenções**, onde se cadastram as
+  **faixas** (`tier_type = 'manutencao'`, mesmo `technique_name`, `dias_min`/`dias_max`, valor
+  e duração próprios).
+- Faixas: a usuária informa só **até quantos dias** a faixa vale. O início é automático
+  (1ª faixa começa no dia 1; as seguintes, no dia seguinte ao fim da anterior) — sem buracos
+  nem sobreposição. Alterar o fim de uma faixa ajusta o início da seguinte, com aviso.
+- Depois da última faixa não há manutenção: a cliente volta a pagar a aplicação.
+- Serviço ou faixa já usado em agendamento **não é excluído**: é **arquivado** (sai do
+  cadastro e da agenda, mas continua exibindo o histórico).
+
 ## 5. Guardrails de negócio (nunca violar)
 
 1. **Nunca somar `empresa` e `pessoal`** no mesmo saldo/relatório sem pedido explícito.
@@ -169,7 +189,7 @@ regras de CRM, regras de retenção, Google Calendar, troca de senha e exportaç
 | Tabela | Papel |
 |---|---|
 | `clients` | Clientes (telefone único, aniversário, recorrência, observações privadas) |
-| `services` | Catálogo (valor, duração padrão 60min, cor) |
+| `services` | Catálogo (valor, duração padrão 60min, cor) + estrutura por técnica: `technique_name`, `tier_type` (avulso/colocação/manutenção), `dias_min`/`dias_max` da faixa |
 | `categories` | Categorias por `type` + `scope` |
 | `accounts` | Contas/formas de recebimento |
 | `account_fee_types` | Tipos de cobrança por conta, com taxa própria |
@@ -199,7 +219,6 @@ Volume ainda não exige paginação agressiva, mas evite carregar tudo sem filtr
 ## 9. Roadmap — **não implementar sem pedido explícito**
 
 - Módulo dedicado de "Gestão Financeira" (fluxo de caixa, projeções, lucro).
-- Serviço-pai com variações (hoje cada variação é um serviço independente).
 - Multiusuário / equipe e expansão para outros segmentos.
 - Sync bidirecional com Google Calendar.
 
