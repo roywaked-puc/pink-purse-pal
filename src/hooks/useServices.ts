@@ -25,6 +25,36 @@ export function useServices() {
         return undefined;
       };
 
+      // Técnica/tipo/faixa derivados das colunas estruturadas (possui_manutencao, servico_pai_id, manutencao_ate_dias)
+      const byId = new Map(data.map(s => [s.id, s]));
+      const techniqueOf = (desc: string) => desc.replace(/\s*-\s*coloca[cç][aã]o\s*$/i, '').replace(/\s+/g, ' ').trim();
+      const deMap = new Map<string, number>();
+      const byParent = new Map<string, typeof data>();
+      data.forEach(s => {
+        if (s.servico_pai_id && s.manutencao_ate_dias != null) {
+          const list = byParent.get(s.servico_pai_id) || [];
+          list.push(s);
+          byParent.set(s.servico_pai_id, list);
+        }
+      });
+      byParent.forEach(list => {
+        let prev = 0;
+        [...list].sort((a, b) => a.manutencao_ate_dias! - b.manutencao_ate_dias!).forEach(f => {
+          deMap.set(f.id, prev + 1);
+          prev = f.manutencao_ate_dias!;
+        });
+      });
+      const derive = (s: (typeof data)[number]) => {
+        const pai = s.servico_pai_id ? byId.get(s.servico_pai_id) : undefined;
+        if (pai && s.manutencao_ate_dias != null) {
+          return { techniqueName: techniqueOf(pai.description), tierType: 'manutencao' as const, diasMin: deMap.get(s.id), diasMax: s.manutencao_ate_dias };
+        }
+        if (!s.servico_pai_id && s.possui_manutencao) {
+          return { techniqueName: techniqueOf(s.description), tierType: 'colocacao' as const, diasMin: undefined, diasMax: undefined };
+        }
+        return { techniqueName: s.technique_name || undefined, tierType: 'avulso' as const, diasMin: undefined, diasMax: undefined };
+      };
+
       return data.map(s => ({
         id: s.id,
         description: s.description,
@@ -32,10 +62,7 @@ export function useServices() {
         duration: s.duration,
         notes: s.notes || undefined,
         color: s.color || undefined,
-        techniqueName: s.technique_name || undefined,
-        tierType: validTier(s.tier_type),
-        diasMin: s.dias_min ?? undefined,
-        diasMax: s.dias_max ?? undefined,
+        ...derive(s),
         possuiManutencao: !!s.possui_manutencao,
         servicoPaiId: s.servico_pai_id || undefined,
         manutencaoAteDias: s.manutencao_ate_dias ?? undefined,
