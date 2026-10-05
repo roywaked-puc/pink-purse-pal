@@ -55,14 +55,16 @@ const Configuracoes = () => {
 
       <div className="space-y-4">
         {/* User Info */}
-        <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-          <div>
+        <div className="p-4 bg-muted/50 rounded-lg">
+          <div className="min-w-0">
             <p className="text-sm text-muted-foreground">Conectado como</p>
-            <p className="font-medium">{user?.email}</p>
+            <p className="font-medium truncate min-w-0">{user?.email}</p>
           </div>
-          <div className="flex gap-2">
-            <ChangePasswordDialog />
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+          <div className="flex gap-2 mt-3">
+            <div className="flex-1 min-w-0 [&_button]:w-full">
+              <ChangePasswordDialog />
+            </div>
+            <Button variant="outline" size="sm" onClick={handleLogout} className="flex-1">
               <LogOut className="h-4 w-4 mr-2" />
               Sair
             </Button>
