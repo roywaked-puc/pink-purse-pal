@@ -61,7 +61,9 @@ const Configuracoes = () => {
             <p className="font-medium truncate min-w-0">{user?.email}</p>
           </div>
           <div className="flex gap-2 mt-3">
-            <ChangePasswordDialog />
+            <div className="flex-1 min-w-0 [&_button]:w-full">
+              <ChangePasswordDialog />
+            </div>
             <Button variant="outline" size="sm" onClick={handleLogout} className="flex-1">
               <LogOut className="h-4 w-4 mr-2" />
               Sair
