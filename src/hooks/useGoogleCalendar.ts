@@ -118,6 +118,7 @@ export function useSyncAppointment() {
             amount: appointment.amount,
             duration: appointment.duration,
             notes: appointment.notes,
+            serviceId: appointment.serviceId,
             maintenanceNumber: appointment.maintenanceNumber,
             confirmationStatus: appointment.confirmationStatus,
             googleEventId: appointment.googleEventId,

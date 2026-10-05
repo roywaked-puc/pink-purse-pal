@@ -44,6 +44,7 @@ import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
 import type { Appointment, Transaction } from '@/types';
+import { getCorServico } from '@/lib/corServico';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -241,6 +242,8 @@ export default function ClienteFicha() {
                     .map((a) => a.id);
                   const today = new Date();
                   return clientAppointments.map((a) => {
+                    const service = a.serviceId ? getServiceById(a.serviceId) : undefined;
+                    const serviceColor = getCorServico(service);
                     let daysLabel: string | null = null;
                     if (a.confirmationStatus === 'atendido') {
                       const idx = completedIds.indexOf(a.id);
@@ -267,6 +270,11 @@ export default function ClienteFicha() {
                         key={a.id}
                         type="button"
                         onClick={() => setSelectedAppointment(a)}
+                        style={serviceColor ? {
+                          backgroundColor: `${serviceColor}20`,
+                          borderLeftColor: serviceColor,
+                          borderLeftWidth: '4px',
+                        } : undefined}
                         className="w-full text-left p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-3 transition-colors hover:bg-muted/50 hover:border-primary/40 cursor-pointer"
                       >
                         <div className="min-w-0">
@@ -275,7 +283,7 @@ export default function ClienteFicha() {
                           </p>
                            <AppointmentChips
                              appointment={a}
-                             service={a.serviceId ? getServiceById(a.serviceId) : undefined}
+                             service={service}
                              compact
                              className="mt-0.5"
                            />

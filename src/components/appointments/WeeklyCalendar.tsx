@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApp } from '@/contexts/AppContext';
 import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
+import { getCorServico } from '@/lib/corServico';
 
 interface WeeklyCalendarProps {
   appointments: Appointment[];
@@ -204,7 +205,7 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                   const aptDate = new Date(appointment.date);
                   const endTime = addMinutes(aptDate, appointment.duration);
                     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
-                    const serviceColor = service?.color;
+                    const serviceColor = getCorServico(service);
                     const ConfirmationIcon = confirmationIcons[appointment.confirmationStatus] || Clock;
                     const confirmationColor = confirmationColors[appointment.confirmationStatus] || 'text-muted-foreground';
                     
@@ -218,7 +219,7 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                       key={appointment.id}
                       onClick={() => onAppointmentClick(appointment)}
                       className={cn(
-                        "absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-left overflow-hidden transition-all hover:opacity-80 hover:ring-2 hover:ring-primary/50 border-l-2",
+                        "absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-left overflow-hidden transition-all hover:opacity-80 hover:ring-2 hover:ring-primary/50 border-l-4",
                         !serviceColor && "bg-muted/50 border-muted-foreground/30"
                       )}
                       style={{

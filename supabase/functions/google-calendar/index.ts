@@ -255,7 +255,18 @@ Deno.serve(async (req) => {
         // Create or update calendar event
         const startDate = new Date(appointment.date);
         const endDate = new Date(startDate.getTime() + appointment.duration * 60000);
-        const colorId = getColorId(appointment.serviceColor);
+        let serviceColor = appointment.serviceColor as string | undefined;
+        let serviceTierType: string | undefined;
+        if (appointment.serviceId) {
+          const { data: serviceData } = await supabase
+            .from('services')
+            .select('color, tier_type')
+            .eq('id', appointment.serviceId)
+            .single();
+          serviceColor = serviceData?.color || serviceColor;
+          serviceTierType = serviceData?.tier_type || undefined;
+        }
+        const colorId = serviceTierType === 'manutencao' ? '3' : getColorId(serviceColor);
         const statusPrefix = getStatusPrefix(appointment.confirmationStatus);
 
         const event: CalendarEvent = {
@@ -272,7 +283,7 @@ Deno.serve(async (req) => {
           ...(colorId && { colorId }),
         };
 
-        console.log('Event color:', appointment.serviceColor, '->', colorId);
+        console.log('Event color:', serviceColor, '->', colorId);
 
         // Add extendedProperties with appointmentId for idempotency
         const eventWithProps = {

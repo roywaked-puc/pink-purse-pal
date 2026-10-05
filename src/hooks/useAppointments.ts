@@ -25,6 +25,7 @@ async function syncToGoogleCalendar(appointment: {
   duration: number;
   notes?: string;
   googleEventId?: string;
+  serviceId?: string;
   serviceColor?: string;
   confirmationStatus?: string;
   maintenanceNumber?: number;
@@ -42,6 +43,7 @@ async function syncToGoogleCalendar(appointment: {
           duration: appointment.duration,
           notes: appointment.notes,
           googleEventId: appointment.googleEventId,
+          serviceId: appointment.serviceId,
           serviceColor: appointment.serviceColor,
           confirmationStatus: appointment.confirmationStatus,
           maintenanceNumber: appointment.maintenanceNumber,
@@ -168,6 +170,7 @@ export function useAddAppointment() {
           amount: Number(data.amount),
           duration: data.duration,
           notes: data.notes || undefined,
+          serviceId: data.service_id || undefined,
           serviceColor,
           confirmationStatus: data.confirmation_status,
           maintenanceNumber: (data as any).maintenance_number ?? undefined,
@@ -255,6 +258,7 @@ export function useUpdateAppointment() {
           duration: data.duration,
           notes: data.notes || undefined,
           googleEventId: freshData?.google_event_id || undefined,
+          serviceId: data.service_id || undefined,
           serviceColor,
           confirmationStatus: data.confirmation_status,
           maintenanceNumber: (data as any).maintenance_number ?? undefined,
@@ -441,6 +445,7 @@ export function useUpdateConfirmationStatus() {
           duration: appointment.duration,
           notes: appointment.notes || undefined,
           googleEventId: appointment.google_event_id,
+          serviceId: appointment.service_id || undefined,
           serviceColor,
           confirmationStatus: status,
           maintenanceNumber: (appointment as any).maintenance_number ?? undefined,
