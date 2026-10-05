@@ -25,6 +25,7 @@ import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
 import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
+import { getCorServico } from '@/lib/corServico';
 
 
 const formatWhatsAppMessage = (appointment: Appointment) => {
@@ -181,7 +182,7 @@ const Agendamentos = () => {
     const hasBalance = appointment.paidAmount < appointment.amount;
     const canDelete = appointment.paidAmount === 0;
     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
-    const serviceColor = service?.color;
+    const serviceColor = getCorServico(service);
     const confirmationConfig = confirmationStatusConfig[appointment.confirmationStatus] || confirmationStatusConfig.pendente;
     const ConfirmationIcon = confirmationConfig.icon;
 

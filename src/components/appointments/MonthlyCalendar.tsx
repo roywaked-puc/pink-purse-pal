@@ -21,6 +21,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 import { useApp } from '@/contexts/AppContext';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
+import { getCorServico } from '@/lib/corServico';
 
 interface MonthlyCalendarProps {
   appointments: Appointment[];
@@ -152,7 +153,7 @@ export function MonthlyCalendar({ appointments, onAppointmentClick }: MonthlyCal
                   {visibleAppointments.map((appointment) => {
                     const aptDate = new Date(appointment.date);
                     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
-                    const serviceColor = service?.color;
+                    const serviceColor = getCorServico(service);
                     const ConfirmationIcon = confirmationIcons[appointment.confirmationStatus] || Clock;
                     const confirmationColor = confirmationColors[appointment.confirmationStatus] || 'text-muted-foreground';
 
@@ -161,7 +162,7 @@ export function MonthlyCalendar({ appointments, onAppointmentClick }: MonthlyCal
                         key={appointment.id}
                         onClick={() => onAppointmentClick(appointment)}
                         className={cn(
-                          "w-full rounded px-1.5 py-0.5 text-left overflow-hidden transition-all hover:opacity-80 hover:ring-1 hover:ring-primary/50 border-l-2",
+                          "w-full rounded px-1.5 py-0.5 text-left overflow-hidden transition-all hover:opacity-80 hover:ring-1 hover:ring-primary/50 border-l-4",
                           !serviceColor && "bg-muted/70 border-muted-foreground/30"
                         )}
                         style={serviceColor ? {

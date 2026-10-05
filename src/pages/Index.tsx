@@ -21,6 +21,7 @@ import { useUserSettings } from '@/hooks/useUserSettings';
 import { useServices } from '@/hooks/useServices';
 import { useCaixaSummary } from '@/hooks/useCaixaSummary';
 import { Appointment } from '@/types';
+import { getCorServico } from '@/lib/corServico';
 
 const Index = () => {
   const {
@@ -37,7 +38,7 @@ const Index = () => {
 
   const getClientPhone = (clientId: string) => getClientById(clientId)?.phone;
   const getServiceColor = (serviceId?: string) =>
-    serviceId ? services?.find((s) => s.id === serviceId)?.color || undefined : undefined;
+    serviceId ? getCorServico(services?.find((s) => s.id === serviceId)) : undefined;
 
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);

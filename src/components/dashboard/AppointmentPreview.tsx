@@ -12,6 +12,7 @@ import { useUserSettings } from '@/hooks/useUserSettings';
 import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
 import { useApp } from '@/contexts/AppContext';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
+import { getCorServico } from '@/lib/corServico';
 
 
 const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -96,6 +97,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const isAppointmentToday = isToday(appointmentDate);
   const paymentStatus = getPaymentStatus(appointment);
   const appointmentService = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
+  const resolvedServiceColor = getCorServico(appointmentService) ?? serviceColor;
   const { data: userSettings } = useUserSettings();
   const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
   const reserva = appointment.caixaReservaValorAplicado ?? userSettings?.caixa_reserva_valor ?? 0;
@@ -130,9 +132,9 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   return (
     <div 
       style={{
-        ...(serviceColor && {
-          backgroundColor: `${serviceColor}20`,
-          borderLeftColor: serviceColor,
+        ...(resolvedServiceColor && {
+          backgroundColor: `${resolvedServiceColor}20`,
+          borderLeftColor: resolvedServiceColor,
           borderLeftWidth: '4px'
         })
       }}
