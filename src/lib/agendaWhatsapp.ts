@@ -27,9 +27,9 @@ export function montarMensagemAgenda(
     const data = `${parte('weekday').replace(/\.$/, '')}, ${parte('day')}/${parte('month')} · ${parte('hour')}:${parte('minute')}`;
     const servico = a.serviceId ? opcoes.servicos.find((s) => s.id === a.serviceId) : undefined;
     // Com vínculo, nunca recuperar a descrição congelada do agendamento.
-    const partes = getAppointmentDetailParts(a, servico);
-    const descricao = partes.length
-      ? partes.join(' · ')
+    const detalhes = getAppointmentDetailParts(a, servico);
+    const descricao = detalhes.length
+      ? detalhes.join(' · ')
       : (a.serviceId ? (servico ? servico.description : '') : a.service);
     const valor = opcoes.mostrarValores && !a.isPermuta ? ` · ${valorFormat.format(a.amount)}` : '';
     return `✨ ${data}${descricao ? ` — ${descricao}` : ''}${valor}`;
