@@ -29,7 +29,7 @@ export function montarMensagemAgenda(
     // Com vínculo, nunca recuperar a descrição congelada do agendamento.
     const detalhes = getAppointmentDetailParts(a, servico);
     const descricao = detalhes.length
-      ? detalhes.join(' · ')
+      ? (servico?.tierType === 'colocacao' ? 'Colocação' : detalhes.join(' · '))
       : (a.serviceId ? (servico ? servico.description : '') : a.service);
     const valor = opcoes.mostrarValores && !a.isPermuta ? ` · ${valorFormat.format(a.amount)}` : '';
     return `✨ ${data}${descricao ? ` — ${descricao}` : ''}${valor}`;
