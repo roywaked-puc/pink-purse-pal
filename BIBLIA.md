@@ -124,6 +124,13 @@ o caixa pessoal (livre pra saque). A divisão reaproveita o campo `scope` já ex
 Dados cadastrais (telefone **único** — validação por dígitos), aniversário, recorrência,
 histórico financeiro, histórico de atendimentos, fotos, anamnese e aba CRM.
 
+- **Enviar agenda** acima do histórico aparece quando há horários futuros (`data/hora >= agora`)
+  pendentes, confirmados ou retornos previstos. Lista todos em ordem, com datas em America/Sao_Paulo
+  e descrição estruturada atual. A mensagem é editável e abre o link WhatsApp, sem envio automático.
+  Valores ficam ocultos inicialmente e a última escolha é lembrada localmente; permutas nunca
+  mostram valor e não há total somado. Alterar a opção pede confirmação se o texto foi editado.
+  Sem telefone válido, copiar continua disponível, mas abrir WhatsApp fica desabilitado.
+
 - **Linha do tempo** unificada: atendimentos (pela data do agendamento) + pagamentos
   (pelo `created_at` real), com **agrupamento de pagamentos numa janela de ±2 minutos**.
 - Histórico mostra o **intervalo em dias desde o atendimento concluído anterior**;
