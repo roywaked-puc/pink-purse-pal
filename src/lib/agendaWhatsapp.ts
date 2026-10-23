@@ -1,5 +1,5 @@
 import type { Appointment, Client, Service } from '@/types';
-import { getAppointmentDescription } from './maintenance';
+import { getAppointmentDetailParts } from './maintenance';
 import { whatsappLink } from './whatsapp';
 
 export function selecionarAgendaFutura(agendamentos: Appointment[], agora = new Date()): Appointment[] {
@@ -27,13 +27,15 @@ export function montarMensagemAgenda(
     const data = `${parte('weekday').replace(/\.$/, '')}, ${parte('day')}/${parte('month')} · ${parte('hour')}:${parte('minute')}`;
     const servico = a.serviceId ? opcoes.servicos.find((s) => s.id === a.serviceId) : undefined;
     // Com vínculo, nunca recuperar a descrição congelada do agendamento.
-    const descricao = a.serviceId
-      ? (servico ? getAppointmentDescription({ ...a, service: servico.description }, servico) : '')
-      : a.service;
+    const detalhes = getAppointmentDetailParts(a, servico);
+    const descricao = detalhes.length
+      ? (servico?.tierType === 'colocacao' ? 'Colocação' : detalhes.join(' · '))
+      : (a.serviceId ? (servico ? servico.description : '') : a.service);
     const valor = opcoes.mostrarValores && !a.isPermuta ? ` · ${valorFormat.format(a.amount)}` : '';
-    return `📅 ${data}${descricao ? ` — ${descricao}` : ''}${valor}`;
+    return `✨ ${data}${descricao ? ` — ${descricao}` : ''}${valor}`;
   });
-  return `Oi, ${nome}! 💕 Seus próximos horários comigo:\n\n${linhas.join('\n')}\n\nQualquer imprevisto, me avisa com antecedência pra gente remarcar 😊`;
+  const cabecalho = `Oi, ${nome}! Seus próximos horários agendados:`;
+  return linhas.length ? `${cabecalho}\n\n${linhas.join('\n')}` : cabecalho;
 }
 
 export function linkAgendaWhatsapp(telefone: string | undefined, mensagem: string): string | null {
