@@ -26,18 +26,14 @@ export function isMaintenanceName(name: string): boolean {
 }
 
 /** Monta a descrição visual do atendimento a partir do serviço estruturado atual. */
-export function getAppointmentDescription(
-  appointment: Pick<Appointment, 'service' | 'maintenanceNumber'>,
+/** Partes estruturadas do atendimento sem a técnica: tipo, faixa e número da manutenção. */
+export function getAppointmentDetailParts(
+  appointment: Pick<Appointment, 'maintenanceNumber'>,
   service?: Service | null,
-): string {
-  if (!service?.techniqueName || !service.tierType || service.tierType === 'avulso') {
-    return appointment.service;
-  }
+): string[] {
+  if (!service?.techniqueName || !service.tierType || service.tierType === 'avulso') return [];
 
-  const parts = [
-    service.techniqueName,
-    service.tierType === 'manutencao' ? 'Manutenção' : 'Colocação',
-  ];
+  const parts = [service.tierType === 'manutencao' ? 'Manutenção' : 'Colocação'];
 
   if (service.diasMin != null && service.diasMax != null) {
     parts.push(`Faixa ${service.diasMin}–${service.diasMax} dias`);
@@ -51,7 +47,17 @@ export function getAppointmentDescription(
     parts.push(`${appointment.maintenanceNumber}ª manutenção`);
   }
 
-  return parts.join(' · ');
+  return parts;
+}
+
+/** Monta a descrição visual do atendimento a partir do serviço estruturado atual. */
+export function getAppointmentDescription(
+  appointment: Pick<Appointment, 'service' | 'maintenanceNumber'>,
+  service?: Service | null,
+): string {
+  const parts = getAppointmentDetailParts(appointment, service);
+  if (!parts.length || !service?.techniqueName) return appointment.service;
+  return [service.techniqueName, ...parts].join(' · ');
 }
 
 /**
