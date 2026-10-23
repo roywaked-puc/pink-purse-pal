@@ -37,12 +37,31 @@ test('permuta nunca expõe valor mesmo com opção ligada', () => {
   assert.equal(montar([{ ...base, isPermuta: true }], true).includes('R$'), false);
 });
 test('não limita a agenda em dez horários', () => {
-  assert.equal(montar(Array.from({ length: 12 }, (_, i) => ({ ...base, id: String(i) }))).split('📅').length - 1, 12);
+  assert.equal(montar(Array.from({ length: 12 }, (_, i) => ({ ...base, id: String(i) }))).split('✨').length - 1, 12);
 });
-test('descrição vinculada usa catálogo, faixa e número atual, não o legado', () => {
+test('descrição vinculada usa faixa e número atual, sem a técnica e sem o legado', () => {
   const texto = montar([{ ...base, serviceId: 's', maintenanceNumber: 3 }]);
-  assert.match(texto, /Volume Russo · Manutenção · Faixa 16–20 dias · 3ª manutenção/);
+  assert.match(texto, /— Manutenção · Faixa 16–20 dias · 3ª manutenção/);
+  assert.equal(texto.includes('Volume Russo'), false);
   assert.equal(texto.includes('Legado'), false);
+});
+test('colocação mostra só o tipo, sem técnica, faixa ou número', () => {
+  const texto = montar([{ ...base, serviceId: 's', maintenanceNumber: 5 }], false,
+    [{ ...servico, tierType: 'colocacao' }]);
+  assert.match(texto, /— Colocação$/m);
+  assert.equal(texto.includes('Volume Russo'), false);
+  assert.equal(texto.includes('ª manutenção'), false);
+});
+test('cabeçalho sem emojis e sem a linha de imprevisto', () => {
+  const texto = montar([{ ...base, serviceId: 's', maintenanceNumber: 1 }]);
+  assert.equal(texto.startsWith('Oi, Maria! Seus próximos horários agendados:\n\n✨ '), true);
+  for (const fora of ['💕', '📅', 'comigo', 'imprevisto', '😊']) assert.equal(texto.includes(fora), false);
+});
+test('partes vazias não deixam separadores sobrando', () => {
+  const semFaixa = { ...servico, diasMin: undefined, diasMax: undefined };
+  const texto = montar([{ ...base, serviceId: 's' }], false, [semFaixa]);
+  assert.match(texto, /— Manutenção$/m);
+  for (const sobra of ['— ·', '· ·', ' ·\n', '  ']) assert.equal(texto.includes(sobra), false);
 });
 test('sem número e colocação não exibem número de manutenção', () => {
   assert.equal(montar([{ ...base, serviceId: 's' }]).includes('ª manutenção'), false);
