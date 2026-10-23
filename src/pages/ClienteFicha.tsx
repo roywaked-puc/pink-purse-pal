@@ -45,6 +45,8 @@ import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
 import type { Appointment, Transaction } from '@/types';
 import { getCorServico } from '@/lib/corServico';
+import { selecionarAgendaFutura } from '@/lib/agendaWhatsapp';
+import { EnviarAgendaSheet } from '@/components/clients/EnviarAgendaSheet';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -53,8 +55,9 @@ const formatCurrency = (value: number) =>
 export default function ClienteFicha() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { appointments, transactions, getClientById, getServiceById } = useApp();
+  const { appointments, transactions, services, getClientById, getServiceById } = useApp();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [enviarAgendaAberto, setEnviarAgendaAberto] = useState(false);
 
   const client = id ? getClientById(id) : undefined;
 
@@ -70,6 +73,8 @@ export default function ClienteFicha() {
     const apptIds = new Set(clientAppointments.map((a) => a.id));
     return transactions.filter((t) => t.appointmentId && apptIds.has(t.appointmentId));
   }, [transactions, clientAppointments]);
+
+  const temAgendaFutura = selecionarAgendaFutura(clientAppointments).length > 0;
 
   const stats = useMemo(() => {
     const totalReceived = clientTransactions
@@ -227,6 +232,11 @@ export default function ClienteFicha() {
 
           {/* Histórico */}
           <section>
+            {temAgendaFutura && (
+              <Button variant="outline" className="mb-3" onClick={() => setEnviarAgendaAberto(true)}>
+                <MessageCircle className="w-4 h-4 mr-2" />Enviar agenda
+              </Button>
+            )}
             <h2 className="font-semibold mb-3">Histórico de atendimentos</h2>
             {clientAppointments.length === 0 ? (
               <EmptyState
@@ -321,6 +331,10 @@ export default function ClienteFicha() {
         </TabsContent>
       </Tabs>
 
+      {enviarAgendaAberto && (
+        <EnviarAgendaSheet cliente={client} agendamentos={clientAppointments} servicos={services}
+          onOpenChange={setEnviarAgendaAberto} />
+      )}
       <AppointmentDetailSheet
         appointment={selectedAppointment}
         onOpenChange={(open) => !open && setSelectedAppointment(null)}
