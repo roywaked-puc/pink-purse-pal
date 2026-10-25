@@ -2,11 +2,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Appointment, Service } from '../types';
-import { linkAgendaWhatsapp, montarMensagemAgenda, selecionarAgendaFutura } from './agendaWhatsapp';
+import {
+  calcularDiasDesdeAnterior, linkAgendaWhatsapp, montarMensagemAgenda, selecionarAgendaFutura,
+} from './agendaWhatsapp';
 
-const agora = new Date('2026-11-11T12:00:00Z');
+const agora = new Date('2026-11-01T12:00:00Z');
 const base: Appointment = {
-  id: 'a', date: agora, clientName: 'Maria Silva', service: 'Legado', amount: 115,
+  id: 'a', date: new Date('2026-11-05T12:00:00Z'), clientName: 'Maria Silva', service: 'Legado', amount: 115,
   paidAmount: 0, paymentStatus: 'nao_pago', confirmationStatus: 'pendente', duration: 60,
 };
 const servico: Service = {
@@ -27,53 +29,74 @@ test('ordena cronologicamente sem alterar a lista original', () => {
   assert.deepEqual(selecionarAgendaFutura(agendas, agora).map((a) => a.id), ['a', 'depois']);
   assert.equal(agendas[0].id, 'depois');
 });
-test('valores desligados não expõem montantes', () => {
-  assert.equal(montar([base]).includes('R$'), false);
+test('valores desligados não expõem o valor do agendamento', () => {
+  assert.equal(montar([base]).includes('115'), false);
 });
 test('valores ligados usam o valor do agendamento, nunca da tabela de serviços', () => {
   assert.match(montar([{ ...base, serviceId: 's', amount: 130 }], true), /R\$\s130,00/);
 });
 test('permuta nunca expõe valor mesmo com opção ligada', () => {
-  assert.equal(montar([{ ...base, isPermuta: true }], true).includes('R$'), false);
+  assert.equal(montar([{ ...base, isPermuta: true, amount: 130 }], true).includes('130'), false);
 });
 test('não limita a agenda em dez horários', () => {
   assert.equal(montar(Array.from({ length: 12 }, (_, i) => ({ ...base, id: String(i) }))).split('✨').length - 1, 12);
 });
-test('descrição vinculada usa faixa e número atual, sem a técnica e sem o legado', () => {
-  const texto = montar([{ ...base, serviceId: 's', maintenanceNumber: 3 }]);
-  assert.match(texto, /— Manutenção · Faixa 16–20 dias · 3ª manutenção/);
-  assert.equal(texto.includes('Volume Russo'), false);
-  assert.equal(texto.includes('Legado'), false);
+test('manutenção mostra dias desde o atendimento anterior, sem faixa, número ou técnica', () => {
+  const anterior = { ...base, id: 'ant', date: new Date('2026-10-17T12:00:00Z'), confirmationStatus: 'atendido' as const };
+  const texto = montar([anterior, { ...base, serviceId: 's', maintenanceNumber: 3 }]);
+  assert.match(texto, /✨ qui, 05\/11 · 09:00 · Manutenção \(19 dias\)/);
+  for (const fora of ['Faixa', 'ª manutenção', 'Volume Russo', 'Legado']) assert.equal(texto.includes(fora), false);
 });
-test('colocação mostra só o tipo, sem técnica, faixa ou número', () => {
+test('manutenção sem nenhum anterior mostra só "Manutenção"', () => {
+  assert.match(montar([{ ...base, serviceId: 's' }]), /· Manutenção$/m);
+});
+test('primeiro item usa o último atendido; o seguinte usa o item anterior da lista', () => {
+  const atendido = { ...base, id: 'at', date: new Date('2026-10-17T12:00:00Z'), confirmationStatus: 'atendido' as const };
+  const segunda = { ...base, id: 'b', serviceId: 's', date: new Date('2026-11-24T12:00:00Z') };
+  const texto = montar([atendido, { ...base, serviceId: 's' }, segunda]);
+  assert.match(texto, /05\/11 · 09:00 · Manutenção \(19 dias\)/);
+  assert.match(texto, /24\/11 · 09:00 · Manutenção \(19 dias\)/);
+});
+test('cancelado é ignorado ao procurar o anterior', () => {
+  const cancelado = { ...base, id: 'c', date: new Date('2026-11-03T12:00:00Z'), confirmationStatus: 'cancelado' as const };
+  const atendido = { ...base, id: 'at', date: new Date('2026-10-26T12:00:00Z'), confirmationStatus: 'atendido' as const };
+  assert.match(montar([cancelado, atendido, { ...base, serviceId: 's' }]), /Manutenção \(10 dias\)/);
+});
+test('singular usa "(1 dia)"', () => {
+  const atendido = { ...base, id: 'at', date: new Date('2026-11-04T12:00:00Z'), confirmationStatus: 'atendido' as const };
+  assert.match(montar([atendido, { ...base, serviceId: 's' }]), /Manutenção \(1 dia\)/);
+});
+test('calcularDiasDesdeAnterior compara só a data, ignorando a hora', () => {
+  const atendido = { ...base, id: 'at', date: new Date('2026-10-17T23:00:00Z'), confirmationStatus: 'atendido' as const };
+  assert.equal(calcularDiasDesdeAnterior(base, [base], [atendido, base]), 19);
+  assert.equal(calcularDiasDesdeAnterior(base, [base], [base]), null);
+});
+test('colocação mostra só "Colocação", sem técnica, faixa ou número', () => {
   const texto = montar([{ ...base, serviceId: 's', maintenanceNumber: 5 }], false,
     [{ ...servico, tierType: 'colocacao' }]);
-  assert.match(texto, /— Colocação$/m);
+  assert.match(texto, /· Colocação$/m);
   assert.equal(texto.includes('Volume Russo'), false);
-  assert.equal(texto.includes('ª manutenção'), false);
 });
-test('cabeçalho sem emojis e sem a linha de imprevisto', () => {
-  const texto = montar([{ ...base, serviceId: 's', maintenanceNumber: 1 }]);
-  assert.equal(texto.startsWith('Oi, Maria! Seus próximos horários agendados:\n\n✨ '), true);
-  for (const fora of ['💕', '📅', 'comigo', 'imprevisto', '😊']) assert.equal(texto.includes(fora), false);
+test('cabeçalho, atenção e agradecimento seguem o novo modelo', () => {
+  const texto = montar([{ ...base, serviceId: 's' }]);
+  assert.equal(texto.startsWith('Oi, Maria! Tudo bem? 😊\nSeus horários de fim de ano já estão garantidos:\n\n✨ '), true);
+  assert.match(texto, /\n\n⚠️ Atenção\nSe não puder comparecer, me avise com pelo menos 48h/);
+  assert.match(texto, /taxa de R\$ 50,00\./);
+  assert.equal(texto.endsWith('\n\nAgradeço a confiança! 💕'), true);
+  for (const fora of ['comigo', 'imprevisto', '📅']) assert.equal(texto.includes(fora), false);
 });
 test('partes vazias não deixam separadores sobrando', () => {
-  const semFaixa = { ...servico, diasMin: undefined, diasMax: undefined };
-  const texto = montar([{ ...base, serviceId: 's' }], false, [semFaixa]);
-  assert.match(texto, /— Manutenção$/m);
-  for (const sobra of ['— ·', '· ·', ' ·\n', '  ']) assert.equal(texto.includes(sobra), false);
+  const texto = montar([{ ...base, serviceId: 's' }]);
+  for (const sobra of ['· ·', ' ·\n', '  ', '—']) assert.equal(texto.includes(sobra), false);
 });
-test('sem número e colocação não exibem número de manutenção', () => {
-  assert.equal(montar([{ ...base, serviceId: 's' }]).includes('ª manutenção'), false);
-  assert.equal(montar([{ ...base, serviceId: 's', maintenanceNumber: 5 }], false,
-    [{ ...servico, tierType: 'colocacao' }]).includes('ª manutenção'), false);
-});
-test('avulso vinculado usa nome atual do catálogo', () => {
-  assert.match(montar([{ ...base, serviceId: 's' }], false, [{ ...servico, tierType: 'avulso' }]), /Volume Russo/);
+test('avulso vinculado usa o nome atual do catálogo, sem dias', () => {
+  const texto = montar([{ ...base, serviceId: 's' }], false, [{ ...servico, tierType: 'avulso' }]);
+  assert.match(texto, /· Volume Russo$/m);
+  assert.equal(texto.includes('dias)'), false);
 });
 test('sem service_id preserva texto livre; sem texto não acrescenta descrição', () => {
-  assert.match(montar([base]), /— Legado/);
-  assert.equal(montar([{ ...base, service: '' }]).includes('—'), false);
+  assert.match(montar([base]), /· Legado$/m);
+  assert.equal(montar([{ ...base, service: '' }]).includes('09:00 ·'), false);
 });
 test('formata data e hora em São Paulo mesmo quando muda o dia UTC', () => {
   const texto = montarMensagemAgenda({ name: 'Maria Silva' }, [{ ...base, date: new Date('2026-11-12T01:00:00Z') }],
