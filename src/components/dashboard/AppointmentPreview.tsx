@@ -2,26 +2,20 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, Calendar, FileText, Check, CheckCheck, X, Camera } from 'lucide-react';
-import { Appointment, ConfirmationStatus } from '@/types';
+import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, Calendar, FileText, CheckCheck, Camera, MoreHorizontal } from 'lucide-react';
+import { Appointment } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { MaintenanceBadge } from '@/components/ds/MaintenanceBadge';
+import { StatusBadge } from '@/components/ds/StatusBadge';
+import { MoneyDisplay } from '@/components/ds/MoneyDisplay';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { useApp } from '@/contexts/AppContext';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { getCorServico } from '@/lib/corServico';
 
-
-const confirmationStatusConfig: Record<ConfirmationStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
-  pendente: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Pendente' },
-  confirmado: { icon: Check, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Confirmado' },
-  atendido: { icon: CheckCheck, color: 'text-green-600', bg: 'bg-green-100', label: 'Atendido' },
-  cancelado: { icon: X, color: 'text-red-600', bg: 'bg-red-100', label: 'Cancelado' },
-  retorno_previsto: { icon: Clock, color: 'text-orange-600', bg: 'bg-orange-100', label: 'Retorno previsto' },
-};
 
 interface AppointmentPreviewProps {
   appointment: Appointment;
@@ -44,12 +38,6 @@ const getPaymentStatus = (appointment: Appointment) => {
   if (appointment.paidAmount >= appointment.amount) return 'pago';
   if (appointment.paidAmount > 0) return 'sinal';
   return 'nao_pago';
-};
-
-const statusLabels = {
-  pago: 'Pago',
-  nao_pago: 'Não pago',
-  sinal: 'Sinal',
 };
 
 const formatWhatsAppMessage = (appointment: Appointment) => {
@@ -92,6 +80,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const { getServiceById } = useApp();
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
@@ -110,8 +99,6 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const hasBalance = appointment.paidAmount < appointment.amount;
   const canDelete = appointment.paidAmount === 0;
   const canComplete = appointment.confirmationStatus !== 'atendido' && appointment.confirmationStatus !== 'cancelado';
-  const confirmationConfig = confirmationStatusConfig[appointment.confirmationStatus];
-  const ConfirmationIcon = confirmationConfig.icon;
 
   const clientPhone = getClientPhone?.(appointment.clientId || '');
   const hasPhone = clientPhone && clientPhone.length > 0;
@@ -133,73 +120,42 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
     <div 
       style={{
         ...(resolvedServiceColor && {
-          backgroundColor: `${resolvedServiceColor}20`,
+          backgroundColor: `color-mix(in srgb, ${resolvedServiceColor} 20%, transparent)`,
           borderLeftColor: resolvedServiceColor,
           borderLeftWidth: '4px'
         })
       }}
       className={cn(
-        "p-4 rounded-xl bg-card border border-border shadow-soft animate-fade-in",
+        "min-w-0 p-3 sm:p-4 rounded-xl bg-card border border-border shadow-soft animate-fade-in",
         isAppointmentToday && "ring-2 ring-primary/30"
       )}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className={cn(
-            "p-2 rounded-lg",
-            isAppointmentToday ? "bg-primary/15" : "bg-muted"
-          )}>
-            <Clock className={cn(
-              "w-4 h-4",
-              isAppointmentToday ? "text-primary" : "text-muted-foreground"
-            )} />
-          </div>
-          <div>
-            <p className="text-sm font-medium">
-              {format(appointmentDate, "EEE, dd 'de' MMM", { locale: ptBR })}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {format(appointmentDate, "HH:mm")}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className={cn(
-            "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
-            confirmationConfig.bg, confirmationConfig.color
-          )}>
-            <ConfirmationIcon className="w-3 h-3" />
-            {confirmationConfig.label}
-          </span>
-          <span className={cn(
-            "text-xs font-medium px-2.5 py-1 rounded-full",
-            paymentStatus === 'pago' && "status-paid",
-            paymentStatus === 'nao_pago' && "status-pending",
-            paymentStatus === 'sinal' && "status-today"
-          )}>
-            {statusLabels[paymentStatus]}
-          </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <p className="flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap">
+          <Clock className="w-4 h-4 shrink-0 text-muted-foreground" />
+          {format(appointmentDate, "EEE, dd/MM · HH:mm", { locale: ptBR }).replace('.', '')}
+        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge status={appointment.confirmationStatus} className="whitespace-nowrap" />
+          <StatusBadge status={paymentStatus} className="whitespace-nowrap" />
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-2">
-        <User className="w-4 h-4 text-muted-foreground" />
+      <div className="flex items-center gap-2 mb-2 min-w-0">
+        <User className="w-4 h-4 shrink-0 text-muted-foreground" />
         {appointment.clientId ? (
-          <Link
-            to={`/cliente/${appointment.clientId}`}
-            className="font-medium hover:text-primary hover:underline transition-colors"
-          >
+          <Link to={`/cliente/${appointment.clientId}`} className="min-w-0 text-[17px] font-bold break-words hover:text-primary hover:underline transition-colors">
             {appointment.clientName}
           </Link>
         ) : (
-          <span className="font-medium">{appointment.clientName}</span>
+          <span className="min-w-0 text-[17px] font-bold break-words">{appointment.clientName}</span>
         )}
         {appointment.parentAppointmentId && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
-            🔄 Retorno
-          </span>
+          <span className="shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">🔄 Retorno</span>
         )}
-        <MaintenanceBadge number={appointment.maintenanceNumber} />
       </div>
+
+      <AppointmentChips appointment={appointment} service={appointmentService}
+        className="mb-3 [&>p]:text-muted-foreground [&>p]:font-normal [&>div]:gap-1.5 [&_span]:whitespace-nowrap" />
 
       {appointment.notes && (
         <div className="flex items-start gap-2 mb-2">
@@ -210,112 +166,66 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
         </div>
       )}
 
-      <AppointmentChips appointment={appointment} service={appointmentService} className="mb-2" />
-
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
-          {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
-            <p className="text-xs text-muted-foreground">
-              Recebido: {formatCurrency(appointment.paidAmount)}
-            </p>
-          )}
-          {showCaixaSplit && (
-            <p className="text-xs text-muted-foreground">
-              Caixa empresa {formatCurrency(caixaEmpresa)} · Caixa pessoal {formatCurrency(caixaPessoal)}
-            </p>
-          )}
-        </div>
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(appointment)}
-            className="h-8 w-8"
-          >
-            <Pencil className="w-4 h-4" />
+      <div className="border-t border-border pt-2 flex items-center justify-between gap-1">
+        <MoneyDisplay value={appointment.amount} size="sm" className="text-primary shrink-0" />
+        <div className="flex shrink-0">
+          <Button variant="ghost" size="icon" className="h-11 w-11 text-success" aria-label="WhatsApp" title="WhatsApp"
+            disabled={!hasPhone} onClick={() => window.open(whatsappLink, '_blank', 'noopener,noreferrer')}>
+            <MessageCircle className="w-4 h-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className={cn(
-              "h-8 w-8",
-              appointment.googleEventId 
-                ? "text-green-600 hover:text-green-700"
-                : "text-blue-600 hover:text-blue-700"
-            )}
-          >
-            <a 
-              href={appointment.googleEventId 
-                ? 'https://calendar.google.com' 
-                : formatGoogleCalendarUrl(appointment, appointment.duration)
-              } 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              {appointment.googleEventId 
-                ? <Calendar className="w-4 h-4" />
-                : <CalendarPlus className="w-4 h-4" />
-              }
-            </a>
+          <Button variant="ghost" size="icon" className="h-11 w-11 text-success" aria-label="Marcar como atendido" title="Marcar como atendido"
+            disabled={!canComplete} onClick={handleQuickComplete}>
+            <CheckCheck className="w-4 h-4" />
           </Button>
-          {hasPhone && (
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              className="h-8 w-8 text-green-600 hover:text-green-700"
-            >
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="w-4 h-4" />
-              </a>
-            </Button>
-          )}
-          {appointment.clientId && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setHistoryOpen(true)}
-              className="h-8 w-8 text-pink-600 hover:text-pink-700"
-              title="Histórico de fotos"
-            >
-              <Camera className="w-4 h-4" />
-            </Button>
-          )}
-          {canComplete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleQuickComplete}
-              className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
-              title={hasBalance ? 'Concluir e receber' : 'Marcar como atendido'}
-            >
-              <CheckCheck className="w-4 h-4" />
-            </Button>
-          )}
-          {hasBalance && onReceive && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onReceive(appointment)}
-              className="h-8 w-8 text-green-600 hover:text-green-700"
-            >
-              <DollarSign className="w-4 h-4" />
-            </Button>
-          )}
-          {canDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(appointment.id)}
-              className="h-8 w-8 text-destructive hover:text-destructive"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
+          <Button variant="ghost" size="icon" className="h-11 w-11 text-success" aria-label="Registrar pagamento" title="Registrar pagamento"
+            disabled={!hasBalance || !onReceive} onClick={() => onReceive?.(appointment)}>
+            <DollarSign className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Mais ações" title="Mais ações" onClick={() => setMoreOpen(true)}>
+            <MoreHorizontal className="w-5 h-5" />
+          </Button>
         </div>
       </div>
+      {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
+        <p className="text-xs text-muted-foreground">Recebido: {formatCurrency(appointment.paidAmount)}</p>
+      )}
+      {showCaixaSplit && (
+        <p className="text-xs text-muted-foreground break-words">
+          Caixa empresa {formatCurrency(caixaEmpresa)} · Caixa pessoal {formatCurrency(caixaPessoal)}
+        </p>
+      )}
+
+      <Drawer open={moreOpen} onOpenChange={setMoreOpen}>
+        <DrawerContent className="max-h-[85dvh]">
+          <div className="w-full max-w-lg mx-auto overflow-y-auto pb-6">
+            <DrawerHeader className="text-left">
+              <DrawerTitle className="break-words leading-snug">{appointment.clientName} · {appointmentService?.techniqueName || appointment.service}</DrawerTitle>
+              <DrawerDescription>{format(appointmentDate, "EEE, dd/MM · HH:mm", { locale: ptBR })}</DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4">
+              <Button variant="ghost" className="h-[52px] w-full justify-start gap-3" onClick={() => { setMoreOpen(false); onEdit(appointment); }}>
+                <Pencil className="w-5 h-5" /> Editar agendamento
+              </Button>
+              <Button variant="ghost" className="h-[52px] w-full justify-start gap-3" onClick={() => { setMoreOpen(false); onEdit(appointment); }}>
+                <Calendar className="w-5 h-5" /> Reagendar
+              </Button>
+              <Button variant="ghost" className="h-[52px] w-full justify-start gap-3" disabled={!appointment.clientId} onClick={() => { setMoreOpen(false); setHistoryOpen(true); }}>
+                <Camera className="w-5 h-5" /> Adicionar fotos
+              </Button>
+              <Button variant="ghost" asChild className="h-[52px] w-full justify-start gap-3">
+                <a href={appointment.googleEventId ? 'https://calendar.google.com' : formatGoogleCalendarUrl(appointment, appointment.duration)} target="_blank" rel="noopener noreferrer">
+                  <CalendarPlus className="w-5 h-5" /> Google Calendar
+                </a>
+              </Button>
+              <div className="border-t border-border my-2" />
+              <Button variant="ghost" className="h-[52px] w-full justify-start gap-3 text-destructive hover:text-destructive" disabled={!canDelete}
+                onClick={() => { setMoreOpen(false); onDelete(appointment.id); }}>
+                <Trash2 className="w-5 h-5" /> Excluir agendamento
+              </Button>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {appointment.clientId && (
         <ClientPhotosDialog

@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
-import { isToday } from 'date-fns';
+import { format, isToday } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
 import { TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
 import { CaixaSaldoResumo } from '@/components/ds/CaixaSaldoResumo';
 import { CaixaDetalheDrawer, CaixaDetalheTipo } from '@/components/dashboard/CaixaDetalheDrawer';
@@ -142,19 +143,16 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <PageHeader
-        title="Meu Dia ☀️"
-        subtitle="Sua agenda e seus números"
-        action={
-          <button
-            onClick={toggleBalances}
-            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            title={balancesVisible ? 'Ocultar saldos' : 'Exibir saldos'}
-          >
-            {balancesVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-          </button>
-        }
-      />
+      <header className="flex items-center justify-between mb-6 gap-3">
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">{format(new Date(), "EEEE, dd 'de' MMM", { locale: ptBR })}</p>
+          <h1 className="text-2xl font-bold mt-1">Meu Dia</h1>
+        </div>
+        <Button variant="ghost" size="icon" onClick={toggleBalances} className="h-11 w-11 shrink-0 text-muted-foreground"
+          aria-label={balancesVisible ? 'Ocultar saldos' : 'Exibir saldos'} title={balancesVisible ? 'Ocultar saldos' : 'Exibir saldos'}>
+          {balancesVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+        </Button>
+      </header>
 
       {/* Busca */}
       <div className="mb-4">
@@ -185,42 +183,37 @@ const Index = () => {
             icon={Sun}
             title="Nenhum atendimento para hoje"
             description="Aproveite para organizar a semana ou agendar um cliente."
-            action={
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditingAppointment(null);
-                  setShowAppointmentForm(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Novo agendamento
-              </Button>
-            }
+
           />
         )}
       </section>
 
       {/* Ações rápidas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <Button onClick={() => setShowTransactionForm(true)} className="h-12">
-          <Plus className="w-5 h-5 mr-2" />
-          Nova Movimentação
+      <div className="grid grid-cols-2 gap-2.5 mb-6">
+        <Button onClick={() => setShowTransactionForm(true)} className="h-[52px] min-w-0 px-2 gap-2 whitespace-nowrap">
+          <Plus className="w-5 h-5 shrink-0" />
+          Movimentação
         </Button>
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             setEditingAppointment(null);
             setShowAppointmentForm(true);
           }}
-          className="h-12"
+          className="h-[52px] min-w-0 px-2 gap-2 whitespace-nowrap bg-card border-primary/30"
         >
-          <Calendar className="w-5 h-5 mr-2" />
-          Novo Agendamento
+          <Calendar className="w-5 h-5 shrink-0" />
+          Agendamento
         </Button>
       </div>
 
       {/* Saldos */}
+      {!balancesVisible ? (
+        <Button variant="ghost" onClick={toggleBalances} className="w-full h-14 mb-6 rounded-xl border border-dashed border-border bg-muted/40 gap-2 text-muted-foreground whitespace-nowrap px-2">
+          <Eye className="w-4 h-4 shrink-0" />
+          Saldos ocultos · toque para exibir
+        </Button>
+      ) : (
       <CaixaSaldoResumo
         saldoEmpresa={resumoCaixa.saldoEmpresa}
         saldoPessoal={resumoCaixa.saldoPessoal}
@@ -244,6 +237,8 @@ const Index = () => {
         }
       />
 
+      )}
+
       <CaixaDetalheDrawer
         tipo={detalheCaixa}
         mesReferencia={new Date()}
@@ -255,10 +250,12 @@ const Index = () => {
       {/* Próximos */}
       {upcomingAppointments.length > 0 && (
         <section className="mb-6">
-          <h2 className="font-semibold mb-3 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-primary" />
-            Próximos Agendamentos
-          </h2>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <h2 className="font-semibold min-w-0">Próximos Agendamentos</h2>
+            <Button variant="link" asChild className="shrink-0 h-11 px-0">
+              <Link to="/agendamentos">Ver agenda</Link>
+            </Button>
+          </div>
           {renderAppointmentList(upcomingAppointments)}
         </section>
       )}
