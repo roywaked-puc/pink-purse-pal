@@ -5,6 +5,6 @@
 - [ ] Conferir o fluxo completo na ficha real: depende de entrada da usuária no preview; sessão própria não pôde ser gerada.
 
 # Layout do Meu Dia
-- [ ] Ajustar cabeçalho, ações rápidas e saldos ocultos somente na Home.
-- [ ] Reorganizar cards e Mais ações preservando os fluxos existentes.
-- [ ] Conferir a Home autenticada em 360px e 390px.
+- [x] Ajustar cabeçalho, ações rápidas e saldos ocultos somente na Home.
+- [x] Reorganizar cards e Mais ações preservando os fluxos existentes.
+- [x] Conferir a Home autenticada em 360px e 390px: sem transbordamento, Mais ações, formulário completo e revelação de saldos.

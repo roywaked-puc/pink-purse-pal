@@ -132,7 +132,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <p className="flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap">
           <Clock className="w-4 h-4 shrink-0 text-muted-foreground" />
-          {format(appointmentDate, "EEE, dd/MM · HH:mm", { locale: ptBR }).replace('.', '')}
+          {format(appointmentDate, 'EEEE', { locale: ptBR }).slice(0, 3)}, {format(appointmentDate, 'dd/MM · HH:mm')}
         </p>
         <div className="flex flex-wrap items-center gap-1.5">
           <StatusBadge status={appointment.confirmationStatus} className="whitespace-nowrap" />
