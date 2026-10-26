@@ -215,7 +215,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
         )}
       </div>
 
-      <AppointmentChips appointment={appointment} service={appointmentService}
+      <AppointmentChips comIntervalo appointment={appointment} service={appointmentService}
         className="mb-3 [&>p]:text-muted-foreground [&>p]:font-normal [&>div]:gap-1.5 [&_span]:whitespace-nowrap" />
 
       {appointment.notes && (

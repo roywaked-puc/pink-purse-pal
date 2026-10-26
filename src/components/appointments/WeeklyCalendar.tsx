@@ -236,7 +236,7 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
                           {format(aptDate, "HH:mm")} - {format(endTime, "HH:mm")}
                         </span>
                       </div>
-                      <AppointmentChips appointment={appointment} service={service} compact />
+                      <AppointmentChips comIntervalo appointment={appointment} service={service} compact />
                       <MaintenanceBadge number={appointment.maintenanceNumber} compact />
                       {appointment.notes && (
                         <div className="flex items-center gap-0.5 mt-0.5">

@@ -181,7 +181,7 @@ export function MonthlyCalendar({ appointments, onAppointmentClick }: MonthlyCal
                             className="px-1"
                           />
                         </div>
-                         <AppointmentChips appointment={appointment} service={service} compact />
+                         <AppointmentChips comIntervalo appointment={appointment} service={service} compact />
                       </button>
                     );
                   })}

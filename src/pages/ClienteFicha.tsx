@@ -26,6 +26,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { StatusBadge } from '@/components/ds/StatusBadge';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
+import { diasDesdeUltimoAtendimento } from '@/lib/diasDesdeUltimoAtendimento';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -264,13 +265,9 @@ export default function ClienteFicha() {
                         else if (diff > 0) parts.push(`Em ${diff} ${diff === 1 ? 'dia' : 'dias'}`);
                         else parts.push(`Há ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'dia' : 'dias'}`);
                       }
-                      if (idx >= 0 && idx < completedIds.length - 1) {
-                        const prevId = completedIds[idx + 1];
-                        const prev = clientAppointments.find((x) => x.id === prevId);
-                        if (prev) {
-                          const diff = differenceInCalendarDays(new Date(a.date), new Date(prev.date));
-                          parts.push(`${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`);
-                        }
+                      const diff = diasDesdeUltimoAtendimento(a, clientAppointments);
+                      if (diff != null) {
+                        parts.push(`${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`);
                       }
                       if (parts.length) daysLabel = parts.join(' · ');
                     }
