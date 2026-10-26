@@ -10,6 +10,6 @@
 - [x] Conferir a Home autenticada em 360px e 390px: sem transbordamento, Mais ações, formulário completo e revelação de saldos.
 
 # Finalizar atendimento sem convite de fotos
-- [ ] Remover disparos automáticos em todos os caminhos sem alterar acesso manual.
-- [ ] Verificar Home, Agenda e acesso por câmera no navegador.
-- [ ] Informar telas com acesso manual às fotos e atualizar regra de produto.
+- [x] Remover disparos automáticos em todos os caminhos sem alterar acesso manual.
+- [x] Verificar Home, Agenda (Lista/Mês/Semana) e câmera da Home/ficha no navegador autenticado com registros temporários, removidos ao final.
+- [x] Identificar acesso manual na Home (Mais ações) e na ficha (Fotos); atualizar regra de produto.
