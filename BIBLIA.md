@@ -145,6 +145,12 @@ a confirmar, retornos previstos, inativas, VIPs, aniversariantes e **Produção 
 (realizado, previsto, projeção, meta com barra colorida; permuta contabilizada à parte).
 Configurável em Configurações → CRM: `crm_inactive_days`, `crm_confirm_days`,
 `crm_vip_count`, `crm_monthly_goal`. Contato rápido via link `wa.me`.
+Lembretes de confirmação na Home e CRM incluem horários entre agora e os próximos
+`crm_confirm_days` dias, pendentes, confirmados e retornos previstos. Abrir WhatsApp
+registra `confirmation_sent_at`, sem enviar automaticamente nem mudar confirmação ou
+financeiro. Reenvio permitido; sem telefone não envia. Política configurável: aviso mínimo
+48h e taxa R$ 50,00 apenas no texto; prazo vencido avisa sem bloquear. Template usa primeiro
+nome, serviço estruturado e datas/saudação em America/Sao_Paulo; horas ≥ 1, taxa ≥ 0.
 
 ### 4.7 Anamnese digital
 Templates **versionados** (`anamnese_templates` → `anamnese_template_versions` →

@@ -31,6 +31,7 @@ import { waMessages } from '@/lib/whatsapp';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
+import { LembretesConfirmacaoCard } from '@/components/crm/LembretesConfirmacaoCard';
 
 type ProductionFilter = {
   kind: 'previsto' | 'realizado';
@@ -180,6 +181,7 @@ export default function CRM() {
 
 
       {/* Cards */}
+      <LembretesConfirmacaoCard />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
         <ActionCard
           icon={Phone}

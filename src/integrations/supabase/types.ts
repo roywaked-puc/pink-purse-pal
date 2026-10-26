@@ -312,6 +312,7 @@ export type Database = {
           caixa_reserva_valor_aplicado: number | null
           client_id: string | null
           client_name: string
+          confirmation_sent_at: string | null
           confirmation_status: Database["public"]["Enums"]["confirmation_status_enum"]
           created_at: string
           date: string
@@ -333,6 +334,7 @@ export type Database = {
           caixa_reserva_valor_aplicado?: number | null
           client_id?: string | null
           client_name: string
+          confirmation_sent_at?: string | null
           confirmation_status?: Database["public"]["Enums"]["confirmation_status_enum"]
           created_at?: string
           date: string
@@ -354,6 +356,7 @@ export type Database = {
           caixa_reserva_valor_aplicado?: number | null
           client_id?: string | null
           client_name?: string
+          confirmation_sent_at?: string | null
           confirmation_status?: Database["public"]["Enums"]["confirmation_status_enum"]
           created_at?: string
           date?: string
@@ -659,6 +662,9 @@ export type Database = {
           caixa_inicio_em: string | null
           caixa_reserva_ativo: boolean
           caixa_reserva_valor: number
+          cancellation_fee: number
+          cancellation_notice_hours: number
+          confirm_message_template: string | null
           created_at: string | null
           crm_confirm_days: number
           crm_inactive_days: number
@@ -683,6 +689,9 @@ export type Database = {
           caixa_inicio_em?: string | null
           caixa_reserva_ativo?: boolean
           caixa_reserva_valor?: number
+          cancellation_fee?: number
+          cancellation_notice_hours?: number
+          confirm_message_template?: string | null
           created_at?: string | null
           crm_confirm_days?: number
           crm_inactive_days?: number
@@ -707,6 +716,9 @@ export type Database = {
           caixa_inicio_em?: string | null
           caixa_reserva_ativo?: boolean
           caixa_reserva_valor?: number
+          cancellation_fee?: number
+          cancellation_notice_hours?: number
+          confirm_message_template?: string | null
           created_at?: string | null
           crm_confirm_days?: number
           crm_inactive_days?: number
@@ -738,6 +750,7 @@ export type Database = {
         Args: { p_appointment_id: string }
         Returns: undefined
       }
+      google_calendar_secret_configured: { Args: never; Returns: boolean }
     }
     Enums: {
       anamnese_question_type:

@@ -1,0 +1,3 @@
+REVOKE SELECT ON public.user_settings FROM authenticated, anon;
+GRANT SELECT (id, user_id, google_calendar_enabled, google_token_expiry, created_at, updated_at, google_client_id, google_client_secret, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count, crm_monthly_goal, caixa_reserva_valor, caixa_reserva_ativo, caixa_inicio_em, confirm_message_template, cancellation_notice_hours, cancellation_fee)
+ON public.user_settings TO authenticated;

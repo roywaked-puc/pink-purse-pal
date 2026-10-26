@@ -105,12 +105,19 @@ Deno.serve(async (req) => {
     const userId = claimsData.claims.sub;
     console.log('User authenticated:', userId);
 
+    // Credentials remain server-only; every settings operation is scoped to the verified user.
+    const servidor = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+
     // Parse request body
     const { action, ...params } = await req.json();
     console.log('Action:', action);
 
     // Get user settings (credentials)
-    const { data: settings, error: settingsError } = await supabase
+    const { data: settings, error: settingsError } = await servidor
       .from('user_settings')
       .select('*')
       .eq('user_id', userId)
@@ -249,7 +256,7 @@ Deno.serve(async (req) => {
         
         if (tokenExpiry && tokenExpiry <= new Date()) {
           console.log('Token expired, refreshing...');
-          accessToken = await refreshAccessToken(supabase, userId, settings);
+          accessToken = await refreshAccessToken(servidor, userId, settings);
         }
 
         // Create or update calendar event
@@ -393,7 +400,7 @@ Deno.serve(async (req) => {
         const tokenExpiry = settings.google_token_expiry ? new Date(settings.google_token_expiry) : null;
         
         if (tokenExpiry && tokenExpiry <= new Date()) {
-          accessToken = await refreshAccessToken(supabase, userId, settings);
+          accessToken = await refreshAccessToken(servidor, userId, settings);
         }
 
         console.log('Deleting calendar event:', eventId);

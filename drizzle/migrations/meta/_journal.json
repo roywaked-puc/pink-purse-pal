@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793054131240,
+      "tag": "0000_confirmation_reminders",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793054163601,
+      "tag": "0001_protect_google_tokens_settings_select",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793054199104,
+      "tag": "0002_protect_google_secret_settings",
+      "breakpoints": true
+    }
+  ]
+}

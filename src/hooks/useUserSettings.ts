@@ -22,6 +22,9 @@ export interface UserSettings {
   caixa_reserva_ativo: boolean;
   caixa_reserva_valor: number;
   caixa_inicio_em: string | null;
+  confirm_message_template: string | null;
+  cancellation_notice_hours: number;
+  cancellation_fee: number;
 }
 
 const DEFAULTS = {
@@ -36,11 +39,14 @@ const DEFAULTS = {
   crm_monthly_goal: 0,
   caixa_reserva_ativo: false,
   caixa_reserva_valor: 0,
+  confirm_message_template: null,
+  cancellation_notice_hours: 48,
+  cancellation_fee: 50,
 };
 
 // Safe column list — never select OAuth client secret or access/refresh tokens client-side.
 const SAFE_COLUMNS =
-  'id, user_id, google_calendar_enabled, google_client_id, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count, crm_monthly_goal, caixa_reserva_ativo, caixa_reserva_valor, caixa_inicio_em';
+  'id, user_id, google_calendar_enabled, google_client_id, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count, crm_monthly_goal, caixa_reserva_ativo, caixa_reserva_valor, caixa_inicio_em, confirm_message_template, cancellation_notice_hours, cancellation_fee';
 
 export function useUserSettings() {
   const { user } = useAuth();
@@ -57,11 +63,7 @@ export function useUserSettings() {
           .eq('user_id', user.id)
           .maybeSingle(),
         // Derive a boolean for the client without exposing the secret value.
-        supabase
-          .from('user_settings')
-          .select('user_id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .not('google_client_secret', 'is', null),
+        supabase.rpc('google_calendar_secret_configured'),
       ]);
 
       if (error) throw sanitizeDbError(error);
@@ -73,7 +75,7 @@ export function useUserSettings() {
         user_id: d.user_id,
         google_calendar_enabled: d.google_calendar_enabled ?? false,
         google_client_id: d.google_client_id ?? null,
-        google_client_secret_configured: (secretCheck.count ?? 0) > 0,
+        google_client_secret_configured: secretCheck.data === true,
         google_token_expiry: d.google_token_expiry ?? null,
         retention_intervals: d.retention_intervals ?? DEFAULTS.retention_intervals,
         retention_reminder_days: d.retention_reminder_days ?? DEFAULTS.retention_reminder_days,
@@ -87,6 +89,9 @@ export function useUserSettings() {
         caixa_reserva_ativo: d.caixa_reserva_ativo ?? DEFAULTS.caixa_reserva_ativo,
         caixa_reserva_valor: Number(d.caixa_reserva_valor ?? DEFAULTS.caixa_reserva_valor),
         caixa_inicio_em: d.caixa_inicio_em ?? null,
+        confirm_message_template: d.confirm_message_template ?? null,
+        cancellation_notice_hours: d.cancellation_notice_hours ?? DEFAULTS.cancellation_notice_hours,
+        cancellation_fee: Number(d.cancellation_fee ?? DEFAULTS.cancellation_fee),
       };
     },
     enabled: !!user,
