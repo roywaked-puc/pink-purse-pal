@@ -13,6 +13,7 @@ import { ReturnsToConfirmCard } from '@/components/dashboard/ReturnsToConfirmCar
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { AppointmentForm, AppointmentPrefill } from '@/components/appointments/AppointmentForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
@@ -47,6 +48,8 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [returnPrefill, setReturnPrefill] = useState<AppointmentPrefill | null>(null);
   const [detalheCaixa, setDetalheCaixa] = useState<CaixaDetalheTipo | null>(null);
+  // Fotos pós-atendimento: estado na página para não morrer se o card sair da lista.
+  const [fotosAtendimento, setFotosAtendimento] = useState<Appointment | null>(null);
   const [balancesVisible, setBalancesVisible] = useState(
     () => localStorage.getItem('balancesVisible') === 'true',
   );
@@ -123,6 +126,7 @@ const Index = () => {
             onDelete={handleDeleteAppointment}
             onReceive={handleReceiveAppointment}
             getClientPhone={getClientPhone}
+            onAtendido={(a) => { if (a.clientId) setFotosAtendimento(a); }}
           />
         </div>
       ))}
@@ -296,6 +300,14 @@ const Index = () => {
         description="Tem certeza que deseja excluir este agendamento?"
       />
 
+      {fotosAtendimento?.clientId && (
+        <ClientPhotosDialog
+          open={!!fotosAtendimento}
+          onOpenChange={(open) => { if (!open) setFotosAtendimento(null); }}
+          clientId={fotosAtendimento.clientId}
+          clientName={fotosAtendimento.clientName}
+        />
+      )}
     </MainLayout>
   );
 };

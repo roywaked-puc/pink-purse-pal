@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ConfirmationStatus, PaymentStatus } from '@/types';
 
@@ -6,9 +7,11 @@ type Status = ConfirmationStatus | PaymentStatus;
 interface StatusBadgeProps {
   status: Status;
   className?: string;
+  /** Mostra uma setinha indicando que o selo pode ser tocado. */
+  withChevron?: boolean;
 }
 
-const LABELS: Record<Status, string> = {
+export const STATUS_LABELS: Record<Status, string> = {
   pendente: 'Pendente',
   confirmado: 'Confirmado',
   atendido: 'Atendido',
@@ -30,7 +33,7 @@ const STYLES: Record<Status, string> = {
   sinal: 'bg-amber-100 text-amber-800 border-amber-200',
 };
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, className, withChevron }: StatusBadgeProps) {
   return (
     <span
       className={cn(
@@ -39,7 +42,8 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         className,
       )}
     >
-      {LABELS[status]}
+      {STATUS_LABELS[status]}
+      {withChevron && <ChevronDown className="w-3 h-3 ml-0.5 -mr-0.5" aria-hidden="true" />}
     </span>
   );
 }

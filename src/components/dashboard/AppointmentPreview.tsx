@@ -3,13 +3,19 @@ import { Link } from 'react-router-dom';
 import { format, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Clock, User, Pencil, Trash2, DollarSign, MessageCircle, CalendarPlus, Calendar, FileText, CheckCheck, Camera, MoreHorizontal } from 'lucide-react';
-import { Appointment } from '@/types';
+import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { ClientPhotosDialog } from '@/components/clients/ClientPhotosDialog';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { StatusBadge } from '@/components/ds/StatusBadge';
+import { StatusBadge, STATUS_LABELS } from '@/components/ds/StatusBadge';
+import { StatusPickerSheet } from '@/components/appointments/StatusPickerSheet';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 import { MoneyDisplay } from '@/components/ds/MoneyDisplay';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { useApp } from '@/contexts/AppContext';
@@ -24,6 +30,8 @@ interface AppointmentPreviewProps {
   onDelete: (id: string) => void;
   onReceive?: (appointment: Appointment) => void;
   getClientPhone?: (clientId: string) => string | undefined;
+  /** Chamado depois de marcar "Atendido" — a página abre as fotos (estado fica na página). */
+  onAtendido?: (appointment: Appointment) => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -75,11 +83,19 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
 };
 
-export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
+const PROXIMO_PASSO: Partial<Record<ConfirmationStatus, { label: string; status: ConfirmationStatus }>> = {
+  pendente: { label: 'Confirmar', status: 'confirmado' },
+  retorno_previsto: { label: 'Confirmar', status: 'confirmado' },
+  confirmado: { label: 'Atendido', status: 'atendido' },
+};
+
+export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, getClientPhone, onAtendido }: AppointmentPreviewProps) {
   const { getServiceById } = useApp();
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [confirmacao, setConfirmacao] = useState<{ status: ConfirmationStatus; titulo: string; texto: string } | null>(null);
 
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
@@ -97,15 +113,55 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   // Permuta também usa o "$ Receber" — a baixa vai para uma conta de permuta.
   const hasBalance = appointment.paidAmount < appointment.amount;
   const canDelete = appointment.paidAmount === 0;
-  const canComplete = appointment.confirmationStatus !== 'atendido' && appointment.confirmationStatus !== 'cancelado';
+  const proximoPasso = PROXIMO_PASSO[appointment.confirmationStatus];
 
   const clientPhone = getClientPhone?.(appointment.clientId || '');
   const hasPhone = clientPhone && clientPhone.length > 0;
   const cleanPhone = clientPhone?.replace(/\D/g, '') || '';
   const whatsappLink = `https://wa.me/55${cleanPhone}?text=${formatWhatsAppMessage(appointment)}`;
 
-  const handleQuickComplete = () => {
-    updateStatus({ id: appointment.id, status: 'atendido' });
+  const aplicarStatus = (novo: ConfirmationStatus) => {
+    const anterior = appointment.confirmationStatus;
+    if (novo === anterior) return;
+    updateStatus({ id: appointment.id, status: novo }, {
+      onSuccess: () => {
+        toast(`${appointment.clientName} · ${STATUS_LABELS[novo]}`, {
+          action: { label: 'Desfazer', onClick: () => updateStatus({ id: appointment.id, status: anterior }) },
+        });
+        if (novo === 'atendido') {
+          if (onAtendido) onAtendido(appointment);
+          else if (appointment.clientId) setHistoryOpen(true);
+        }
+      },
+    });
+  };
+
+  // Escolha vinda do selo ou do botão de próximo passo. Cancelar, e marcar como atendido
+  // um horário que ainda não chegou, pedem confirmação antes.
+  const escolherStatus = (novo: ConfirmationStatus) => {
+    setStatusOpen(false);
+    if (novo === appointment.confirmationStatus) return;
+    // Pequeno atraso para o Drawer terminar de fechar antes de abrir o alerta.
+    const pedir = (c: { status: ConfirmationStatus; titulo: string; texto: string }) => setTimeout(() => setConfirmacao(c), 250);
+    if (novo === 'cancelado') {
+      pedir({
+        status: 'cancelado',
+        titulo: `Cancelar o horário de ${appointment.clientName}?`,
+        texto: appointment.paidAmount > 0
+          ? 'Esse agendamento já tem pagamento lançado. O horário fica livre na agenda; os pagamentos e o histórico continuam guardados.'
+          : 'O horário fica livre na agenda. O histórico da cliente continua guardado.',
+      });
+      return;
+    }
+    if (novo === 'atendido' && appointmentDate > new Date()) {
+      pedir({
+        status: 'atendido',
+        titulo: 'Marcar como atendido?',
+        texto: `Esse atendimento está marcado para ${format(appointmentDate, "EEE, dd/MM 'às' HH:mm", { locale: ptBR })}. Marcar como atendido mesmo assim?`,
+      });
+      return;
+    }
+    aplicarStatus(novo);
   };
 
 
@@ -128,8 +184,20 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           {format(appointmentDate, 'EEEE', { locale: ptBR }).slice(0, 3)}, {format(appointmentDate, 'dd/MM · HH:mm')}
         </p>
         <div className="flex flex-wrap items-center gap-1.5">
-          <StatusBadge status={appointment.confirmationStatus} className="whitespace-nowrap" />
-          <StatusBadge status={paymentStatus} className="whitespace-nowrap" />
+          <button type="button" onClick={() => setStatusOpen(true)}
+            className="-my-2 py-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={`Situação: ${STATUS_LABELS[appointment.confirmationStatus]}. Toque para trocar`}>
+            <StatusBadge status={appointment.confirmationStatus} withChevron className="whitespace-nowrap" />
+          </button>
+          {hasBalance && onReceive ? (
+            <button type="button" onClick={() => onReceive(appointment)}
+              className="-my-2 py-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Registrar pagamento">
+              <StatusBadge status={paymentStatus} className="whitespace-nowrap" />
+            </button>
+          ) : (
+            <StatusBadge status={paymentStatus} className="whitespace-nowrap" />
+          )}
         </div>
       </div>
 
@@ -166,10 +234,14 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
             disabled={!hasPhone} onClick={() => window.open(whatsappLink, '_blank', 'noopener,noreferrer')}>
             <MessageCircle className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-11 w-11 text-success" aria-label="Marcar como atendido" title="Marcar como atendido"
-            disabled={!canComplete} onClick={handleQuickComplete}>
-            <CheckCheck className="w-4 h-4" />
-          </Button>
+          {proximoPasso && (
+            <Button variant="ghost" className="h-11 px-2.5 gap-1.5 text-success font-semibold"
+              title={proximoPasso.status === 'atendido' ? 'Marcar como atendido' : 'Marcar como confirmado'}
+              onClick={() => escolherStatus(proximoPasso.status)}>
+              <CheckCheck className="w-4 h-4" />
+              {proximoPasso.label}
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="h-11 w-11 text-success" aria-label="Registrar pagamento" title="Registrar pagamento"
             disabled={!hasBalance || !onReceive} onClick={() => onReceive?.(appointment)}>
             <DollarSign className="w-4 h-4" />
@@ -219,6 +291,32 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
           </div>
         </DrawerContent>
       </Drawer>
+
+      <StatusPickerSheet
+        open={statusOpen}
+        onOpenChange={setStatusOpen}
+        current={appointment.confirmationStatus}
+        title={appointment.clientName}
+        description={format(appointmentDate, "EEE, dd/MM · HH:mm", { locale: ptBR })}
+        onSelect={escolherStatus}
+      />
+
+      <AlertDialog open={!!confirmacao} onOpenChange={(open) => { if (!open) setConfirmacao(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmacao?.titulo}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmacao?.texto}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmacao?.status === 'cancelado' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : undefined}
+              onClick={() => { if (confirmacao) aplicarStatus(confirmacao.status); setConfirmacao(null); }}>
+              {confirmacao?.status === 'cancelado' ? 'Cancelar horário' : 'Marcar atendido'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {appointment.clientId && (
         <ClientPhotosDialog
