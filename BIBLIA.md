@@ -72,8 +72,9 @@ próximos atendimentos e retornos a confirmar. Cards de agendamento mostram
   informado no agendamento, não no cadastro). Serviços sem manutenção (`tier_type = 'avulso'`)
   aparecem numa **lista pesquisável** que preenche `service_id`, valor e duração; texto livre
   fica só como último recurso para algo fora do catálogo.
-- **Fluxo pós-atendimento**: ao marcar "Atendido" → abre o prompt de **fotos** → fim.
-  A antiga etapa 2 ("Próxima manutenção" / `ScheduleReturnDialog`) foi **removida
+- **Finalizar atendimento**: ao marcar "Atendido", salvar o status e encerrar sem abrir
+  prompt, diálogo ou sheet. Fotos são adicionadas pelo acesso manual existente à câmera/ficha.
+  A antiga etapa "Próxima manutenção" / `ScheduleReturnDialog` foi **removida
   deliberadamente — não reintroduzir**.
 
 ### 4.4 Financeiro (`/movimentacoes`)
