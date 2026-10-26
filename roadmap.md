@@ -8,3 +8,8 @@
 - [x] Ajustar cabeçalho, ações rápidas e saldos ocultos somente na Home.
 - [x] Reorganizar cards e Mais ações preservando os fluxos existentes.
 - [x] Conferir a Home autenticada em 360px e 390px: sem transbordamento, Mais ações, formulário completo e revelação de saldos.
+
+# Finalizar atendimento sem convite de fotos
+- [ ] Remover disparos automáticos em todos os caminhos sem alterar acesso manual.
+- [ ] Verificar Home, Agenda e acesso por câmera no navegador.
+- [ ] Informar telas com acesso manual às fotos e atualizar regra de produto.
