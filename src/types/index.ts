@@ -61,6 +61,7 @@ export interface Appointment {
   caixaReservaValorAplicado?: number;
   /** Número da manutenção (1 a 5), escolhido manualmente pela profissional */
   maintenanceNumber?: number;
+  confirmationSentAt?: Date;
 }
 
 export interface Category {
@@ -112,6 +113,9 @@ export interface UserSettings {
   crm_confirm_days: number;
   crm_vip_count: number;
   crm_monthly_goal: number;
+  confirm_message_template: string | null;
+  cancellation_notice_hours: number;
+  cancellation_fee: number;
 }
 
 export interface ClientPhoto {

@@ -8,6 +8,13 @@
       "when": 1793054131240,
       "tag": "0000_confirmation_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793054163601,
+      "tag": "0001_protect_google_tokens_settings_select",
+      "breakpoints": true
     }
   ]
 }

@@ -99,6 +99,7 @@ export function useAppointments() {
         clientName: a.client_name,
         serviceId: a.service_id || undefined,
         service: a.service,
+        confirmationSentAt: a.confirmation_sent_at ? new Date(a.confirmation_sent_at) : undefined,
         amount: Number(a.amount),
         paidAmount: Number(a.paid_amount),
         paymentStatus: a.payment_status as 'pago' | 'nao_pago' | 'sinal',
