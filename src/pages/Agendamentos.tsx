@@ -253,7 +253,7 @@ const Agendamentos = () => {
 
         <div className="flex items-center justify-between">
           <div>
-            <AppointmentChips appointment={appointment} service={service} className="mb-0.5" />
+            <AppointmentChips comIntervalo appointment={appointment} service={service} className="mb-0.5" />
             <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
             {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
               <p className="text-xs text-muted-foreground">
