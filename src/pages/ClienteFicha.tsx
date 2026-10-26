@@ -26,6 +26,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { StatusBadge } from '@/components/ds/StatusBadge';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
+import { diasDesdeUltimoAtendimento } from '@/lib/diasDesdeUltimoAtendimento';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
