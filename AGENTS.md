@@ -1,4 +1,6 @@
 # Architecture rules
+- Derive confirmation reminders from appointments already in AppContext using pure helpers; one shared Home/CRM component records only the sent timestamp, keeping status and finance independent.
+- Read Google credential availability through an authenticated boolean RPC; safe settings column grants must never expose access tokens, refresh tokens or client secrets.
 
 - Resolve appointment service colors through `getCorServico`; this keeps the fixed maintenance color consistent across every view.
 - Keep `AppointmentPreview` exclusive to the Home page; Home layout changes must not alter the Agenda or shared appointment chips.

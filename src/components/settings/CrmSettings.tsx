@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useUserSettings, useUpdateUserSettings } from '@/hooks/useUserSettings';
 import { toast } from 'sonner';
+import { MensagemConfirmacaoSettings } from './MensagemConfirmacaoSettings';
+import { TEMPLATE_CONFIRMACAO_PADRAO } from '@/lib/whatsapp';
+import { politicaCancelamentoSchema } from '@/lib/lembretesConfirmacao';
 
 export function CrmSettings() {
   const { data: settings, isLoading } = useUserSettings();
@@ -14,6 +17,9 @@ export function CrmSettings() {
   const [confirmDays, setConfirmDays] = useState(3);
   const [vipCount, setVipCount] = useState(10);
   const [monthlyGoal, setMonthlyGoal] = useState(0);
+  const [textoConfirmacao, setTextoConfirmacao] = useState(TEMPLATE_CONFIRMACAO_PADRAO);
+  const [horasAviso, setHorasAviso] = useState(48);
+  const [taxaCancelamento, setTaxaCancelamento] = useState(50);
 
   useEffect(() => {
     if (settings) {
@@ -21,20 +27,30 @@ export function CrmSettings() {
       setConfirmDays(settings.crm_confirm_days);
       setVipCount(settings.crm_vip_count);
       setMonthlyGoal(settings.crm_monthly_goal ?? 0);
+      setTextoConfirmacao(settings.confirm_message_template?.trim() ? settings.confirm_message_template : TEMPLATE_CONFIRMACAO_PADRAO);
+      setHorasAviso(settings.cancellation_notice_hours);
+      setTaxaCancelamento(settings.cancellation_fee);
     }
   }, [settings]);
 
   const handleSave = async () => {
+    const politica = politicaCancelamentoSchema.safeParse({ cancellation_notice_hours: horasAviso, cancellation_fee: taxaCancelamento });
+    if (!politica.success) {
+      toast.error(politica.error.issues[0]?.message ?? 'Revise a política de cancelamento');
+      return;
+    }
     try {
       await mutateAsync({
         crm_inactive_days: inactiveDays,
         crm_confirm_days: confirmDays,
         crm_vip_count: vipCount,
         crm_monthly_goal: monthlyGoal,
+        confirm_message_template: textoConfirmacao.trim() ? textoConfirmacao : null,
+        ...politica.data,
       });
       toast.success('Configurações do CRM salvas');
-    } catch (e: any) {
-      toast.error('Erro ao salvar', { description: e?.message });
+    } catch (e) {
+      toast.error('Erro ao salvar', { description: e instanceof Error ? e.message : undefined });
     }
   };
 
@@ -112,6 +128,8 @@ export function CrmSettings() {
       </div>
 
 
+      <MensagemConfirmacaoSettings texto={textoConfirmacao} horas={horasAviso} taxa={taxaCancelamento} dias={confirmDays}
+        onTexto={setTextoConfirmacao} onHoras={setHorasAviso} onTaxa={setTaxaCancelamento} />
       <Button onClick={handleSave} disabled={isPending} className="w-full">
         {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
         Salvar configurações
