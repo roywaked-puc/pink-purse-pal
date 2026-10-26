@@ -264,13 +264,9 @@ export default function ClienteFicha() {
                         else if (diff > 0) parts.push(`Em ${diff} ${diff === 1 ? 'dia' : 'dias'}`);
                         else parts.push(`Há ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'dia' : 'dias'}`);
                       }
-                      if (idx >= 0 && idx < completedIds.length - 1) {
-                        const prevId = completedIds[idx + 1];
-                        const prev = clientAppointments.find((x) => x.id === prevId);
-                        if (prev) {
-                          const diff = differenceInCalendarDays(new Date(a.date), new Date(prev.date));
-                          parts.push(`${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`);
-                        }
+                      const diff = diasDesdeUltimoAtendimento(a, clientAppointments);
+                      if (diff != null) {
+                        parts.push(`${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`);
                       }
                       if (parts.length) daysLabel = parts.join(' · ');
                     }
