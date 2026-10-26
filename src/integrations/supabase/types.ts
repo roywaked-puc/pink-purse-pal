@@ -750,6 +750,7 @@ export type Database = {
         Args: { p_appointment_id: string }
         Returns: undefined
       }
+      google_calendar_secret_configured: { Args: never; Returns: boolean }
     }
     Enums: {
       anamnese_question_type:

@@ -2,7 +2,7 @@ import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ConfirmationStatus, PaymentStatus } from '@/types';
 
-type Status = ConfirmationStatus | PaymentStatus;
+type Status = ConfirmationStatus | PaymentStatus | 'enviado';
 
 interface StatusBadgeProps {
   status: Status;
@@ -20,6 +20,7 @@ export const STATUS_LABELS: Record<Status, string> = {
   pago: 'Pago',
   nao_pago: 'Não pago',
   sinal: 'Sinal',
+  enviado: 'Enviado ✓',
 };
 
 const STYLES: Record<Status, string> = {
@@ -31,6 +32,7 @@ const STYLES: Record<Status, string> = {
   pago: 'bg-emerald-100 text-emerald-800 border-emerald-200',
   nao_pago: 'bg-rose-100 text-rose-800 border-rose-200',
   sinal: 'bg-amber-100 text-amber-800 border-amber-200',
+  enviado: 'bg-primary/10 text-primary border-primary/20',
 };
 
 export function StatusBadge({ status, className, withChevron }: StatusBadgeProps) {

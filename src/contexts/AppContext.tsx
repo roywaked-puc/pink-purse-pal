@@ -8,6 +8,7 @@ import { useAccounts, useAddAccount, useUpdateAccount, useDeleteAccount } from '
 import { useAppointments, useAddAppointment, useUpdateAppointment, useDeleteAppointment, useUpdateAppointmentPayment, useSubtractAppointmentPayment } from '@/hooks/useAppointments';
 import { useTransactions, useAddTransaction, useUpdateTransaction, useDeleteTransaction } from '@/hooks/useTransactions';
 import { isPermutaRelated } from '@/lib/accountBalance';
+import { useMarcarLembreteEnviado } from '@/hooks/useLembretesConfirmacao';
 
 interface AppContextType {
   transactions: Transaction[];
@@ -17,6 +18,7 @@ interface AppContextType {
   clients: Client[];
   services: Service[];
   loading: boolean;
+  marcarLembreteEnviado: (id: string) => Promise<unknown>;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (transaction: Transaction) => void;
@@ -89,6 +91,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addTransactionMutation = useAddTransaction();
   const updateTransactionMutation = useUpdateTransaction();
   const deleteTransactionMutation = useDeleteTransaction();
+  const lembreteMutation = useMarcarLembreteEnviado();
+  const marcarLembreteEnviado = lembreteMutation.mutateAsync;
 
   const loading = clientsLoading || servicesLoading || categoriesLoading || 
                   accountsLoading || appointmentsLoading || transactionsLoading;
@@ -290,6 +294,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     clients,
     services,
     loading,
+    marcarLembreteEnviado,
     addTransaction,
     updateTransaction,
     deleteTransaction,
@@ -329,6 +334,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     clients,
     services,
     loading,
+    marcarLembreteEnviado,
     addTransaction,
     updateTransaction,
     deleteTransaction,

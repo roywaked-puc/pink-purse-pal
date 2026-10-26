@@ -22,6 +22,7 @@ import { useServices } from '@/hooks/useServices';
 import { useCaixaSummary } from '@/hooks/useCaixaSummary';
 import { Appointment } from '@/types';
 import { getCorServico } from '@/lib/corServico';
+import { LembretesConfirmacaoCard } from '@/components/crm/LembretesConfirmacaoCard';
 
 const Index = () => {
   const {
@@ -161,6 +162,7 @@ const Index = () => {
 
       {/* Retornos para confirmar */}
       <ReturnsToConfirmCard />
+      <LembretesConfirmacaoCard home />
 
       {/* Hoje — o foco do dia */}
       <section className="mb-6">
