@@ -1,4 +1,6 @@
 # Enviar agenda futura
+- [ ] Implementar lembretes de confirmação: colunas, mensagem, hooks, Home/CRM e configurações.
+- [ ] Validar regras com testes e fluxo autenticado, sem efeito financeiro ou mudança de confirmação.
 - [x] Implementar geração da mensagem e painel na ficha.
 - [x] Executar 12 testes das regras e conferir o painel isolado no navegador a 380px e desktop.
 - [x] Atualizar documentação do recurso.
