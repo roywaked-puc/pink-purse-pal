@@ -60,11 +60,10 @@ interface AppointmentFormProps {
   onOpenChange: (open: boolean) => void;
   appointment?: Appointment | null;
   onDelete?: () => void;
-  onAttendanceConfirmed?: (appointment: Appointment) => void;
   prefill?: AppointmentPrefill | null;
 }
 
-export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onAttendanceConfirmed, prefill }: AppointmentFormProps) {
+export function AppointmentForm({ open, onOpenChange, appointment, onDelete, prefill }: AppointmentFormProps) {
   const { appointments, services, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
   const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
   const { mutateAsync: addAppointmentAsync } = useAddAppointment();
@@ -317,19 +316,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, onA
       };
 
       if (appointment) {
-        const wasAtendido = appointment.confirmationStatus === 'atendido';
-        const becameAtendido = confirmationStatus === 'atendido' && !wasAtendido;
-
         await updateAppointmentAsync({ id: appointment.id, appointment: data });
-
-        if (becameAtendido && onAttendanceConfirmed) {
-          const updated = { ...appointment, ...data, id: appointment.id };
-          onOpenChange(false);
-          resetForm();
-          // Pequeno delay para garantir que o Dialog feche antes de abrir o próximo
-          setTimeout(() => onAttendanceConfirmed(updated), 150);
-          return;
-        }
       } else {
         await addAppointmentAsync(data);
       }

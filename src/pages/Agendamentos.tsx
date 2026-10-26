@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X, CalendarPlus, Search, Grid3X3 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format, isToday, isFuture, isPast, addMinutes } from 'date-fns';
@@ -23,8 +23,6 @@ import { Appointment, ConfirmationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
-import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
-import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
 import { getCorServico } from '@/lib/corServico';
 
 
@@ -99,9 +97,6 @@ const Agendamentos = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'week' | 'month'>('month');
   const [searchQuery, setSearchQuery] = useState('');
-  const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
-  const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
-  const didOpenUpload = useRef(false);
 
 
 
@@ -141,20 +136,7 @@ const Agendamentos = () => {
     }
   };
   const handleConfirmationStatusChange = (appointmentId: string, status: ConfirmationStatus) => {
-    if (status === 'atendido') {
-      const apt = appointments.find(a => a.id === appointmentId);
-      if (apt) {
-        handleMarkAttended(apt);
-        return;
-      }
-    }
     updateConfirmationStatus({ id: appointmentId, status });
-  };
-
-  const triggerPostAttendance = (apt: Appointment) => {
-    if (apt.clientId) {
-      setPhotoPromptSource(apt);
-    }
   };
 
   const handleMarkAttended = (apt: Appointment) => {
@@ -165,15 +147,7 @@ const Agendamentos = () => {
     if (stillHasBalance) {
       handleReceive(apt);
     }
-    triggerPostAttendance(apt);
   };
-
-  // Disparado pelo formulário: status já salvo, apenas abrir a sequência fotos/retorno
-  const handleAttendanceFromForm = (apt: Appointment) => {
-    triggerPostAttendance(apt);
-  };
-
-
 
   const renderAppointment = (appointment: Appointment, index: number) => {
     const appointmentDate = new Date(appointment.date);
@@ -492,9 +466,6 @@ const Agendamentos = () => {
             setShowForm(false);
           }
         }}
-        onAttendanceConfirmed={(apt) => {
-          handleAttendanceFromForm(apt);
-        }}
       />
 
       <TransactionForm
@@ -513,40 +484,6 @@ const Agendamentos = () => {
         title="Excluir agendamento"
         description="Tem certeza que deseja excluir este agendamento?"
       />
-
-      {photoPromptSource && (
-        <PostAttendancePhotoPrompt
-          open={!!photoPromptSource}
-          onOpenChange={(o) => {
-            if (!o) {
-              setPhotoPromptSource(null);
-              didOpenUpload.current = false;
-            }
-          }}
-          clientName={photoPromptSource.clientName}
-          onConfirm={() => {
-            didOpenUpload.current = true;
-            setPhotoUploadSource(photoPromptSource);
-            setPhotoPromptSource(null);
-          }}
-        />
-      )}
-
-      {photoUploadSource && photoUploadSource.clientId && (
-        <PhotoUploadDialog
-          open={!!photoUploadSource}
-          onOpenChange={(o) => {
-            if (!o) {
-              setPhotoUploadSource(null);
-              didOpenUpload.current = false;
-            }
-          }}
-          clientId={photoUploadSource.clientId}
-          appointmentId={photoUploadSource.id}
-          serviceName={photoUploadSource.service}
-          defaultDate={new Date(photoUploadSource.date)}
-        />
-      )}
 
     </MainLayout>
   );

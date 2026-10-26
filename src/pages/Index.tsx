@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { format, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
@@ -12,8 +12,6 @@ import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
 import { ReturnsToConfirmCard } from '@/components/dashboard/ReturnsToConfirmCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { AppointmentForm, AppointmentPrefill } from '@/components/appointments/AppointmentForm';
-import { PostAttendancePhotoPrompt } from '@/components/clients/PostAttendancePhotoPrompt';
-import { PhotoUploadDialog } from '@/components/clients/PhotoUploadDialog';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -47,10 +45,7 @@ const Index = () => {
   const [deleteAppointmentId, setDeleteAppointmentId] = useState<string | null>(null);
   const [receivingAppointment, setReceivingAppointment] = useState<Appointment | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [photoPromptSource, setPhotoPromptSource] = useState<Appointment | null>(null);
-  const [photoUploadSource, setPhotoUploadSource] = useState<Appointment | null>(null);
   const [returnPrefill, setReturnPrefill] = useState<AppointmentPrefill | null>(null);
-  const didOpenUpload = useRef(false);
   const [detalheCaixa, setDetalheCaixa] = useState<CaixaDetalheTipo | null>(null);
   const [balancesVisible, setBalancesVisible] = useState(
     () => localStorage.getItem('balancesVisible') === 'true',
@@ -113,12 +108,6 @@ const Index = () => {
     }
   };
 
-  const triggerPostAttendance = (apt: Appointment) => {
-    if (apt.clientId) {
-      setPhotoPromptSource(apt);
-    }
-  };
-
   const renderAppointmentList = (list: Appointment[]) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {list.map((appointment, index) => (
@@ -133,7 +122,6 @@ const Index = () => {
             onEdit={handleEditAppointment}
             onDelete={handleDeleteAppointment}
             onReceive={handleReceiveAppointment}
-            onAttendanceCompleted={triggerPostAttendance}
             getClientPhone={getClientPhone}
           />
         </div>
@@ -298,10 +286,6 @@ const Index = () => {
             setShowAppointmentForm(false);
           }
         }}
-        onAttendanceConfirmed={(apt) => {
-          triggerPostAttendance(apt);
-          setShowAppointmentForm(false);
-        }}
       />
 
       <DeleteConfirmDialog
@@ -311,40 +295,6 @@ const Index = () => {
         title="Excluir agendamento"
         description="Tem certeza que deseja excluir este agendamento?"
       />
-
-      {photoPromptSource && (
-        <PostAttendancePhotoPrompt
-          open={!!photoPromptSource}
-          onOpenChange={(o) => {
-            if (!o) {
-              setPhotoPromptSource(null);
-              didOpenUpload.current = false;
-            }
-          }}
-          clientName={photoPromptSource.clientName}
-          onConfirm={() => {
-            didOpenUpload.current = true;
-            setPhotoUploadSource(photoPromptSource);
-            setPhotoPromptSource(null);
-          }}
-        />
-      )}
-
-      {photoUploadSource && photoUploadSource.clientId && (
-        <PhotoUploadDialog
-          open={!!photoUploadSource}
-          onOpenChange={(o) => {
-            if (!o) {
-              setPhotoUploadSource(null);
-              didOpenUpload.current = false;
-            }
-          }}
-          clientId={photoUploadSource.clientId}
-          appointmentId={photoUploadSource.id}
-          serviceName={photoUploadSource.service}
-          defaultDate={new Date(photoUploadSource.date)}
-        />
-      )}
 
     </MainLayout>
   );

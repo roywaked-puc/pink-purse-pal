@@ -23,7 +23,6 @@ interface AppointmentPreviewProps {
   onEdit: (appointment: Appointment) => void;
   onDelete: (id: string) => void;
   onReceive?: (appointment: Appointment) => void;
-  onAttendanceCompleted?: (appointment: Appointment) => void;
   getClientPhone?: (clientId: string) => string | undefined;
 }
 
@@ -76,7 +75,7 @@ const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: numb
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
 };
 
-export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, onAttendanceCompleted, getClientPhone }: AppointmentPreviewProps) {
+export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, getClientPhone }: AppointmentPreviewProps) {
   const { getServiceById } = useApp();
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -107,12 +106,6 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
 
   const handleQuickComplete = () => {
     updateStatus({ id: appointment.id, status: 'atendido' });
-    if (hasBalance && onReceive) {
-      onReceive(appointment);
-    }
-    // Delegate post-attendance flow (photo prompt + schedule return) to the page,
-    // since this component may unmount as soon as the appointment is filtered out.
-    onAttendanceCompleted?.(appointment);
   };
 
 
