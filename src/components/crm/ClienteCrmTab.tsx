@@ -1,10 +1,11 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Calendar,
   DollarSign,
   Image as ImageIcon,
+  MessageCircle,
   RotateCcw,
   Sparkles,
   FileText,
@@ -16,7 +17,9 @@ import { useClientPhotos } from '@/hooks/useClientPhotos';
 import { useCrm, getClientStats } from '@/hooks/useCrm';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
+import { CobrancaSheet } from '@/components/crm/CobrancaSheet';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
