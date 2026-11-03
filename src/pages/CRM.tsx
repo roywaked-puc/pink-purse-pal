@@ -32,6 +32,8 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { LembretesConfirmacaoCard } from '@/components/crm/LembretesConfirmacaoCard';
+import { CobrancaSheet } from '@/components/crm/CobrancaSheet';
+import type { Client } from '@/types';
 
 type ProductionFilter = {
   kind: 'previsto' | 'realizado';
@@ -47,6 +49,7 @@ type SheetType =
   | 'birthday'
   | 'active'
   | 'balance'
+  | 'cobrancaClients'
   | 'fifthMaintenance'
   | 'productionFilter';
 
@@ -82,6 +85,7 @@ export default function CRM() {
   const [sheet, setSheet] = useState<SheetType>(null);
   const [productionFilter, setProductionFilter] = useState<ProductionFilter | null>(null);
   const [filter, setFilter] = useState<string>('todas');
+  const [cobrancaClient, setCobrancaClient] = useState<Client | null>(null);
 
   const activeClients = useMemo(() => stats.filter((s) => s.isActive), [stats]);
 
