@@ -20,4 +20,4 @@
 - [x] CobrancaSheet reutilizável: checkboxes, prévia editável, envio wa.me.
 - [x] Botão "Cobrar no WhatsApp" na aba CRM da ficha (saldo > 0 e telefone).
 - [x] Card "Com saldo pendente" no /crm abrindo lista de clientes → sheet de cobrança.
-- [ ] Validar no navegador autenticado (ficha + /crm) em 360px.
+- [x] Validar no navegador autenticado (ficha + /crm) em 360px; corrigido overflow do ScrollArea no CrmListSheet.
