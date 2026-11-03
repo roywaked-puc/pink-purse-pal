@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'bun:test';
+/// <reference types="node" />
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
 import {
   ASSINATURA_COBRANCA,
   PIX_COBRANCA,
@@ -32,78 +34,79 @@ const servicoManutencao: Service = {
   diasMax: 20,
 };
 
-describe('atendimentosEmAberto', () => {
-  it('inclui apenas atendidos com valor em aberto, em ordem cronológica', () => {
-    const itens = atendimentosEmAberto(
-      [
-        { ...base, id: 'novo', date: new Date('2026-10-20T12:00:00-03:00') },
-        { ...base, id: 'antigo', date: new Date('2026-09-01T12:00:00-03:00') },
-        { ...base, id: 'quitado', paidAmount: 150 },
-        { ...base, id: 'pendente-futuro', confirmationStatus: 'confirmado' },
-        { ...base, id: 'cancelado', confirmationStatus: 'cancelado' },
-        { ...base, id: 'permuta', isPermuta: true },
-        { ...base, id: 'outra-cliente', clientId: 'c2' },
-      ],
-      'c1',
-    );
-    expect(itens.map((i) => i.appointment.id)).toEqual(['antigo', 'novo']);
-  });
-
-  it('calcula valor em aberto com piso 0 e ignora pagamento a maior', () => {
-    const itens = atendimentosEmAberto(
-      [{ ...base, amount: 100, paidAmount: 60 }, { ...base, id: 'a2', amount: 100, paidAmount: 120 }],
-      'c1',
-    );
-    expect(itens).toHaveLength(1);
-    expect(itens[0].emAberto).toBe(40);
-  });
-
-  it('monta descrição a partir do serviço estruturado e usa fallback legado', () => {
-    const comServico = atendimentosEmAberto(
-      [{ ...base, serviceId: 's1', maintenanceNumber: 2 }],
-      'c1',
-      (id) => (id === 's1' ? servicoManutencao : undefined),
-    );
-    expect(comServico[0].descricao).toBe(
-      'Volume Brasileiro · Manutenção · Faixa 16–20 dias · 2ª manutenção',
-    );
-
-    const semServico = atendimentosEmAberto([{ ...base, service: 'Alongamento de unhas' }], 'c1');
-    expect(semServico[0].descricao).toBe('Alongamento de unhas');
-  });
-});
-
-describe('montarMensagemCobranca', () => {
+test('atendimentosEmAberto: inclui apenas atendidos com valor em aberto, em ordem cronológica', () => {
   const itens = atendimentosEmAberto(
     [
-      { ...base, id: 'a1', amount: 150, paidAmount: 0 },
-      { ...base, id: 'a2', date: new Date('2026-10-24T12:00:00-03:00'), amount: 200, paidAmount: 50 },
+      { ...base, id: 'novo', date: new Date('2026-10-20T12:00:00-03:00') },
+      { ...base, id: 'antigo', date: new Date('2026-09-01T12:00:00-03:00') },
+      { ...base, id: 'quitado', paidAmount: 150 },
+      { ...base, id: 'pendente-futuro', confirmationStatus: 'confirmado' },
+      { ...base, id: 'cancelado', confirmationStatus: 'cancelado' },
+      { ...base, id: 'permuta', isPermuta: true },
+      { ...base, id: 'outra-cliente', clientId: 'c2' },
     ],
     'c1',
   );
+  assert.deepEqual(
+    itens.map((i) => i.appointment.id),
+    ['antigo', 'novo'],
+  );
+});
 
-  const msg = montarMensagemCobranca('Aldeneia Souza', itens);
+test('atendimentosEmAberto: calcula valor em aberto com piso 0 e ignora pagamento a maior', () => {
+  const itens = atendimentosEmAberto(
+    [
+      { ...base, amount: 100, paidAmount: 60 },
+      { ...base, id: 'a2', amount: 100, paidAmount: 120 },
+    ],
+    'c1',
+  );
+  assert.equal(itens.length, 1);
+  assert.equal(itens[0].emAberto, 40);
+});
 
-  it('usa o primeiro nome na saudação', () => {
-    expect(msg.startsWith('Oi, Aldeneia! Tudo bem?')).toBe(true);
-  });
+test('atendimentosEmAberto: monta descrição do serviço estruturado e usa fallback legado', () => {
+  const comServico = atendimentosEmAberto(
+    [{ ...base, serviceId: 's1', maintenanceNumber: 2 }],
+    'c1',
+    (id) => (id === 's1' ? servicoManutencao : undefined),
+  );
+  assert.equal(
+    comServico[0].descricao,
+    'Volume Brasileiro · Manutenção · Faixa 16–20 dias · 2ª manutenção',
+  );
 
-  it('mostra a linha Valor/Pago só quando houve pagamento parcial', () => {
-    expect(msg).not.toContain('Valor: R$ 150,00');
-    expect(msg).toContain('Valor: R$ 200,00 | Pago: R$ 50,00');
-    expect(msg).toContain('Em aberto: *R$ 150,00*');
-    expect(msg).toContain('Em aberto: *R$ 150,00*');
-  });
+  const semServico = atendimentosEmAberto([{ ...base, service: 'Alongamento de unhas' }], 'c1');
+  assert.equal(semServico[0].descricao, 'Alongamento de unhas');
+});
 
-  it('soma o total dos itens e fecha com Pix e assinatura', () => {
-    expect(totalEmAberto(itens)).toBe(300);
-    expect(msg).toContain('💰 *Total em aberto: R$ 300,00*');
-    expect(msg).toContain(`Pode acertar pelo Pix: ${PIX_COBRANCA}`);
-    expect(msg.trimEnd().endsWith(ASSINATURA_COBRANCA)).toBe(true);
-  });
+const itensMensagem = atendimentosEmAberto(
+  [
+    { ...base, id: 'a1', amount: 150, paidAmount: 0 },
+    { ...base, id: 'a2', date: new Date('2026-10-24T12:00:00-03:00'), amount: 200, paidAmount: 50 },
+  ],
+  'c1',
+);
+const mensagem = montarMensagemCobranca('Aldeneia Souza', itensMensagem);
 
-  it('formata a data abreviada em pt-BR sem ponto no dia da semana', () => {
-    expect(msg).toContain('📅 *seg, 12/10*');
-    expect(msg).toContain('📅 *sáb, 24/10*');
-  });
+test('montarMensagemCobranca: usa o primeiro nome na saudação', () => {
+  assert.ok(mensagem.startsWith('Oi, Aldeneia! Tudo bem?'));
+});
+
+test('montarMensagemCobranca: mostra a linha Valor/Pago só quando houve pagamento parcial', () => {
+  assert.ok(!mensagem.includes('Valor: R$ 150,00'));
+  assert.ok(mensagem.includes('Valor: R$ 200,00 | Pago: R$ 50,00'));
+  assert.ok(mensagem.includes('Em aberto: *R$ 150,00*'));
+});
+
+test('montarMensagemCobranca: soma o total dos itens e fecha com Pix e assinatura', () => {
+  assert.equal(totalEmAberto(itensMensagem), 300);
+  assert.ok(mensagem.includes('💰 *Total em aberto: R$ 300,00*'));
+  assert.ok(mensagem.includes(`Pode acertar pelo Pix: ${PIX_COBRANCA}`));
+  assert.ok(mensagem.trimEnd().endsWith(ASSINATURA_COBRANCA));
+});
+
+test('montarMensagemCobranca: formata a data abreviada em pt-BR sem ponto no dia da semana', () => {
+  assert.ok(mensagem.includes('📅 *seg, 12/10*'));
+  assert.ok(mensagem.includes('📅 *sáb, 24/10*'));
 });
