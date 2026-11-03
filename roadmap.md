@@ -15,3 +15,9 @@
 - [x] Remover disparos automáticos em todos os caminhos sem alterar acesso manual.
 - [x] Verificar Home, Agenda (Lista/Mês/Semana) e câmera da Home/ficha no navegador autenticado com registros temporários, removidos ao final.
 - [x] Identificar acesso manual na Home (Mais ações) e na ficha (Fotos); atualizar regra de produto.
+# Cobrança de saldo pendente via WhatsApp
+- [x] Helper puro cobranca.ts (regras do saldo pendente + mensagem) com 7 testes.
+- [x] CobrancaSheet reutilizável: checkboxes, prévia editável, envio wa.me.
+- [x] Botão "Cobrar no WhatsApp" na aba CRM da ficha (saldo > 0 e telefone).
+- [x] Card "Com saldo pendente" no /crm abrindo lista de clientes → sheet de cobrança.
+- [ ] Validar no navegador autenticado (ficha + /crm) em 360px.
