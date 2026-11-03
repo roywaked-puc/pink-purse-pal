@@ -241,6 +241,15 @@ export default function CRM() {
           onClick={() => setSheet('fifthMaintenance')}
           tone="danger"
         />
+        <ActionCard
+          icon={DollarSign}
+          emoji="💰"
+          title="Com saldo pendente"
+          count={pendingPayments.length}
+          description="Clientes com atendimentos ainda não quitados"
+          onClick={() => setSheet('cobrancaClients')}
+          tone="danger"
+        />
       </div>
 
 
