@@ -1,10 +1,11 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Calendar,
   DollarSign,
   Image as ImageIcon,
+  MessageCircle,
   RotateCcw,
   Sparkles,
   FileText,
@@ -16,7 +17,9 @@ import { useClientPhotos } from '@/hooks/useClientPhotos';
 import { useCrm, getClientStats } from '@/hooks/useCrm';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
+import { CobrancaSheet } from '@/components/crm/CobrancaSheet';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -36,10 +39,12 @@ interface TimelineItem {
 }
 
 export function ClienteCrmTab({ clientId }: Props) {
-  const { appointments, transactions, getServiceById } = useApp();
+  const { appointments, transactions, getServiceById, getClientById } = useApp();
   const { data: photos = [] } = useClientPhotos(clientId);
   const { stats } = useCrm();
   const s = getClientStats(stats, clientId);
+  const client = getClientById(clientId);
+  const [cobrancaOpen, setCobrancaOpen] = useState(false);
 
   const { pendingFromAttended, openScheduledTotal } = useMemo(() => {
     const cAppts = appointments.filter((a) => a.clientId === clientId);
@@ -257,6 +262,17 @@ export function ClienteCrmTab({ clientId }: Props) {
           />
 
         </div>
+        {pendingFromAttended > 0 && client?.phone && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-emerald-600 hover:text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-900"
+            onClick={() => setCobrancaOpen(true)}
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Cobrar no WhatsApp
+          </Button>
+        )}
         <div className="text-xs text-muted-foreground pt-2 border-t">
           Último pagamento:{' '}
           {s.lastPaymentDate
@@ -264,6 +280,8 @@ export function ClienteCrmTab({ clientId }: Props) {
             : '—'}
         </div>
       </section>
+
+      <CobrancaSheet open={cobrancaOpen} onOpenChange={setCobrancaOpen} client={client ?? null} />
 
       {/* Timeline */}
       <section className="space-y-3">

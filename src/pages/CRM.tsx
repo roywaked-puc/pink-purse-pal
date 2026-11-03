@@ -32,6 +32,8 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { LembretesConfirmacaoCard } from '@/components/crm/LembretesConfirmacaoCard';
+import { CobrancaSheet } from '@/components/crm/CobrancaSheet';
+import type { Client } from '@/types';
 
 type ProductionFilter = {
   kind: 'previsto' | 'realizado';
@@ -47,6 +49,7 @@ type SheetType =
   | 'birthday'
   | 'active'
   | 'balance'
+  | 'cobrancaClients'
   | 'fifthMaintenance'
   | 'productionFilter';
 
@@ -82,6 +85,7 @@ export default function CRM() {
   const [sheet, setSheet] = useState<SheetType>(null);
   const [productionFilter, setProductionFilter] = useState<ProductionFilter | null>(null);
   const [filter, setFilter] = useState<string>('todas');
+  const [cobrancaClient, setCobrancaClient] = useState<Client | null>(null);
 
   const activeClients = useMemo(() => stats.filter((s) => s.isActive), [stats]);
 
@@ -235,6 +239,15 @@ export default function CRM() {
           count={totals.fifthMaintenanceCount}
           description="Fim do ciclo — direcionar para uma nova colocação"
           onClick={() => setSheet('fifthMaintenance')}
+          tone="danger"
+        />
+        <ActionCard
+          icon={DollarSign}
+          emoji="💰"
+          title="Com saldo pendente"
+          count={pendingPayments.length}
+          description="Clientes com atendimentos ainda não quitados"
+          onClick={() => setSheet('cobrancaClients')}
           tone="danger"
         />
       </div>
@@ -593,6 +606,42 @@ export default function CRM() {
           </Link>
         ))}
       </CrmListSheet>
+
+      {/* SHEET: Clientes com saldo pendente → cobrança */}
+      <CrmListSheet
+        open={sheet === 'cobrancaClients'}
+        onOpenChange={(o) => !o && setSheet(null)}
+        title="💰 Com saldo pendente"
+        description="Toque numa cliente para montar a cobrança no WhatsApp"
+      >
+        {pendingPayments.length === 0 && (
+          <EmptyState icon={CheckCircle2} title="Sem pendências" description="Nenhuma cliente com saldo em aberto." />
+        )}
+        {pendingPayments.map((s) => (
+          <button
+            key={s.client.id}
+            type="button"
+            onClick={() => setCobrancaClient(s.client)}
+            className="w-full flex items-center justify-between gap-3 p-3 border rounded-lg bg-card hover:border-primary/40 transition-colors text-left"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-sm truncate">{s.client.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {s.attendedCount} atend. · {formatBRL(s.totalPaid)} pagos
+              </p>
+            </div>
+            <span className="text-sm font-semibold tabular-nums text-rose-600 flex-shrink-0">
+              {formatBRL(s.pendingBalance)}
+            </span>
+          </button>
+        ))}
+      </CrmListSheet>
+
+      <CobrancaSheet
+        open={cobrancaClient !== null}
+        onOpenChange={(o) => !o && setCobrancaClient(null)}
+        client={cobrancaClient}
+      />
 
       {/* SHEET: Saldo Pendente */}
       <CrmListSheet

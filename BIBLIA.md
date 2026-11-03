@@ -138,10 +138,17 @@ histórico financeiro, histórico de atendimentos, fotos, anamnese e aba CRM.
   o mais recente compara com hoje (ex: "Hoje · 5 dias desde o anterior").
 - Cards da aba CRM: Total gasto · Total pago · **Saldo pendente** (soma dos `atendido` − pago,
   piso 0) · **Saldo de agendas abertas** (`pendente + confirmado + retorno_previsto`).
+- **Cobrar no WhatsApp**: botão na aba CRM da ficha (só com saldo pendente > 0 e telefone
+  cadastrado) e card "Com saldo pendente" no `/crm`. Abre sheet com os atendimentos em aberto
+  (checkboxes, todos marcados por padrão), prévia editável da mensagem e envio via link wa.me.
+  Regras em `src/lib/cobranca.ts`: só `atendido`, sem permuta/cancelado, valor em aberto =
+  `amount − paid_amount` (piso 0), ordem cronológica; descrição pelo serviço estruturado.
+  Chave Pix e assinatura são constantes no código. Nada é gravado no banco — envio é manual.
 
 ### 4.6 CRM (`/crm`)
 Cards acionáveis (todo card e métrica abrem lista filtrada em `CrmListSheet`):
-a confirmar, retornos previstos, inativas, VIPs, aniversariantes e **Produção do Mês**
+a confirmar, retornos previstos, inativas, VIPs, aniversariantes, **Com saldo pendente**
+(lista de clientes → sheet de cobrança WhatsApp) e **Produção do Mês**
 (realizado, previsto, projeção, meta com barra colorida; permuta contabilizada à parte).
 Configurável em Configurações → CRM: `crm_inactive_days`, `crm_confirm_days`,
 `crm_vip_count`, `crm_monthly_goal`. Contato rápido via link `wa.me`.

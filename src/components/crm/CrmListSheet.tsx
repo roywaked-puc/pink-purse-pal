@@ -18,7 +18,7 @@ export function CrmListSheet({ open, onOpenChange, title, description, children 
           <SheetTitle>{title}</SheetTitle>
           {description && <SheetDescription>{description}</SheetDescription>}
         </SheetHeader>
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 [&_[data-radix-scroll-area-viewport]>div]:!block">
           <div className="p-4 space-y-2">{children}</div>
         </ScrollArea>
       </SheetContent>
