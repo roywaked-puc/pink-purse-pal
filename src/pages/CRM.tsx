@@ -607,6 +607,42 @@ export default function CRM() {
         ))}
       </CrmListSheet>
 
+      {/* SHEET: Clientes com saldo pendente → cobrança */}
+      <CrmListSheet
+        open={sheet === 'cobrancaClients'}
+        onOpenChange={(o) => !o && setSheet(null)}
+        title="💰 Com saldo pendente"
+        description="Toque numa cliente para montar a cobrança no WhatsApp"
+      >
+        {pendingPayments.length === 0 && (
+          <EmptyState icon={CheckCircle2} title="Sem pendências" description="Nenhuma cliente com saldo em aberto." />
+        )}
+        {pendingPayments.map((s) => (
+          <button
+            key={s.client.id}
+            type="button"
+            onClick={() => setCobrancaClient(s.client)}
+            className="w-full flex items-center justify-between gap-3 p-3 border rounded-lg bg-card hover:border-primary/40 transition-colors text-left"
+          >
+            <div className="min-w-0">
+              <p className="font-medium text-sm truncate">{s.client.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {s.attendedCount} atend. · {formatBRL(s.totalPaid)} pagos
+              </p>
+            </div>
+            <span className="text-sm font-semibold tabular-nums text-rose-600">
+              {formatBRL(s.pendingBalance)}
+            </span>
+          </button>
+        ))}
+      </CrmListSheet>
+
+      <CobrancaSheet
+        open={cobrancaClient !== null}
+        onOpenChange={(o) => !o && setCobrancaClient(null)}
+        client={cobrancaClient}
+      />
+
       {/* SHEET: Saldo Pendente */}
       <CrmListSheet
         open={sheet === 'balance'}
