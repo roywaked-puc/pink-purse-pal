@@ -624,13 +624,13 @@ export default function CRM() {
             onClick={() => setCobrancaClient(s.client)}
             className="w-full flex items-center justify-between gap-3 p-3 border rounded-lg bg-card hover:border-primary/40 transition-colors text-left"
           >
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-medium text-sm truncate">{s.client.name}</p>
               <p className="text-xs text-muted-foreground">
                 {s.attendedCount} atend. · {formatBRL(s.totalPaid)} pagos
               </p>
             </div>
-            <span className="text-sm font-semibold tabular-nums text-rose-600">
+            <span className="text-sm font-semibold tabular-nums text-rose-600 flex-shrink-0">
               {formatBRL(s.pendingBalance)}
             </span>
           </button>
