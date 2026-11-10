@@ -25,3 +25,17 @@ test('manutenção dentro/fora da faixa; colocação neutra', () => {
   assert.equal(situacaoIntervalo(10, m), 'fora');
   assert.equal(situacaoIntervalo(42, { tierType: 'colocacao' }), 'neutro');
 });
+
+test('Carol: conta da agenda anterior pendente (21 dias, dentro da faixa)', () => {
+  const lista = [
+    ap('at', '2026-11-09T13:00:00-03:00'),
+    ap('col', '2026-11-30T13:00:00-03:00', 'pendente'),
+    ap('man', '2026-12-21T13:00:00-03:00', 'pendente'),
+  ];
+  assert.equal(diasDesdeUltimoAtendimento(lista[2], lista), 21);
+  assert.equal(situacaoIntervalo(21, { tierType: 'manutencao', diasMin: 21, diasMax: 25 }), 'dentro');
+  lista[1].confirmationStatus = 'cancelado';
+  assert.equal(diasDesdeUltimoAtendimento(lista[2], lista), 42);
+  lista[1].confirmationStatus = 'pendente'; lista[1].date = new Date('2026-12-02T13:00:00-03:00');
+  assert.equal(diasDesdeUltimoAtendimento(lista[2], lista), 19);
+});

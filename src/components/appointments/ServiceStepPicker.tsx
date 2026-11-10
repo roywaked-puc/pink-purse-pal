@@ -25,6 +25,8 @@ interface ServiceStepPickerProps {
   initialService?: Service | null;
   /** Edição de atendimento sem serviço cadastrado: abre direto no modo avulso. */
   initialAvulso?: boolean;
+  /** Agendamento em edição: ignorado no cálculo do anterior. */
+  editingAppointmentId?: string;
 }
 
 const isTechnique = (s: Service) =>
@@ -49,6 +51,7 @@ export function ServiceStepPicker({
   onServiceSelect,
   initialService,
   initialAvulso,
+  editingAppointmentId,
 }: ServiceStepPickerProps) {
   const [technique, setTechnique] = useState<string>('');
   const [tier, setTier] = useState<string>('');
@@ -119,7 +122,7 @@ export function ServiceStepPicker({
       },
     );
     return intervalo?.dias ?? null;
-  }, [appointments, selectedClientId, technique, date, services]);
+  }, [appointments, selectedClientId, technique, date, services, editingAppointmentId]);
 
   // Maior dias_max entre as faixas de manutenção da técnica
   const maxDiasManutencao = useMemo(
