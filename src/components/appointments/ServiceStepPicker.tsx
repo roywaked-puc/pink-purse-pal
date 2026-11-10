@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { differenceInCalendarDays } from 'date-fns';
+import { intervaloDesdeAnterior } from '@/lib/diasDesdeUltimoAtendimento';
 import { Appointment, Service } from '@/types';
 import { Label } from '@/components/ui/label';
 import {
@@ -110,17 +110,15 @@ export function ServiceStepPicker({
   // Dias desde o último atendimento da mesma técnica para o cliente selecionado
   const diasDesdeUltimo = useMemo(() => {
     if (!selectedClientId || !technique) return null;
-    const previous = appointments
-      .filter((a) => a.clientId === selectedClientId)
-      .filter((a) => a.confirmationStatus !== 'cancelado')
-      .filter((a) => new Date(a.date) < date)
-      .filter((a) => {
+    const intervalo = intervaloDesdeAnterior(
+      { id: editingAppointmentId ?? '__novo__', clientId: selectedClientId, date, confirmationStatus: 'pendente' },
+      appointments,
+      (a) => {
         const svc = a.serviceId ? services.find((s) => s.id === a.serviceId) : undefined;
         return svc?.techniqueName === technique;
-      })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-    if (!previous) return null;
-    return differenceInCalendarDays(date, new Date(previous.date));
+      },
+    );
+    return intervalo?.dias ?? null;
   }, [appointments, selectedClientId, technique, date, services]);
 
   // Maior dias_max entre as faixas de manutenção da técnica
@@ -267,7 +265,7 @@ export function ServiceStepPicker({
           )}
           {tierSuggestion === 'fora_prazo' && diasDesdeUltimo != null && (
             <p className="text-xs text-muted-foreground">
-              Último atendimento desta técnica há {diasDesdeUltimo}{' '}
+              Agenda anterior desta técnica há {diasDesdeUltimo}{' '}
               {diasDesdeUltimo === 1 ? 'dia' : 'dias'} — fora do prazo de manutenção, sugerindo
               colocação. Você pode trocar.
             </p>
@@ -292,7 +290,7 @@ export function ServiceStepPicker({
           </Select>
           {diasDesdeUltimo != null && (
             <p className="text-xs text-muted-foreground">
-              Último atendimento desta técnica há {diasDesdeUltimo}{' '}
+              Agenda anterior desta técnica há {diasDesdeUltimo}{' '}
               {diasDesdeUltimo === 1 ? 'dia' : 'dias'} — faixa sugerida automaticamente. Você pode
               trocar.
             </p>

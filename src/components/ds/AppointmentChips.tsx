@@ -2,7 +2,7 @@ import { Appointment, Service } from '@/types';
 import { cn } from '@/lib/utils';
 import { AlertTriangle } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
-import { diasDesdeUltimoAtendimento, situacaoIntervalo } from '@/lib/diasDesdeUltimoAtendimento';
+import { intervaloDesdeAnterior, situacaoIntervalo } from '@/lib/diasDesdeUltimoAtendimento';
 
 interface AppointmentChipsProps {
   appointment: Pick<Appointment, 'service' | 'maintenanceNumber'> & Partial<Pick<Appointment, 'id' | 'clientId' | 'date' | 'confirmationStatus'>>;
@@ -17,14 +17,15 @@ interface AppointmentChipsProps {
 function IntervaloChip({ appointment, service, chipSize }: { appointment: AppointmentChipsProps['appointment']; service?: Service | null; chipSize: string }) {
   const { appointments } = useApp();
   if (!appointment.id || !appointment.date || !appointment.confirmationStatus) return null;
-  const dias = diasDesdeUltimoAtendimento(appointment as Appointment, appointments);
+  const intervalo = intervaloDesdeAnterior(appointment as Appointment, appointments);
+  const dias = intervalo?.dias ?? null;
   const sit = situacaoIntervalo(dias, service);
   const base = cn('inline-flex items-center gap-1 font-medium rounded-full border whitespace-nowrap', chipSize);
   if (sit === 'primeira') return <span className={cn(base, 'bg-background/75 border-border text-foreground/80')}>Primeira visita</span>;
   const diasTxt = `${dias} ${dias === 1 ? 'dia' : 'dias'}`;
   if (sit === 'neutro') return (
     <span className={cn(base, 'bg-background/75 border-border text-foreground/80')}>
-      <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />{diasTxt} desde o último
+      <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />{diasTxt} desde o {intervalo?.anteriorAtendido ? 'último' : 'anterior'}
     </span>
   );
   const faixa = `faixa ${service!.diasMin}–${service!.diasMax}`;
