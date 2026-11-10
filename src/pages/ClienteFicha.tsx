@@ -26,7 +26,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { StatusBadge } from '@/components/ds/StatusBadge';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
-import { diasDesdeUltimoAtendimento } from '@/lib/diasDesdeUltimoAtendimento';
+import { diasDesdeAtendimentoConcluido, diasDesdeUltimoAtendimento } from '@/lib/diasDesdeUltimoAtendimento';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -265,11 +265,14 @@ export default function ClienteFicha() {
                         else if (diff > 0) parts.push(`Em ${diff} ${diff === 1 ? 'dia' : 'dias'}`);
                         else parts.push(`Há ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'dia' : 'dias'}`);
                       }
-                      const diff = diasDesdeUltimoAtendimento(a, clientAppointments);
+                      const diff = diasDesdeAtendimentoConcluido(a, clientAppointments);
                       if (diff != null) {
                         parts.push(`${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`);
                       }
                       if (parts.length) daysLabel = parts.join(' · ');
+                    } else if (a.confirmationStatus !== 'cancelado' && new Date(a.date) > today) {
+                      const diff = diasDesdeUltimoAtendimento(a, clientAppointments);
+                      if (diff != null) daysLabel = `${diff} ${diff === 1 ? 'dia' : 'dias'} desde o anterior`;
                     }
 
                     return (
