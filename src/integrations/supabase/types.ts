@@ -497,6 +497,36 @@ export type Database = {
           },
         ]
       }
+      modelos_iniciais: {
+        Row: {
+          ativo: boolean
+          conteudo: Json
+          created_at: string
+          id: string
+          nome: string
+          segmento: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          conteudo: Json
+          created_at?: string
+          id?: string
+          nome: string
+          segmento: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          conteudo?: Json
+          created_at?: string
+          id?: string
+          nome?: string
+          segmento?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           amount: number
@@ -746,8 +776,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aplicar_modelo_inicial: {
+        Args: { p_segmento?: string; p_user_id: string }
+        Returns: boolean
+      }
       caixa_reserva_apply: {
         Args: { p_appointment_id: string }
+        Returns: undefined
+      }
+      gerar_modelo_inicial: {
+        Args: { p_email: string; p_nome?: string; p_segmento?: string }
         Returns: undefined
       }
       google_calendar_secret_configured: { Args: never; Returns: boolean }
