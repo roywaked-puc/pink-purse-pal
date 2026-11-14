@@ -36,6 +36,13 @@
       "when": 1794623588353,
       "tag": "0004_minha_marca_user_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794624139600,
+      "tag": "0005_logos_politicas_nome_fixo",
+      "breakpoints": true
     }
   ]
 }
