@@ -106,8 +106,9 @@ Esta seção descreve o que existe no código, não uma proposta de redesenho.
 - **CRM:** resumo em três colunas no celular/seis em `md`; cards de ação em duas/três.
 - **Relatórios:** abas em duas colunas no celular/quatro em `md`, com rótulos ocultos abaixo
   de `sm`. Tabelas/listas e filtros variam por relatório, com rolagem quando necessária.
-- **Ficha:** métricas em duas/quatro colunas; detalhes de atendimento em Drawer inferior
-  no celular e Sheet lateral no desktop. Fotos/anamnese permanecem dentro das abas.
+- **Ficha:** métricas em duas/quatro colunas; detalhes de atendimento em Sheet à direita,
+  ocupando a largura toda no celular e limitado a 448px a partir de `sm`.
+  Fotos/anamnese permanecem dentro das abas.
 
 ### 3.2 Navegação entre telas
 
