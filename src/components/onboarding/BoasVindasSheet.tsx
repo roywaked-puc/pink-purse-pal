@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useUserSettings, useUpdateUserSettings } from '@/hooks/useUserSettings';
 import { MarcaForm } from '@/components/settings/MarcaForm';
 import { useToast } from '@/hooks/use-toast';
+import { concluirOnboarding } from '@/lib/concluirOnboarding';
 
 const formatCurrency = (value: number): string =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -22,7 +23,7 @@ const formatCurrency = (value: number): string =>
 export function BoasVindasSheet() {
   const { user } = useAuth();
   const { services, updateService, loading: appLoading } = useApp();
-  const { data: settings, isLoading: settingsLoading } = useUserSettings();
+  const { data: settings, isLoading: settingsLoading, isError: settingsError } = useUserSettings();
   const updateSettings = useUpdateUserSettings();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -33,9 +34,10 @@ export function BoasVindasSheet() {
   const [reservaAtiva, setReservaAtiva] = useState(false);
   const [reservaValor, setReservaValor] = useState('0');
   const [concluindo, setConcluindo] = useState(false);
+  const conclusaoEmCurso = useRef(false);
 
   const precisaOnboarding =
-    !!user && !settingsLoading && (!settings || !settings.onboarding_concluido_em);
+    !!user && !settingsLoading && !settingsError && (!settings || !settings.onboarding_concluido_em);
 
   useEffect(() => {
     if (precisaOnboarding && !appLoading) {
@@ -60,11 +62,14 @@ export function BoasVindasSheet() {
   }, [services]);
 
   const concluir = async (destino?: string) => {
+    if (conclusaoEmCurso.current) return;
+    conclusaoEmCurso.current = true;
     setConcluindo(true);
     try {
-      await updateSettings.mutateAsync({ onboarding_concluido_em: new Date().toISOString() });
-      setAberto(false);
-      if (destino) navigate(destino);
+      await concluirOnboarding((dados) => updateSettings.mutateAsync(dados), () => {
+        setAberto(false);
+        if (destino) navigate(destino);
+      });
     } catch (e) {
       toast({
         title: 'Não foi possível concluir',
@@ -72,6 +77,7 @@ export function BoasVindasSheet() {
         variant: 'destructive',
       });
     } finally {
+      conclusaoEmCurso.current = false;
       setConcluindo(false);
     }
   };

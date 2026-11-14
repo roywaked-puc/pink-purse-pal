@@ -1,4 +1,5 @@
 # Architecture rules
+- Confirm user-settings writes with an explicit safe-column readback; onboarding closes only after a persisted completion timestamp, so write errors cannot masquerade as success.
 - Derive confirmation reminders from appointments already in AppContext using pure helpers; one shared Home/CRM component records only the sent timestamp, keeping status and finance independent.
 - Read Google credential availability through an authenticated boolean RPC; safe settings column grants must never expose access tokens, refresh tokens or client secrets.
 

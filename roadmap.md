@@ -1,4 +1,5 @@
 # Enviar agenda futura
+- [ ] Verificar conclusão das boas-vindas de Roy: persistência, Pular, X, erro de gravação e confirmação no banco, sem migração.
 - [x] Implementar lembretes de confirmação: colunas, mensagem, hooks, Home/CRM e configurações.
 - [x] Validar 12 regras novas (34 testes no total), fluxo autenticado Home/CRM, registro real de envio em dados temporários e ausência de efeito financeiro/status. Conferir editor e larguras 360/390/1280.
 - [x] Implementar geração da mensagem e painel na ficha.

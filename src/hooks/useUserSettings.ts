@@ -77,7 +77,7 @@ export function useUserSettings() {
       if (error) throw sanitizeDbError(error);
       if (!data) return null;
 
-      const d = data as any;
+      const d = data;
       return {
         id: d.id,
         user_id: d.user_id,
@@ -122,17 +122,21 @@ export function useUpdateUserSettings() {
     mutationFn: async (settings: UpdateUserSettingsInput) => {
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .upsert({
           user_id: user.id,
           ...settings,
-        } as any, { onConflict: 'user_id' });
+        }, { onConflict: 'user_id' })
+        .select(SAFE_COLUMNS)
+        .single();
 
       if (error) throw sanitizeDbError(error);
+      if (!data) throw new Error('Não foi possível confirmar as configurações salvas.');
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-settings'] });
+      return queryClient.invalidateQueries({ queryKey: ['user-settings', user?.id] });
     },
   });
 }
