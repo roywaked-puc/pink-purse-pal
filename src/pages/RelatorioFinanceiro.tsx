@@ -17,6 +17,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { logoPublicUrl } from '@/hooks/useMarca';
+import { carregarImagemDataUrl } from '@/lib/marca';
+import { adicionarMarcaPdf } from '@/lib/marcaPdf';
 import { isPermutaTransaction } from '@/lib/accountBalance';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -30,6 +34,7 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
   const navigate = useNavigate();
   const { data: transactions = [] } = useTransactions();
   const { data: accounts = [] } = useAccounts();
+  const { data: settings } = useUserSettings();
   const { toast } = useToast();
 
   const [selectedAccount, setSelectedAccount] = useState<string>('todos');
@@ -131,7 +136,7 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
     return account?.name || accountId;
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (transactionsWithBalance.length === 0) {
       toast({
         title: "Sem dados",
@@ -141,9 +146,15 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
       return;
     }
 
+    const logoDataUrl = settings?.logo_path
+      ? await carregarImagemDataUrl(logoPublicUrl(settings.logo_path))
+      : null;
+
     const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
-    
+
+    adicionarMarcaPdf(doc, settings?.nome_negocio ?? null, logoDataUrl);
+
     // Title
     doc.setFontSize(18);
     doc.text('Relatorio Financeiro', pageWidth / 2, 20, { align: 'center' });
