@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Printer, X, Loader2 } from 'lucide-react';
 import { useAnamneseResponseDetail } from '@/hooks/useAnamnese';
 import { useApp } from '@/contexts/AppContext';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { useLogoUrl } from '@/hooks/useMarca';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMemo } from 'react';
@@ -24,7 +26,10 @@ const labelForValue = (type: string, v: unknown): string => {
 export function AnamneseViewer({ responseId, open, onOpenChange }: Props) {
   const { data, isLoading } = useAnamneseResponseDetail(responseId ?? undefined);
   const { getClientById } = useApp();
+  const { data: settings } = useUserSettings();
+  const logoUrl = useLogoUrl();
   const client = data ? getClientById(data.response.client_id) : null;
+  const temMarca = !!(settings?.nome_negocio || logoUrl);
 
   const sections = useMemo(() => {
     const map = new Map<string, typeof data.questions>();
@@ -56,6 +61,9 @@ export function AnamneseViewer({ responseId, open, onOpenChange }: Props) {
         .lbl { font-weight: 600; }
         .meta { color: #666; font-size: 12px; }
         img { max-width: 320px; border: 1px solid #ddd; }
+        .marca { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .marca img { width: 48px; height: 48px; max-width: 48px; border-radius: 50%; object-fit: cover; }
+        .marca .nome { font-size: 16px; font-weight: 700; }
         @media print { body { padding: 0; } }
       </style></head><body>${el.innerHTML}</body></html>`);
     w.document.close();
@@ -81,6 +89,12 @@ export function AnamneseViewer({ responseId, open, onOpenChange }: Props) {
             </div>
 
             <div id="anamnese-print-area">
+              {temMarca && (
+                <div className="marca">
+                  {logoUrl && <img src={logoUrl} alt="Logo do negócio" />}
+                  {settings?.nome_negocio && <span className="nome">{settings.nome_negocio}</span>}
+                </div>
+              )}
               <h1>{data.template.name}</h1>
               <p className="meta">
                 Cliente: <strong>{client?.name ?? '—'}</strong> · Versão {data.version.version} ·{' '}

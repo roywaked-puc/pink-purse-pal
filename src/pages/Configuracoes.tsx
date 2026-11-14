@@ -11,10 +11,11 @@ import { RetentionSettings } from '@/components/settings/RetentionSettings';
 import { CrmSettings } from '@/components/settings/CrmSettings';
 import { CaixaSettings } from '@/components/settings/CaixaSettings';
 import { AnamneseTemplatesSettings } from '@/components/settings/AnamneseTemplatesSettings';
+import { MinhaMarcaSettings } from '@/components/settings/MinhaMarcaSettings';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
-import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Wallet, Download, Calendar, Repeat, Heart, ClipboardList } from 'lucide-react';
+import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Wallet, Download, Calendar, Repeat, Heart, ClipboardList, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Accordion,
@@ -72,6 +73,23 @@ const Configuracoes = () => {
         </div>
 
         <Accordion type="single" collapsible className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <AccordionItem value="minha-marca" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center gap-3">
+                <Palette className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-semibold">Minha Marca</p>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    Nome, logo e cor do seu negócio
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <MinhaMarcaSettings />
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="clients" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline py-4">
               <div className="flex items-center gap-3">
