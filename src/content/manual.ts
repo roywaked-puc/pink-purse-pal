@@ -1,4 +1,4 @@
-/** Conteúdo estático da Central de Ajuda (Manual do Novo Usuário). */
+/** Conteúdo estático da Central de Ajuda. Atualizar junto com supabase/functions/chat-ajuda/manual.ts. */
 export type BlocoManual =
   | { tipo: 'paragrafo'; texto: string; destaque?: string }
   | { tipo: 'lista'; ordenada?: boolean; itens: string[] }
@@ -110,7 +110,7 @@ export const secoesManual: SecaoManual[] = [
         ['Retorno previsto', 'Uma volta esperada da cliente, ainda sem confirmação'],
       ] },
       { tipo: 'subtitulo', texto: 'Terminar um atendimento' },
-      { tipo: 'lista', ordenada: true, itens: ['Abra o horário e marque como Atendido.', 'Se quiser, tire ou anexe as fotos do resultado pela ficha da cliente, na aba Fotos.', 'Registre o pagamento (veja a seção Dinheiro).'] },
+      { tipo: 'lista', ordenada: true, itens: ['Abra o horário e marque como Atendido. Marcar como Atendido não deve abrir fotos automaticamente.', 'Quando quiser, use "Adicionar fotos" em Mais ações do horário na tela Início ou a aba Fotos da ficha da cliente.', 'Registre o pagamento (veja a seção Dinheiro).'] },
       { tipo: 'paragrafo', destaque: 'Remarcar:', texto: 'abra o horário, edite e escolha o novo dia e hora. O app abre a agenda completa para você ver os horários livres.' },
       { tipo: 'paragrafo', destaque: 'Permuta:', texto: 'se o atendimento foi uma troca de serviços, sem dinheiro, marque a opção Permuta. O app não cobra nada e não conta esse atendimento no seu faturamento nem na sua meta.' },
     ],
@@ -185,11 +185,11 @@ export const secoesManual: SecaoManual[] = [
         ['A confirmar', 'Clientes com horário chegando que ainda não confirmaram'],
         ['Retornos previstos', 'Clientes que já deveriam estar voltando'],
         ['Inativas', 'Clientes que não aparecem há muito tempo'],
-        ['VIPs', 'Suas clientes mais frequentes'],
+        ['VIPs', 'Clientes ordenadas pelo valor pago e pela quantidade de atendimentos'],
         ['Aniversariantes', 'Quem faz aniversário, para você mandar um carinho'],
         ['Produção do Mês', 'Quanto você já fez, quanto ainda está marcado e o quanto falta para a meta'],
       ] },
-      { tipo: 'paragrafo', texto: 'Você decide as regras em Configurações → CRM: depois de quantos dias uma cliente vira inativa, com quantos dias de antecedência confirmar, quantas visitas fazem uma VIP e qual é a sua meta mensal.' },
+      { tipo: 'paragrafo', texto: 'Você decide as regras em Configurações → CRM: depois de quantos dias uma cliente vira inativa, com quantos dias de antecedência confirmar, quantas clientes entram na lista VIP e qual é a sua meta mensal. A ordem das VIPs considera o valor pago e a quantidade de atendimentos, não um número mínimo de visitas.' },
       { tipo: 'paragrafo', texto: 'Em Relatórios você vê o resumo do mês (dinheiro, atendimentos e indicadores) e pode exportar em PDF ou planilha, por exemplo para enviar ao contador.' },
     ],
   },
@@ -205,9 +205,9 @@ export const secoesManual: SecaoManual[] = [
         ['Editar um pagamento de atendimento', 'Mantém o financeiro fiel ao que aconteceu', 'Exclua e registre de novo'],
         ['Excluir um horário que já tem pagamento', 'O dinheiro ficaria sem origem', 'Exclua o pagamento antes, ou apenas cancele o horário'],
         ['Alterar uma anamnese assinada', 'Ela é o registro do que a cliente declarou', 'Aplique uma ficha nova'],
-        ['Excluir um serviço já usado', 'Os atendimentos antigos perderiam a descrição', 'O serviço é arquivado: some da agenda, fica no histórico'],
       ] },
       { tipo: 'paragrafo', texto: 'O app sempre pede confirmação antes de excluir qualquer coisa. Leia a mensagem antes de confirmar.' },
+      { tipo: 'paragrafo', texto: 'Serviços e faixas são excluídos, não arquivados. Confira antes de confirmar a exclusão.' },
     ],
   },
   {
@@ -230,7 +230,7 @@ export const secoesManual: SecaoManual[] = [
         ['Sinal', 'Valor adiantado pela cliente para garantir o horário'],
         ['Taxa da maquininha', 'Parte que a operadora do cartão desconta de cada venda'],
         ['Valor líquido', 'O que sobra para você depois de descontada a taxa'],
-        ['VIP', 'Cliente que já veio o número de vezes que você definiu'],
+        ['VIP', 'Cliente da lista ordenada por valor pago e quantidade de atendimentos; você define quantas clientes entram'],
       ] },
     ],
   },
@@ -246,7 +246,6 @@ export const secoesManual: SecaoManual[] = [
       { tipo: 'paragrafo', destaque: 'Não consigo salvar o horário.', texto: 'Provavelmente há outro atendimento no mesmo período. Veja a agenda do dia e ajuste a hora ou a duração.' },
       { tipo: 'paragrafo', destaque: 'Mudei um horário no Google Calendar e o app não mudou.', texto: 'O app envia os horários para o Google, mas não recebe mudanças de lá. Altere sempre pelo app.' },
       { tipo: 'paragrafo', destaque: 'Tenho medo de perder meus dados.', texto: 'Seus dados ficam guardados na sua conta, não no celular. Trocar de aparelho não apaga nada. Em Configurações → Exportar Dados você também pode exportar uma cópia.' },
-      { tipo: 'paragrafo', destaque: 'Preciso de ajuda.', texto: '[Contato do suporte: definir canal e horário de atendimento]' },
     ],
   },
 ];
