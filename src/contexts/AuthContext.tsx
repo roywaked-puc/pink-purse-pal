@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { limparTema } from '@/lib/marca';
 
 interface AuthContextType {
   user: User | null;
@@ -64,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    limparTema();
     await supabase.auth.signOut();
   };
 
