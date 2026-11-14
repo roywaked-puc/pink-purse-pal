@@ -9,3 +9,4 @@
 - Generate future agenda WhatsApp messages in the pure `agendaWhatsapp` helpers and reuse the existing service-description and WhatsApp-link helpers; this keeps eligibility and formatting reusable without changing other flows.- Compute 'days since last attendance' only via `src/lib/diasDesdeUltimoAtendimento.ts`; Home/Agenda chips and the client file must never diverge.
 
 - Keep Help Center content static in `src/content/manual.ts`; the `/ajuda` page and first-steps checklist render from it, and checklist progress lives only in per-user localStorage.
+- Keep Help AI inference in the authenticated `chat-ajuda` Edge Function with a synchronized text-only manual and no data queries/tools; send only the last ten messages capped at 1,000 characters and clear in-memory chat on close to preserve its privacy boundary.

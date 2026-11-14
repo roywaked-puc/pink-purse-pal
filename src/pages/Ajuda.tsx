@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, SearchX } from 'lucide-react';
+import { Search, SearchX, MessageCircle } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { PrimeirosPassos } from '@/components/ajuda/PrimeirosPassos';
+import { ChatAjuda } from '@/components/ajuda/ChatAjuda';
+import { Button } from '@/components/ui/button';
 import { comoFaco, secoesManual, normalizarBusca, type BlocoManual, type SecaoManual } from '@/content/manual';
 
 function textoBloco(b: BlocoManual): string {
@@ -81,6 +83,7 @@ function Bloco({ b }: { b: BlocoManual }) {
 const Ajuda = () => {
   const { hash } = useLocation();
   const [busca, setBusca] = useState('');
+  const [chatAberto, setChatAberto] = useState(false);
   const [aberta, setAberta] = useState<string>(hash.replace('#', '') || '');
   const termo = normalizarBusca(busca.trim());
 
@@ -109,6 +112,11 @@ const Ajuda = () => {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar no manual..." className="pl-9" aria-label="Buscar no manual" />
       </div>
+
+      <Button variant="outline" className="w-full mb-4 gap-2" onClick={() => setChatAberto(true)}>
+        <MessageCircle className="h-4 w-4" />Perguntar à assistente
+      </Button>
+      <ChatAjuda aberto={chatAberto} aoAbrir={setChatAberto} />
 
       {!termo && <div id="secao-primeiros-passos" className="mb-6 scroll-mt-4"><PrimeirosPassos /></div>}
 
