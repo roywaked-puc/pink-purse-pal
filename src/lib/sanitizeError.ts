@@ -1,5 +1,14 @@
 import { PostgrestError } from '@supabase/supabase-js';
 
+/** Somente status conhecidos; nunca repassa mensagens cruas da IA. */
+export function sanitizeChatError(status?: number): Error {
+  if (status === 429) return new Error('Muitas perguntas neste momento. Aguarde um pouco e tente novamente.');
+  if (status === 402) return new Error('A assistente está sem créditos disponíveis. Tente novamente após a recarga.');
+  if (status === 401) return new Error('Sua sessão expirou. Entre novamente para conversar com a assistente.');
+  if (status === 400) return new Error('Envie uma pergunta com até 1.000 caracteres.');
+  return new Error('Não foi possível completar a resposta. Sua pergunta foi preservada; tente novamente quando quiser.');
+}
+
 /**
  * Maps PostgreSQL error codes to user-friendly messages
  * This prevents leaking database schema details to the client
