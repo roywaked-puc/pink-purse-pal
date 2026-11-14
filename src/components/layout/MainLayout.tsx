@@ -1,5 +1,6 @@
 import { ReactNode, useEffect } from 'react';
 import { BottomNav } from './BottomNav';
+import { BoasVindasSheet } from '@/components/onboarding/BoasVindasSheet';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useLogoUrl } from '@/hooks/useMarca';
 import { aplicarTema } from '@/lib/marca';
@@ -43,6 +44,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         {children}
       </main>
       <BottomNav />
+      <BoasVindasSheet />
     </div>
   );
 }
