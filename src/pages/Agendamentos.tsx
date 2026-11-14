@@ -5,6 +5,7 @@ import { format, isToday, isFuture, isPast, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { BotaoAjuda } from '@/components/ajuda/BotaoAjuda';
 import { AppointmentForm } from '@/components/appointments/AppointmentForm';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
@@ -350,6 +351,7 @@ const Agendamentos = () => {
         subtitle="Gerencie sua agenda"
         action={
           <div className="flex items-center gap-2">
+            <BotaoAjuda secao="agenda" />
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'week' | 'month')}>
               <TabsList className="h-9">
                 <TabsTrigger value="list" className="px-2">
