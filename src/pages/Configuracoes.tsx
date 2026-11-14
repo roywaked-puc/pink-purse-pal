@@ -17,6 +17,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Wallet, Download, Calendar, Repeat, Heart, ClipboardList, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { BotaoAjuda } from '@/components/ajuda/BotaoAjuda';
+import { HelpCircle, ChevronRight } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -28,6 +31,9 @@ const Configuracoes = () => {
   const { user, signOut } = useAuth();
   const { loading, clients, services, categories, accounts } = useApp();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const secaoInicial = searchParams.get('abrir') ?? undefined;
 
   const handleLogout = async () => {
     await signOut();
@@ -52,9 +58,19 @@ const Configuracoes = () => {
       <PageHeader
         title="Configurações"
         subtitle="Personalize seu app"
+        action={<BotaoAjuda secao="primeiros-passos" />}
       />
 
       <div className="space-y-4">
+        <button type="button" onClick={() => navigate('/ajuda')} className="w-full flex items-center gap-3 p-4 border rounded-lg text-left hover:bg-muted/50 transition-colors">
+          <HelpCircle className="w-5 h-5 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold">Ajuda</p>
+            <p className="text-sm text-muted-foreground">Manual do app e primeiros passos</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+        </button>
+
         {/* User Info */}
         <div className="p-4 bg-muted/50 rounded-lg">
           <div className="min-w-0">
@@ -72,7 +88,7 @@ const Configuracoes = () => {
           </div>
         </div>
 
-        <Accordion type="single" collapsible className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <Accordion type="single" collapsible defaultValue={secaoInicial} className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <AccordionItem value="minha-marca" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline py-4">
               <div className="flex items-center gap-3">

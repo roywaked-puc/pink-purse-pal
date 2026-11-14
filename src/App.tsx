@@ -20,6 +20,7 @@ import ClienteFicha from "./pages/ClienteFicha";
 import Auth from "./pages/Auth";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import NotFound from "./pages/NotFound";
+import Ajuda from "./pages/Ajuda";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -95,6 +96,11 @@ function AppRoutes() {
       <Route path="/cliente/:id" element={
         <ProtectedRoute>
           <ClienteFicha />
+        </ProtectedRoute>
+      } />
+      <Route path="/ajuda" element={
+        <ProtectedRoute>
+          <Ajuda />
         </ProtectedRoute>
       } />
       <Route path="*" element={<NotFound />} />

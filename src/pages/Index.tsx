@@ -6,6 +6,7 @@ import { TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } f
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
+import { PrimeirosPassosHome } from '@/components/ajuda/PrimeirosPassos';
 import { CaixaSaldoResumo } from '@/components/ds/CaixaSaldoResumo';
 import { CaixaDetalheDrawer, CaixaDetalheTipo } from '@/components/dashboard/CaixaDetalheDrawer';
 import { AppointmentPreview } from '@/components/dashboard/AppointmentPreview';
@@ -146,6 +147,8 @@ const Index = () => {
           {balancesVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
         </Button>
       </header>
+
+      <PrimeirosPassosHome />
 
       {/* Busca */}
       <div className="mb-4">

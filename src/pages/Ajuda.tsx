@@ -129,7 +129,8 @@ const Ajuda = () => {
               </div>
             </section>
           )}
-          <Accordion type="single" collapsible value={termo ? undefined : aberta} onValueChange={setAberta} className="space-y-2">
+          {termo ? (
+            <Accordion type="multiple" value={secoes.map((s) => s.id)} className="space-y-2">
             {secoes.map((s) => (
               <AccordionItem key={s.id} value={s.id} id={`secao-${s.id}`} className="border rounded-lg px-4 scroll-mt-4">
                 <AccordionTrigger className="hover:no-underline py-4 text-left">
@@ -143,7 +144,24 @@ const Ajuda = () => {
                 </AccordionContent>
               </AccordionItem>
             ))}
-          </Accordion>
+            </Accordion>
+          ) : (
+            <Accordion type="single" collapsible value={aberta} onValueChange={setAberta} className="space-y-2">
+            {secoes.map((s) => (
+              <AccordionItem key={s.id} value={s.id} id={`secao-${s.id}`} className="border rounded-lg px-4 scroll-mt-4">
+                <AccordionTrigger className="hover:no-underline py-4 text-left">
+                  <div>
+                    <p className="font-semibold">{s.titulo}</p>
+                    <p className="text-sm text-muted-foreground font-normal">{s.resumo}</p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-3 pb-4">
+                  {s.blocos.map((b, i) => <Bloco key={i} b={b} />)}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+            </Accordion>
+          )}
         </>
       )}
     </MainLayout>

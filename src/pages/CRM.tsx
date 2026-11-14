@@ -18,6 +18,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { BotaoAjuda } from '@/components/ajuda/BotaoAjuda';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ActionCard } from '@/components/crm/ActionCard';
@@ -155,7 +156,7 @@ export default function CRM() {
 
   return (
     <MainLayout>
-      <PageHeader title="CRM" subtitle="Quem precisa de você hoje?" />
+      <PageHeader title="CRM" subtitle="Quem precisa de você hoje?" action={<BotaoAjuda secao="crm" />} />
 
       {/* Mini dashboard */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-6">

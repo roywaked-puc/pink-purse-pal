@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { BotaoAjuda } from '@/components/ajuda/BotaoAjuda';
 import { TransactionItem } from '@/components/transactions/TransactionItem';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
@@ -105,6 +106,7 @@ const Movimentacoes = () => {
         subtitle="Controle suas entradas e saídas"
         action={
           <div className="flex gap-2">
+            <BotaoAjuda secao="dinheiro" />
             <Button 
               variant="outline"
               size="sm"
