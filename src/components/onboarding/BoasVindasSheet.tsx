@@ -52,10 +52,10 @@ export function BoasVindasSheet() {
 
   // Serviços principais com suas faixas de manutenção.
   const grupos = useMemo(() => {
-    const principais = services.filter((s) => !s.servico_pai_id);
+    const principais = services.filter((s) => !s.servicoPaiId);
     return principais.map((p) => ({
       principal: p,
-      faixas: services.filter((s) => s.servico_pai_id === p.id),
+      faixas: services.filter((s) => s.servicoPaiId === p.id),
     }));
   }, [services]);
 
