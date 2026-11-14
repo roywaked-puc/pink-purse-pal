@@ -22,6 +22,13 @@
       "when": 1793054199104,
       "tag": "0002_protect_google_secret_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794623332282,
+      "tag": "0003_modelos_iniciais",
+      "breakpoints": true
     }
   ]
 }
