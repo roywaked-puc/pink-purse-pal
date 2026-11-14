@@ -10,6 +10,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useApp } from '@/contexts/AppContext';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { logoPublicUrl } from '@/hooks/useMarca';
+import { carregarImagemDataUrl } from '@/lib/marca';
+import { adicionarMarcaPdf } from '@/lib/marcaPdf';
 import { format, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, FileText, FileSpreadsheet, ArrowLeft } from 'lucide-react';
@@ -79,6 +83,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
   const navigate = useNavigate();
   const { toast } = useToast();
   const { transactions, appointments, categories, accounts, clients } = useApp();
+  const { data: settings } = useUserSettings();
 
   // Filter states
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
@@ -274,14 +279,20 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
   };
 
   // Export to PDF
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (enrichedTransactions.length === 0) {
       toast({ title: 'Sem dados', description: 'Não há movimentações para exportar.', variant: 'destructive' });
       return;
     }
 
+    const logoDataUrl = settings?.logo_path
+      ? await carregarImagemDataUrl(logoPublicUrl(settings.logo_path))
+      : null;
+
     const doc = new jsPDF('landscape');
-    
+
+    adicionarMarcaPdf(doc, settings?.nome_negocio ?? null, logoDataUrl);
+
     // Header
     doc.setFontSize(16);
     doc.text('Relatório de Movimentações', 14, 15);

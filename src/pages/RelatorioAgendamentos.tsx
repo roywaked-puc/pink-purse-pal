@@ -25,6 +25,10 @@ import {
 import { useAppointments } from '@/hooks/useAppointments';
 import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { logoPublicUrl } from '@/hooks/useMarca';
+import { carregarImagemDataUrl } from '@/lib/marca';
+import { adicionarMarcaPdf } from '@/lib/marcaPdf';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ConfirmationStatus, PaymentStatus } from '@/types';
@@ -38,6 +42,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
   const { data: appointments = [] } = useAppointments();
   const { data: clients = [] } = useClients();
   const { data: services = [] } = useServices();
+  const { data: settings } = useUserSettings();
   const { toast } = useToast();
   const serviceDescription = (appointment: (typeof appointments)[number]) =>
     getAppointmentDescription(
@@ -139,7 +144,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
     return filters.length > 0 ? filters.join(' | ') : 'Todos';
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (filteredAppointments.length === 0) {
       toast({
         title: "Sem dados",
@@ -149,8 +154,14 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
       return;
     }
 
+    const logoDataUrl = settings?.logo_path
+      ? await carregarImagemDataUrl(logoPublicUrl(settings.logo_path))
+      : null;
+
     const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
+
+    adicionarMarcaPdf(doc, settings?.nome_negocio ?? null, logoDataUrl);
 
     // Title
     doc.setFontSize(18);
