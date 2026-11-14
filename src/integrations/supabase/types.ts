@@ -695,6 +695,7 @@ export type Database = {
           cancellation_fee: number
           cancellation_notice_hours: number
           confirm_message_template: string | null
+          cor_primaria: string | null
           created_at: string | null
           crm_confirm_days: number
           crm_inactive_days: number
@@ -707,6 +708,9 @@ export type Database = {
           google_refresh_token: string | null
           google_token_expiry: string | null
           id: string
+          logo_path: string | null
+          nome_negocio: string | null
+          onboarding_concluido_em: string | null
           retention_color_aguardando: string
           retention_color_confirmado: string
           retention_color_previsto: string
@@ -722,6 +726,7 @@ export type Database = {
           cancellation_fee?: number
           cancellation_notice_hours?: number
           confirm_message_template?: string | null
+          cor_primaria?: string | null
           created_at?: string | null
           crm_confirm_days?: number
           crm_inactive_days?: number
@@ -734,6 +739,9 @@ export type Database = {
           google_refresh_token?: string | null
           google_token_expiry?: string | null
           id?: string
+          logo_path?: string | null
+          nome_negocio?: string | null
+          onboarding_concluido_em?: string | null
           retention_color_aguardando?: string
           retention_color_confirmado?: string
           retention_color_previsto?: string
@@ -749,6 +757,7 @@ export type Database = {
           cancellation_fee?: number
           cancellation_notice_hours?: number
           confirm_message_template?: string | null
+          cor_primaria?: string | null
           created_at?: string | null
           crm_confirm_days?: number
           crm_inactive_days?: number
@@ -761,6 +770,9 @@ export type Database = {
           google_refresh_token?: string | null
           google_token_expiry?: string | null
           id?: string
+          logo_path?: string | null
+          nome_negocio?: string | null
+          onboarding_concluido_em?: string | null
           retention_color_aguardando?: string
           retention_color_confirmado?: string
           retention_color_previsto?: string
