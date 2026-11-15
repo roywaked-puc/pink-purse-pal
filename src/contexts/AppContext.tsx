@@ -9,8 +9,13 @@ import { useAppointments, useAddAppointment, useUpdateAppointment, useDeleteAppo
 import { useTransactions, useAddTransaction, useUpdateTransaction, useDeleteTransaction } from '@/hooks/useTransactions';
 import { isPermutaRelated } from '@/lib/accountBalance';
 import { useMarcarLembreteEnviado } from '@/hooks/useLembretesConfirmacao';
+import { useAssinatura } from '@/hooks/useAssinatura';
+import type { ResumoAssinatura } from '@/types';
 
 interface AppContextType {
+  assinatura: ResumoAssinatura | undefined;
+  assinaturaCarregando: boolean;
+  atualizarAssinatura: () => Promise<unknown>;
   transactions: Transaction[];
   appointments: Appointment[];
   categories: Category[];
@@ -64,6 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { data: accounts = [], isLoading: accountsLoading } = useAccounts();
   const { data: appointments = [], isLoading: appointmentsLoading } = useAppointments();
   const { data: transactions = [], isLoading: transactionsLoading } = useTransactions();
+  const { data: assinatura, isLoading: assinaturaCarregando, refetch: atualizarAssinatura } = useAssinatura();
 
   // Mutations
   const addClientMutation = useAddClient();
@@ -287,6 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [transactions, accounts]);
 
   const value = useMemo(() => ({
+    assinatura, assinaturaCarregando, atualizarAssinatura,
     transactions,
     appointments,
     categories,
@@ -327,6 +334,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getAppointmentById,
     updateAppointmentPayment,
   }), [
+    assinatura, assinaturaCarregando, atualizarAssinatura,
     transactions,
     appointments,
     categories,

@@ -39,6 +39,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ClientAutocomplete } from './ClientAutocomplete';
 import { ServiceStepPicker } from './ServiceStepPicker';
+import { PaywallAssinatura } from '@/components/assinatura/PaywallAssinatura';
+import { AssinaturaNecessariaError } from '@/lib/assinatura';
 
 import { toast } from 'sonner';
 
@@ -64,7 +66,7 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ open, onOpenChange, appointment, onDelete, prefill }: AppointmentFormProps) {
-  const { appointments, services, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById } = useApp();
+  const { appointments, services, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById, atualizarAssinatura } = useApp();
   const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
   const { mutateAsync: addAppointmentAsync } = useAddAppointment();
   const [date, setDate] = useState<Date>(new Date());
@@ -85,6 +87,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
   const [maintenanceNumber, setMaintenanceNumber] = useState<number | null>(null);
   const [showTransactions, setShowTransactions] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     if (appointment) {
@@ -274,6 +277,11 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
 
     setIsSubmitting(true);
     try {
+      if (!appointment) {
+        const resultado = await atualizarAssinatura() as { data?: { estado: string }; error?: unknown };
+        if (resultado.error || !resultado.data) throw new Error('Não foi possível verificar sua assinatura. Tente novamente.');
+        if (resultado.data.estado === 'expirado') { setShowPaywall(true); return; }
+      }
       let clientId = selectedClientId;
 
       // Se tem cliente selecionado, atualiza os dados se mudaram
@@ -323,10 +331,11 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
 
       onOpenChange(false);
       resetForm();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (err instanceof AssinaturaNecessariaError) { setShowPaywall(true); void atualizarAssinatura(); return; }
       console.error('[AppointmentForm] save error:', err);
       toast.error('Erro ao salvar agendamento', {
-        description: err?.message || 'Tente novamente.',
+        description: err instanceof Error ? err.message : 'Tente novamente.',
       });
     } finally {
       setIsSubmitting(false);
@@ -615,6 +624,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
           </DialogFooter>
         </form>
       </DialogContent>
+      <PaywallAssinatura open={showPaywall} onOpenChange={setShowPaywall} />
       {appointment && (
         <AppointmentTransactionsDialog
           appointmentId={appointment.id}

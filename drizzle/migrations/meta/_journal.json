@@ -57,6 +57,13 @@
       "when": 1794700957637,
       "tag": "0007_bind_logo_upload_policy_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794774424467,
+      "tag": "0008_assinaturas_belafy",
+      "breakpoints": true
     }
   ]
 }

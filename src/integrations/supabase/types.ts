@@ -390,6 +390,51 @@ export type Database = {
           },
         ]
       }
+      assinaturas: {
+        Row: {
+          atualizado_em: string
+          cancelar_no_fim_do_periodo: boolean
+          criado_em: string
+          isento: boolean
+          periodicidade: string | null
+          periodo_atual_fim: string | null
+          plano: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          teste_ate: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          cancelar_no_fim_do_periodo?: boolean
+          criado_em?: string
+          isento?: boolean
+          periodicidade?: string | null
+          periodo_atual_fim?: string | null
+          plano?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          teste_ate: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          cancelar_no_fim_do_periodo?: boolean
+          criado_em?: string
+          isento?: boolean
+          periodicidade?: string | null
+          periodo_atual_fim?: string | null
+          plano?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          teste_ate?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -496,6 +541,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      eventos_stripe: {
+        Row: {
+          evento_id: string
+          modo: string
+          ocorrido_em: string
+          processado_em: string
+          tipo: string
+        }
+        Insert: {
+          evento_id: string
+          modo: string
+          ocorrido_em: string
+          processado_em?: string
+          tipo: string
+        }
+        Update: {
+          evento_id?: string
+          modo?: string
+          ocorrido_em?: string
+          processado_em?: string
+          tipo?: string
+        }
+        Relationships: []
       }
       modelos_iniciais: {
         Row: {
@@ -788,6 +857,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aplicar_evento_stripe: {
+        Args: {
+          p_cancelar: boolean
+          p_customer: string
+          p_evento_id: string
+          p_fim: string
+          p_modo: string
+          p_ocorrido_em: string
+          p_pago: boolean
+          p_periodicidade: string
+          p_status: string
+          p_subscription: string
+          p_tipo: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       aplicar_modelo_inicial: {
         Args: { p_segmento?: string; p_user_id: string }
         Returns: boolean
@@ -801,6 +887,8 @@ export type Database = {
         Returns: undefined
       }
       google_calendar_secret_configured: { Args: never; Returns: boolean }
+      plano_efetivo: { Args: never; Returns: string }
+      resumo_assinatura: { Args: never; Returns: Json }
     }
     Enums: {
       anamnese_question_type:
