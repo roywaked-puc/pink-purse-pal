@@ -1,6 +1,8 @@
-# Assinaturas Belafy — aguardando aprovação
+# Assinaturas Belafy — aprovado, sem plano gratuito
 - [x] Inspecionar schema real, cadastro, inserções de agenda e documentação Stripe/Pix.
-- [ ] Aprovar o plano antes de habilitar Stripe, criar migrações ou alterar o app.
+- [x] Aprovação recebida: sem plano gratuito/contagem mensal; só criação bloqueada após expiração. RPCs auth.uid() e eventos internos service_role.
+- [x] Confirmar que app, Google Calendar e funções de caixa não alteram created_at/user_id dos agendamentos.
+- [ ] Conectar Stripe com chave restrita de teste pelo formulário seguro.
 - [ ] Após aprovação: conectar conta Stripe de teste, implementar proteção de limite, checkout/webhook/portal e interface; validar regras e fluxo completo.
 
 # Páginas públicas legais
