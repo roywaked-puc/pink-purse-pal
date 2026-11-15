@@ -19,6 +19,7 @@ import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Wallet, Download, Cal
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BotaoAjuda } from '@/components/ajuda/BotaoAjuda';
+import { SeloBelafy } from '@/components/ds/SeloBelafy';
 import { HelpCircle, ChevronRight } from 'lucide-react';
 import {
   Accordion,
@@ -276,6 +277,8 @@ const Configuracoes = () => {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+
+        <SeloBelafy />
       </div>
     </MainLayout>
   );

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { TrendingDown, Plus, Calendar, AlertCircle, Search, Eye, EyeOff, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { SeloBelafy } from '@/components/ds/SeloBelafy';
 import { BalanceCard } from '@/components/dashboard/BalanceCard';
 import { PrimeirosPassosHome } from '@/components/ajuda/PrimeirosPassos';
 import { CaixaSaldoResumo } from '@/components/ds/CaixaSaldoResumo';
