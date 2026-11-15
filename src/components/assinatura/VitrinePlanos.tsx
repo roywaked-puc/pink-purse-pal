@@ -21,7 +21,7 @@ export function VitrinePlanos({ valor, onChange, disabled }: { valor: PlanoEscol
           return (
             <button key={p.id} type="button" role="radio" aria-checked={ativo} disabled={disabled} onClick={() => onChange(p.id)}
               className={cn('flex items-center gap-3 rounded-xl border p-3 min-h-11 text-left transition-colors',
-                ativo ? 'border-belafy-ameixa bg-belafy-ameixa/5 ring-1 ring-belafy-ameixa' : 'border-border hover:bg-muted/50')}>
+                ativo ? 'border-belafy-ameixa ring-1 ring-belafy-ameixa' : 'border-border hover:bg-muted/50')}>
               <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
                 ativo ? 'border-belafy-ameixa bg-belafy-ameixa text-white' : 'border-muted-foreground/40')}>
                 {ativo && <Check className="h-3 w-3" />}
@@ -29,7 +29,7 @@ export function VitrinePlanos({ valor, onChange, disabled }: { valor: PlanoEscol
               <span className="flex-1 min-w-0">
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="font-semibold text-foreground">{p.nome}</span>
-                  {p.selo && <span className="rounded-full bg-belafy-rosa/20 px-2 py-0.5 text-[11px] font-medium text-belafy-ameixa">{p.selo}</span>}
+                  {p.selo && <span className="rounded-full bg-belafy-rosa px-2 py-0.5 text-[11px] font-medium text-belafy-ameixa">{p.selo}</span>}
                 </span>
                 <span className="block text-xs text-muted-foreground">{p.detalhe}</span>
               </span>
