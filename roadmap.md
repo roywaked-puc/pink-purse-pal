@@ -1,3 +1,8 @@
+# Assinaturas Belafy — aguardando aprovação
+- [x] Inspecionar schema real, cadastro, inserções de agenda e documentação Stripe/Pix.
+- [ ] Aprovar o plano antes de habilitar Stripe, criar migrações ou alterar o app.
+- [ ] Após aprovação: conectar conta Stripe de teste, implementar proteção de limite, checkout/webhook/portal e interface; validar regras e fluxo completo.
+
 # Páginas públicas legais
 - [x] Guardar termos e privacidade em conteúdo estático e adicionar rotas públicas, sem navegação inferior.
 - [x] Adicionar links no cadastro e em Configurações; completar análise de visitas conforme configurações verificadas.
