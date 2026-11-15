@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, SearchX, MessageCircle } from 'lucide-react';
+import { Search, SearchX } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/ds/EmptyState';
