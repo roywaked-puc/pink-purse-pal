@@ -24,7 +24,7 @@
 - [x] Validar no navegador autenticado (ficha + /crm) em 360px; corrigido overflow do ScrollArea no CrmListSheet.
 
 # Chat de ajuda com IA
-- [ ] Corrigir somente fotos, serviços, VIP e suporte do manual estático.
-- [ ] Adicionar chat-ajuda autenticado com manual espelhado, streaming, 10 mensagens e 1.000 caracteres por mensagem, sem acesso a dados.
-- [ ] Adicionar Drawer na Ajuda com histórico em memória, sugestões e tratamento seguro de erros.
-- [ ] Testar limites, autenticação, respostas reais e fechamento em celular/desktop; documentar arquitetura.
+- [x] Corrigir somente fotos, serviços, VIP e suporte do manual estático. Botão manual encontrado na Home (Mais ações → Adicionar fotos), não na Agenda; nenhuma outra tela alterada.
+- [x] Adicionar chat-ajuda autenticado com manual espelhado, streaming, 10 mensagens e 1.000 caracteres por mensagem, sem acesso a dados.
+- [x] Adicionar Drawer na Ajuda com histórico em memória, sugestões e tratamento seguro de erros.
+- [x] Testar limites, autenticação, respostas reais e fechamento em celular/desktop; documentar arquitetura. Seis testes locais, rejeição real de 11 mensagens/1.001 caracteres, JWT inválido 401, recusas de dados/saúde e avisos simulados 429/402 com pergunta preservada.

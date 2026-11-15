@@ -14,6 +14,7 @@ export function useChatAjuda(aberto: boolean) {
   useEffect(() => {
     if (!aberto) {
       requisicao.current?.abort();
+      requisicao.current = null;
       historico.current = [];
       setMensagens([]);
       setErro(null);
@@ -54,6 +55,7 @@ export function useChatAjuda(aberto: boolean) {
           setMensagens([...conversa, { papel: 'assistente', conteudo: resposta }]);
         }
       });
+      if (controller.signal.aborted) return false;
       if (!resposta.trim()) throw sanitizeChatError();
       historico.current = [...conversa, { papel: 'assistente', conteudo: resposta }];
       concluido = true;

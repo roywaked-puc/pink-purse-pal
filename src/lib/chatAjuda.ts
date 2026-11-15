@@ -39,6 +39,9 @@ export async function lerRespostaAjuda(
       if (done) break;
     }
     if (!terminou) throw new Error('Resposta interrompida');
+  } catch (erro) {
+    await leitor.cancel().catch(() => {});
+    throw erro;
   } finally {
     leitor.releaseLock();
   }
