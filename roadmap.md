@@ -1,3 +1,12 @@
+# Marca Belafy (plataforma)
+- [x] Tokens belafy-* fixos + cores no Tailwind; componentes LogoBelafy e SeloBelafy.
+- [x] /auth e /recuperar-senha com fundo ameixa, logo escuro, card branco 24px e botões ameixa (lógica intacta).
+- [x] Boas-vindas: logo, "Passo X de 3", barra de progresso, título do passo 1 e botões ameixa (lógica intacta).
+- [x] Selo "feito com belafy" só no fim de Meu Dia e Configurações; logo no topo da Ajuda.
+- [x] index.html: título/meta/og/theme-color Belafy, favicon.svg + apple-touch-icon; sem manifest PWA (não existia).
+- [x] Varredura "Pink Purse Pal": trocado só nos manuais visíveis (src/content/manual.ts e espelho chat-ajuda); docs internos preservados.
+- [ ] Validar no navegador: /auth, /recuperar-senha, boas-vindas, selo e ajuda; typecheck/build.
+
 # Enviar agenda futura
 - [x] Verificar conclusão das boas-vindas de Roy: persistência, Pular, X, erro de gravação e confirmação no banco, sem migração. A conclusão já existia; adicionado retorno explícito da gravação e trava contra duplicidade. Três caminhos validados na conta real; falha simulada mantém painel aberto; 5 testes passam.
 - [x] Implementar lembretes de confirmação: colunas, mensagem, hooks, Home/CRM e configurações.

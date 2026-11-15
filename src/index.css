@@ -54,6 +54,12 @@
     --sidebar-accent-foreground: 340 50% 30%;
     --sidebar-border: 340 20% 92%;
     --sidebar-ring: 340 65% 65%;
+
+    /* Marca da plataforma Belafy — fixos, não dependem do tema da conta */
+    --belafy-ameixa: #4A1F3F;
+    --belafy-rosa: #FF9EBB;
+    --belafy-nevoa: #FBF3F6;
+    --belafy-tinta: #1F1219;
   }
 
   .dark {

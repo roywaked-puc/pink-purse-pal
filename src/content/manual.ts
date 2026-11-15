@@ -51,7 +51,7 @@ export const secoesManual: SecaoManual[] = [
     titulo: 'Comece por aqui',
     resumo: 'Os três hábitos para usar o app no dia a dia.',
     blocos: [
-      { tipo: 'paragrafo', texto: 'O Pink Purse Pal é o seu caderno de agenda, a sua ficha de clientes e o seu controle de dinheiro, tudo no celular. Você anota uma vez e o app organiza o resto.' },
+      { tipo: 'paragrafo', texto: 'A Belafy é o seu caderno de agenda, a sua ficha de clientes e o seu controle de dinheiro, tudo no celular. Você anota uma vez e o app organiza o resto.' },
       { tipo: 'paragrafo', texto: 'Você não precisa aprender tudo de uma vez. Para trabalhar no dia a dia, bastam três coisas:' },
       { tipo: 'lista', ordenada: true, itens: ['Marcar o horário da cliente na Agenda.', 'Concluir o atendimento quando ele terminar.', 'Registrar o pagamento que você recebeu.'] },
       { tipo: 'paragrafo', texto: 'Com esses três hábitos, o app já mostra sozinho quanto você ganhou, quem está sumida, quem faz aniversário e quem precisa confirmar horário.' },

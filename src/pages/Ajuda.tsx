@@ -9,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { PrimeirosPassos } from '@/components/ajuda/PrimeirosPassos';
 import { ChatAjuda } from '@/components/ajuda/ChatAjuda';
 import { CardChatAssistente } from '@/components/ajuda/CardChatAssistente';
+import { LogoBelafy } from '@/components/ds/LogoBelafy';
 import { comoFaco, secoesManual, normalizarBusca, type BlocoManual, type SecaoManual } from '@/content/manual';
 
 function textoBloco(b: BlocoManual): string {
@@ -108,6 +109,9 @@ const Ajuda = () => {
 
   return (
     <MainLayout>
+      <div className="mb-4">
+        <LogoBelafy tamanho={28} />
+      </div>
       <PageHeader title="Ajuda" subtitle="Manual do novo usuário" />
       <CardChatAssistente aoAbrir={(pergunta) => { setPerguntaInicial(pergunta); setChatAberto(true); }} />
       <div className="relative mb-4">
