@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { passwordSchema, getPasswordStrength } from '@/lib/passwordValidation';
 import { Progress }  from '@/components/ui/progress';
+import { LogoBelafy } from '@/components/ds/LogoBelafy';
 
 const RecuperarSenha = () => {
   const navigate = useNavigate();
@@ -80,134 +81,149 @@ const RecuperarSenha = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">
-            💅 Gestão Financeira
-          </CardTitle>
-          <CardDescription>
-            {isRecoveryMode ? 'Digite sua nova senha' : 'Recuperar senha'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isRecoveryMode ? (
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">Nova senha</Label>
-                <div className="relative">
-                  <Input
-                    id="new-password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Mínimo 8 caracteres"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {password && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Progress 
-                        value={(getPasswordStrength(password).score / 5) * 100} 
-                        className={`h-2 flex-1`}
-                      />
-                      <span className={`text-xs font-medium ${
-                        getPasswordStrength(password).score <= 2 ? 'text-destructive' :
-                        getPasswordStrength(password).score <= 3 ? 'text-yellow-600' :
-                        'text-green-600'
-                      }`}>
-                        {getPasswordStrength(password).label}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Use 8+ caracteres, maiúscula, número e símbolo
-                    </p>
+    <div className="min-h-screen flex flex-col bg-belafy-ameixa">
+      <div className="flex-1 flex items-center justify-center px-6 py-10">
+        <LogoBelafy variante="escuro" tamanho={48} />
+      </div>
+
+      <div className="w-full md:flex md:justify-center md:px-4 md:pb-10">
+        <Card className="w-full md:max-w-md border-0 rounded-t-3xl rounded-b-none md:rounded-3xl shadow-elevated">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">
+              {isRecoveryMode ? 'Redefinir senha' : 'Recuperar senha'}
+            </CardTitle>
+            <CardDescription>
+              {isRecoveryMode ? 'Digite sua nova senha' : 'Enviaremos um link para o seu email'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isRecoveryMode ? (
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Nova senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Mínimo 8 caracteres"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="pr-10 focus-visible:ring-belafy-ameixa"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirmar nova senha</Label>
-                <div className="relative">
+                  {password && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Progress
+                          value={(getPasswordStrength(password).score / 5) * 100}
+                          className={`h-2 flex-1`}
+                        />
+                        <span className={`text-xs font-medium ${
+                          getPasswordStrength(password).score <= 2 ? 'text-destructive' :
+                          getPasswordStrength(password).score <= 3 ? 'text-yellow-600' :
+                          'text-green-600'
+                        }`}>
+                          {getPasswordStrength(password).label}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Use 8+ caracteres, maiúscula, número e símbolo
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirmar nova senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm-password"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Repita a senha"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="pr-10 focus-visible:ring-belafy-ameixa"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full min-h-12 bg-belafy-ameixa text-white hover:opacity-90"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Atualizando...
+                    </>
+                  ) : (
+                    'Redefinir senha'
+                  )}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleSendReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
                   <Input
-                    id="confirm-password"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Repita a senha"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    id="reset-email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="pr-10"
+                    className="focus-visible:ring-belafy-ameixa"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    tabIndex={-1}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
                 </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Atualizando...
-                  </>
-                ) : (
-                  'Redefinir senha'
-                )}
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={handleSendReset} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
-                <Input
-                  id="reset-email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                <Button
+                  type="submit"
+                  className="w-full min-h-12 bg-belafy-ameixa text-white hover:opacity-90"
                   disabled={loading}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  'Enviar link de recuperação'
-                )}
-              </Button>
-            </form>
-          )}
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => navigate('/auth')}
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              <ArrowLeft className="mr-1 h-4 w-4" />
-              Voltar para o login
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    'Enviar link de recuperação'
+                  )}
+                </Button>
+              </form>
+            )}
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => navigate('/auth')}
+                className="inline-flex items-center text-sm text-belafy-ameixa hover:opacity-80 transition-opacity"
+              >
+                <ArrowLeft className="mr-1 h-4 w-4" />
+                Voltar para o login
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
