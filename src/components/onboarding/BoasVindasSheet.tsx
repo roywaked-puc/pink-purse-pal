@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import { useUserSettings, useUpdateUserSettings } from '@/hooks/useUserSettings';
 import { MarcaForm } from '@/components/settings/MarcaForm';
+import { LogoBelafy } from '@/components/ds/LogoBelafy';
 import { useToast } from '@/hooks/use-toast';
 import { concluirOnboarding } from '@/lib/concluirOnboarding';
 
@@ -121,10 +122,23 @@ export function BoasVindasSheet() {
       <SheetContent side="bottom" className="max-h-[92vh] rounded-t-3xl flex flex-col gap-0 p-0">
         <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-lg">{titulos[passo]}</SheetTitle>
-            <span className="text-xs text-muted-foreground">Passo {passo + 1} de 3</span>
+            <LogoBelafy tamanho={28} />
+            <span className="text-sm text-muted-foreground">Passo {passo + 1} de 3</span>
           </div>
-          <SheetDescription className="text-sm">{descricoes[passo]}</SheetDescription>
+          <div className="flex gap-1.5 pt-3" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className={`h-1 flex-1 rounded-full ${i <= passo ? 'bg-belafy-ameixa' : 'bg-muted'}`}
+              />
+            ))}
+          </div>
+          <SheetTitle className="text-lg pt-3">
+            {passo === 0 ? 'Bem-vinda à Belafy' : titulos[passo]}
+          </SheetTitle>
+          <SheetDescription className="text-sm">
+            {passo === 0 ? 'Comece pela sua marca. É ela que suas clientes vão ver.' : descricoes[passo]}
+          </SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -159,7 +173,10 @@ export function BoasVindasSheet() {
                   ))}
                 </div>
               ))}
-              <Button className="w-full" onClick={() => setPasso(2)}>
+              <Button
+                className="w-full bg-belafy-ameixa text-white hover:opacity-90"
+                onClick={() => setPasso(2)}
+              >
                 Continuar
               </Button>
             </div>
@@ -198,7 +215,7 @@ export function BoasVindasSheet() {
               </div>
 
               <Button
-                className="w-full"
+                className="w-full bg-belafy-ameixa text-white hover:opacity-90"
                 onClick={() => concluir('/agendamentos')}
                 disabled={concluindo}
               >

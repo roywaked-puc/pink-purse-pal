@@ -268,6 +268,8 @@ const Index = () => {
         </section>
       )}
 
+      <SeloBelafy />
+
       {/* Forms */}
       <TransactionForm
         open={showTransactionForm}
