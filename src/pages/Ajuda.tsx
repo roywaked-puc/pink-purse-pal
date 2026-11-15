@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { PrimeirosPassos } from '@/components/ajuda/PrimeirosPassos';
 import { ChatAjuda } from '@/components/ajuda/ChatAjuda';
-import { Button } from '@/components/ui/button';
+import { CardChatAssistente } from '@/components/ajuda/CardChatAssistente';
 import { comoFaco, secoesManual, normalizarBusca, type BlocoManual, type SecaoManual } from '@/content/manual';
 
 function textoBloco(b: BlocoManual): string {
