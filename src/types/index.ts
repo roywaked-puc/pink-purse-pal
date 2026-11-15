@@ -3,6 +3,16 @@ export type TransactionScope = 'empresa' | 'pessoal';
 export type PaymentStatus = 'pago' | 'nao_pago' | 'sinal';
 export type ConfirmationStatus = 'pendente' | 'confirmado' | 'atendido' | 'cancelado' | 'retorno_previsto';
 
+export interface ResumoAssinatura {
+  estado: 'isento' | 'teste' | 'pro' | 'expirado';
+  teste_ate: string;
+  periodo_atual_fim: string | null;
+  periodicidade: 'mensal' | 'anual' | null;
+  cancelar_no_fim_do_periodo: boolean;
+  status: string;
+  tem_customer: boolean;
+}
+
 export interface Transaction {
   id: string;
   date: Date;

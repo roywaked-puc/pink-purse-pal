@@ -1,4 +1,5 @@
 # Architecture rules
+- Keep subscription entitlement in authenticated no-argument RPCs and enforce expiry only on appointment INSERT; signed Stripe invoice.paid events grant paid access atomically with internal event deduplication, never through client writes or business transactions.
 - Keep public legal documents in `src/content/legal.ts` and render them outside ProtectedRoute/MainLayout; public reading must not require a session or show business navigation.
 - Confirm user-settings writes with an explicit safe-column readback; onboarding closes only after a persisted completion timestamp, so write errors cannot masquerade as success.
 - Derive confirmation reminders from appointments already in AppContext using pure helpers; one shared Home/CRM component records only the sent timestamp, keeping status and finance independent.

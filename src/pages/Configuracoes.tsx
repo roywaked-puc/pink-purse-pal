@@ -12,6 +12,7 @@ import { CrmSettings } from '@/components/settings/CrmSettings';
 import { CaixaSettings } from '@/components/settings/CaixaSettings';
 import { AnamneseTemplatesSettings } from '@/components/settings/AnamneseTemplatesSettings';
 import { MinhaMarcaSettings } from '@/components/settings/MinhaMarcaSettings';
+import { MeuPlano } from '@/components/assinatura/MeuPlano';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
@@ -90,6 +91,10 @@ const Configuracoes = () => {
         </div>
 
         <Accordion type="single" collapsible defaultValue={secaoInicial} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <AccordionItem value="meu-plano" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4"><div className="flex items-center gap-3"><Wallet className="h-5 w-5 text-primary" /><div className="text-left"><p className="font-semibold">Meu Plano</p><p className="text-sm text-muted-foreground font-normal">Teste e assinatura Pro</p></div></div></AccordionTrigger>
+            <AccordionContent><MeuPlano /></AccordionContent>
+          </AccordionItem>
           <AccordionItem value="minha-marca" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline py-4">
               <div className="flex items-center gap-3">

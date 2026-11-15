@@ -1,4 +1,5 @@
 import { PostgrestError } from '@supabase/supabase-js';
+import { AssinaturaNecessariaError } from './assinatura';
 
 /** Somente status conhecidos; nunca repassa mensagens cruas da IA. */
 export function sanitizeChatError(status?: number): Error {
@@ -46,6 +47,7 @@ export function sanitizeDbError(error: PostgrestError | Error | unknown): Error 
   if ('code' in error && typeof (error as PostgrestError).code === 'string') {
     const pgError = error as PostgrestError;
     const code = pgError.code;
+    if (code === 'P0010' && pgError.message === 'ASSINATURA_NECESSARIA') return new AssinaturaNecessariaError();
     
     // Check for RLS policy violations (these often have specific message patterns)
     if (pgError.message?.includes('row-level security')) {

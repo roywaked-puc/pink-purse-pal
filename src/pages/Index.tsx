@@ -25,6 +25,7 @@ import { useCaixaSummary } from '@/hooks/useCaixaSummary';
 import { Appointment } from '@/types';
 import { getCorServico } from '@/lib/corServico';
 import { LembretesConfirmacaoCard } from '@/components/crm/LembretesConfirmacaoCard';
+import { AvisoAssinatura } from '@/components/assinatura/AvisoAssinatura';
 
 const Index = () => {
   const {
@@ -150,6 +151,7 @@ const Index = () => {
       </header>
 
       <PrimeirosPassosHome />
+      <AvisoAssinatura />
 
       {/* Busca */}
       <div className="mb-4">
