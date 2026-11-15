@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -264,6 +264,12 @@ const Auth = () => {
                       'Criar Conta'
                     )}
                   </Button>
+                  <p className="text-xs leading-relaxed text-muted-foreground text-center">
+                    Ao criar a conta, você concorda com os{' '}
+                    <Link to="/termos" className="text-belafy-ameixa underline underline-offset-2">Termos de Uso</Link>{' '}
+                    e a{' '}
+                    <Link to="/privacidade" className="text-belafy-ameixa underline underline-offset-2">Política de Privacidade</Link>.
+                  </p>
                 </form>
               </TabsContent>
             </Tabs>

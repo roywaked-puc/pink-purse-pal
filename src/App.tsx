@@ -21,6 +21,7 @@ import Auth from "./pages/Auth";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import NotFound from "./pages/NotFound";
 import Ajuda from "./pages/Ajuda";
+import DocumentoLegal from "./pages/DocumentoLegal";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/auth" element={<Auth />} />
       <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+      <Route path="/termos" element={<DocumentoLegal />} />
+      <Route path="/privacidade" element={<DocumentoLegal />} />
       <Route path="/" element={
         <ProtectedRoute>
           <Index />
