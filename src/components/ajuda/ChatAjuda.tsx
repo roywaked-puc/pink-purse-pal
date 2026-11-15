@@ -8,11 +8,17 @@ import { useChatAjuda } from '@/hooks/useChatAjuda';
 
 const sugestoes = ['Como registro um pagamento?', 'O que é permuta?', 'Como funciona a separação de caixa?', 'Como cadastro as manutenções de um serviço?'];
 
-export function ChatAjuda({ aberto, aoAbrir }: { aberto: boolean; aoAbrir: (aberto: boolean) => void }) {
+export function ChatAjuda({ aberto, aoAbrir, perguntaInicial }: { aberto: boolean; aoAbrir: (aberto: boolean) => void; perguntaInicial?: string }) {
   const { mensagens, respondendo, erro, enviar } = useChatAjuda(aberto);
   const [pergunta, setPergunta] = useState('');
   const lista = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (!aberto) setPergunta(''); }, [aberto]);
+  const inicialEnviada = useRef(false);
+  useEffect(() => { if (!aberto) { setPergunta(''); inicialEnviada.current = false; } }, [aberto]);
+  useEffect(() => {
+    if (!aberto || !perguntaInicial?.trim() || inicialEnviada.current) return;
+    inicialEnviada.current = true;
+    void enviar(perguntaInicial);
+  }, [aberto, perguntaInicial, enviar]);
   useEffect(() => { lista.current?.scrollTo({ top: lista.current.scrollHeight }); }, [mensagens, respondendo, erro]);
 
   const perguntar = async (texto: string) => {
