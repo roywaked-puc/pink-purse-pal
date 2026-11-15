@@ -12,6 +12,8 @@ import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { passwordSchema, getPasswordStrength } from '@/lib/passwordValidation';
 import { Progress } from '@/components/ui/progress';
 import { LogoBelafy } from '@/components/ds/LogoBelafy';
+import { VitrinePlanos, type PlanoEscolhido } from '@/components/assinatura/VitrinePlanos';
+import { useAssinarPro } from '@/hooks/useAssinatura';
 
 const emailSchema = z.string().email('Email inválido').max(255, 'Email muito longo');
 
@@ -29,9 +31,12 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [plano, setPlano] = useState<PlanoEscolhido>('teste');
+  const [aba, setAba] = useState('login');
+  const assinar = useAssinarPro();
 
   // Redirect if already logged in
-  if (user) {
+  if (user && !loading) {
     navigate('/');
     return null;
   }
@@ -101,12 +106,24 @@ const Auth = () => {
         description: message,
         variant: 'destructive',
       });
-    } else {
+    } else if (plano === 'teste') {
       toast({
         title: 'Conta criada!',
-        description: 'Sua conta foi criada com sucesso. Você já pode usar o app!',
+        description: 'Seus 40 dias grátis começaram. Aproveite!',
       });
       navigate('/');
+    } else {
+      setLoading(true);
+      try {
+        await assinar.mutateAsync(plano);
+      } catch (e) {
+        setLoading(false);
+        toast({
+          title: 'Conta criada!',
+          description: 'Não abrimos o pagamento agora, mas seus 40 dias grátis já estão ativos. Você pode assinar em Configurações → Meu Plano.',
+        });
+        navigate('/');
+      }
     }
   };
 
@@ -122,7 +139,7 @@ const Auth = () => {
       <div className="w-full md:flex md:justify-center md:px-4 md:pb-10">
         <Card className="w-full md:max-w-md border-0 rounded-t-3xl rounded-b-none md:rounded-3xl shadow-elevated">
           <CardContent className="pt-6">
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs value={aba} onValueChange={setAba} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger
                   value="login"
@@ -204,6 +221,7 @@ const Auth = () => {
 
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
+                  <VitrinePlanos valor={plano} onChange={setPlano} disabled={loading} />
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
@@ -258,10 +276,12 @@ const Auth = () => {
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Criando conta...
+                        {plano === 'teste' ? 'Criando conta...' : 'Abrindo pagamento...'}
                       </>
+                    ) : plano === 'teste' ? (
+                      'Começar 40 dias grátis'
                     ) : (
-                      'Criar Conta'
+                      'Criar conta e assinar'
                     )}
                   </Button>
                   <p className="text-xs leading-relaxed text-muted-foreground text-center">
