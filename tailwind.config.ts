@@ -58,6 +58,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        belafy: {
+          ameixa: "var(--belafy-ameixa)",
+          rosa: "var(--belafy-rosa)",
+          nevoa: "var(--belafy-nevoa)",
+          tinta: "var(--belafy-tinta)",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
