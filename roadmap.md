@@ -5,7 +5,7 @@
 - [x] Selo "feito com belafy" só no fim de Meu Dia e Configurações; logo no topo da Ajuda.
 - [x] index.html: título/meta/og/theme-color Belafy, favicon.svg + apple-touch-icon; sem manifest PWA (não existia).
 - [x] Varredura "Pink Purse Pal": trocado só nos manuais visíveis (src/content/manual.ts e espelho chat-ajuda); docs internos preservados.
-- [ ] Validar no navegador: /auth, /recuperar-senha, boas-vindas, selo e ajuda; typecheck/build.
+- [x] Validar no navegador: /auth e /recuperar-senha (360px/1280px), boas-vindas com usuária de teste (passos 1 e 2, pular funcionando), selo em Meu Dia/Configurações, logo na Ajuda, título da aba "Belafy". Typecheck e build passaram.
 
 # Enviar agenda futura
 - [x] Verificar conclusão das boas-vindas de Roy: persistência, Pular, X, erro de gravação e confirmação no banco, sem migração. A conclusão já existia; adicionado retorno explícito da gravação e trava contra duplicidade. Três caminhos validados na conta real; falha simulada mantém painel aberto; 5 testes passam.
