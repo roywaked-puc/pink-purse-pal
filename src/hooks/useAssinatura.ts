@@ -12,7 +12,7 @@ export function useAssinatura() {
     queryFn: async (): Promise<ResumoAssinatura> => {
       const { data, error } = await supabase.rpc('resumo_assinatura');
       if (error) throw sanitizeDbError(error);
-      return resumo.parse(data);
+      return resumo.parse(data) as ResumoAssinatura;
     },
   });
 }
