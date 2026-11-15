@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import { LogOut, Loader2, Users, Scissors, Tags, Landmark, Wallet, Download, Calendar, Repeat, Heart, ClipboardList, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { BotaoAjuda } from '@/components/ajuda/BotaoAjuda';
 import { SeloBelafy } from '@/components/ds/SeloBelafy';
 import { HelpCircle, ChevronRight } from 'lucide-react';
@@ -278,6 +278,10 @@ const Configuracoes = () => {
           </AccordionItem>
         </Accordion>
 
+        <nav aria-label="Documentos legais" className="flex flex-wrap justify-center gap-x-6">
+          <Button variant="link" asChild className="min-h-11 px-0"><Link to="/termos">Termos de Uso</Link></Button>
+          <Button variant="link" asChild className="min-h-11 px-0"><Link to="/privacidade">Política de Privacidade</Link></Button>
+        </nav>
         <SeloBelafy />
       </div>
     </MainLayout>

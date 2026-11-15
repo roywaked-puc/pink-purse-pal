@@ -1,3 +1,8 @@
+# Páginas públicas legais
+- [x] Guardar termos e privacidade em conteúdo estático e adicionar rotas públicas, sem navegação inferior.
+- [x] Adicionar links no cadastro e em Configurações; completar análise de visitas conforme configurações verificadas.
+- [x] Conferir páginas e links no navegador em 360px/1280px, incluindo Configurações autenticada; sem transbordamento ou erros, tabelas viram cards no celular, lint e build OK.
+
 # Marca Belafy (plataforma)
 - [x] Tokens belafy-* fixos + cores no Tailwind; componentes LogoBelafy e SeloBelafy.
 - [x] /auth e /recuperar-senha com fundo ameixa, logo escuro, card branco 24px e botões ameixa (lógica intacta).
