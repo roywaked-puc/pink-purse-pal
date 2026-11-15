@@ -84,6 +84,7 @@ const Ajuda = () => {
   const { hash } = useLocation();
   const [busca, setBusca] = useState('');
   const [chatAberto, setChatAberto] = useState(false);
+  const [perguntaInicial, setPerguntaInicial] = useState<string | undefined>(undefined);
   const [aberta, setAberta] = useState<string>(hash.replace('#', '') || '');
   const termo = normalizarBusca(busca.trim());
 
@@ -108,15 +109,13 @@ const Ajuda = () => {
   return (
     <MainLayout>
       <PageHeader title="Ajuda" subtitle="Manual do novo usuário" />
+      <CardChatAssistente aoAbrir={(pergunta) => { setPerguntaInicial(pergunta); setChatAberto(true); }} />
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar no manual..." className="pl-9" aria-label="Buscar no manual" />
       </div>
 
-      <Button variant="outline" className="w-full mb-4 gap-2" onClick={() => setChatAberto(true)}>
-        <MessageCircle className="h-4 w-4" />Perguntar à assistente
-      </Button>
-      <ChatAjuda aberto={chatAberto} aoAbrir={setChatAberto} />
+      <ChatAjuda aberto={chatAberto} aoAbrir={setChatAberto} perguntaInicial={perguntaInicial} />
 
       {!termo && <div id="secao-primeiros-passos" className="mb-6 scroll-mt-4"><PrimeirosPassos /></div>}
 
