@@ -64,6 +64,13 @@
       "when": 1794774424467,
       "tag": "0008_assinaturas_belafy",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794871726912,
+      "tag": "0009_conta_corrente_permuta_etapa_1",
+      "breakpoints": true
     }
   ]
 }

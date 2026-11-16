@@ -50,6 +50,13 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "account_fee_types_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "permuta_transacoes_legadas"
+            referencedColumns: ["conta_legada_id"]
+          },
         ]
       }
       accounts: {
@@ -506,6 +513,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          paga_permuta: boolean
           phone: string
           recurrence_days: number | null
           user_id: string
@@ -517,6 +525,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          paga_permuta?: boolean
           phone?: string
           recurrence_days?: number | null
           user_id: string
@@ -528,6 +537,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          paga_permuta?: boolean
           phone?: string
           recurrence_days?: number | null
           user_id?: string
@@ -539,6 +549,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_conta_permuta_padrao_id_fkey"
+            columns: ["conta_permuta_padrao_id"]
+            isOneToOne: false
+            referencedRelation: "permuta_transacoes_legadas"
+            referencedColumns: ["conta_legada_id"]
           },
         ]
       }
@@ -595,6 +612,81 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      permuta_lancamentos: {
+        Row: {
+          client_id: string
+          conta_legada_id: string | null
+          created_at: string
+          date: string
+          descricao: string | null
+          id: string
+          tipo: string
+          transaction_id: string | null
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          client_id: string
+          conta_legada_id?: string | null
+          created_at?: string
+          date: string
+          descricao?: string | null
+          id?: string
+          tipo: string
+          transaction_id?: string | null
+          user_id: string
+          valor: number
+        }
+        Update: {
+          client_id?: string
+          conta_legada_id?: string | null
+          created_at?: string
+          date?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string
+          transaction_id?: string | null
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permuta_lancamentos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permuta_lancamentos_conta_legada_id_fkey"
+            columns: ["conta_legada_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permuta_lancamentos_conta_legada_id_fkey"
+            columns: ["conta_legada_id"]
+            isOneToOne: false
+            referencedRelation: "permuta_transacoes_legadas"
+            referencedColumns: ["conta_legada_id"]
+          },
+          {
+            foreignKeyName: "permuta_lancamentos_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "permuta_transacoes_legadas"
+            referencedColumns: ["transaction_id"]
+          },
+          {
+            foreignKeyName: "permuta_lancamentos_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -741,6 +833,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "permuta_transacoes_legadas"
+            referencedColumns: ["conta_legada_id"]
+          },
+          {
             foreignKeyName: "transactions_appointment_id_fkey"
             columns: ["appointment_id"]
             isOneToOne: false
@@ -780,6 +879,7 @@ export type Database = {
           logo_path: string | null
           nome_negocio: string | null
           onboarding_concluido_em: string | null
+          permuta_corte_em: string | null
           retention_color_aguardando: string
           retention_color_confirmado: string
           retention_color_previsto: string
@@ -811,6 +911,7 @@ export type Database = {
           logo_path?: string | null
           nome_negocio?: string | null
           onboarding_concluido_em?: string | null
+          permuta_corte_em?: string | null
           retention_color_aguardando?: string
           retention_color_confirmado?: string
           retention_color_previsto?: string
@@ -842,6 +943,7 @@ export type Database = {
           logo_path?: string | null
           nome_negocio?: string | null
           onboarding_concluido_em?: string | null
+          permuta_corte_em?: string | null
           retention_color_aguardando?: string
           retention_color_confirmado?: string
           retention_color_previsto?: string
@@ -854,7 +956,59 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      permuta_extrato: {
+        Row: {
+          appointment_id: string | null
+          client_id: string | null
+          date: string | null
+          descricao: string | null
+          origem: string | null
+          permuta_lancamento_id: string | null
+          tipo: string | null
+          user_id: string | null
+          valor: number | null
+        }
+        Relationships: []
+      }
+      permuta_saldos: {
+        Row: {
+          client_id: string | null
+          client_name: string | null
+          qtd_lancamentos: number | null
+          saldo: number | null
+          ultimo_movimento: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      permuta_transacoes_legadas: {
+        Row: {
+          amount: number | null
+          appointment_id: string | null
+          category: string | null
+          conta_legada_id: string | null
+          conta_legada_nome: string | null
+          date: string | null
+          description: string | null
+          gross_amount: number | null
+          scope: string | null
+          transaction_id: string | null
+          type: string | null
+          user_id: string | null
+          valor_assinado_bruto: number | null
+          valor_assinado_liquido: number | null
+          valor_bruto: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       aplicar_evento_stripe: {
@@ -888,6 +1042,22 @@ export type Database = {
       }
       google_calendar_secret_configured: { Args: never; Returns: boolean }
       plano_efetivo: { Args: never; Returns: string }
+      registrar_acerto_permuta: {
+        Args: {
+          p_account_id: string
+          p_category_id: string
+          p_client_id: string
+          p_date: string
+          p_descricao: string
+          p_direcao: string
+          p_scope: string
+          p_valor: number
+        }
+        Returns: {
+          permuta_lancamento_id: string
+          transaction_id: string
+        }[]
+      }
       resumo_assinatura: { Args: never; Returns: Json }
     }
     Enums: {
