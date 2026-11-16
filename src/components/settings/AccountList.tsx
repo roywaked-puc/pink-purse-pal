@@ -15,6 +15,7 @@ import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { AccountFeeTypes } from './AccountFeeTypes';
 import { AccountExtratoDrawer } from './AccountExtratoDrawer';
 import { cn } from '@/lib/utils';
+import { RevisaoPermutaDrawer } from './RevisaoPermutaDrawer';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -197,6 +198,7 @@ export function AccountList() {
 
   return (
     <div className="space-y-3">
+      <RevisaoPermutaDrawer />
       <div className="flex items-center justify-end">
         <Button
           variant="ghost"
