@@ -1,3 +1,9 @@
+# Conta corrente de permuta — execução por etapas
+- [x] Etapa 1: migração 0009 aplicada com critério legado único, preferência independente, views, acerto atômico e congelamento; saldos vazios, corte nulo e 81 referências legadas conferidas, bruto/líquido iguais.
+- [ ] Etapa 2: aguardar autorização; ativação atômica deve recalcular saldos, conferir revisão, exigir cliente nos saldos não zero e gravar corte/saldos juntos.
+- [ ] Etapa 3: aguardar autorização; helper financeiro exclui somente conta permuta, relatórios distinguem dinheiro/permuta, acertos ficam somente leitura e cliente com saldo não zero não pode ser excluída.
+- [ ] Etapas 4–5: aguardar autorização; telas de conta corrente e WhatsApp seguindo a convenção de sinal aprovada.
+
 # Assinaturas Belafy — aprovado, sem plano gratuito
 - [x] Inspecionar schema real, cadastro, inserções de agenda e documentação Stripe/Pix.
 - [x] Aprovação recebida: sem plano gratuito/contagem mensal; só criação bloqueada após expiração. RPCs auth.uid() e eventos internos service_role.
