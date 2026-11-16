@@ -3,6 +3,7 @@ import { differenceInCalendarDays, addDays, isAfter, isBefore, isSameMonth, pars
 import { useApp } from '@/contexts/AppContext';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { Appointment, Client } from '@/types';
+import { saldoPendenteDinheiro } from '@/lib/permuta';
 
 export interface ClientCrmStats {
   client: Client;
@@ -64,8 +65,7 @@ export function useCrm() {
       const totalPaid = cAppts
         .filter((a) => a.confirmationStatus !== 'cancelado')
         .reduce((s, a) => s + a.paidAmount, 0);
-      const pendingBalance = cAppts.filter(a => !a.isPermuta && a.confirmationStatus !== 'cancelado')
-        .reduce((saldo, a) => saldo + Math.max(0, a.amount - a.paidAmount), 0);
+      const pendingBalance = saldoPendenteDinheiro(cAppts);
 
       const apptIds = new Set(cAppts.map((a) => a.id));
       const cTransactions = transactions

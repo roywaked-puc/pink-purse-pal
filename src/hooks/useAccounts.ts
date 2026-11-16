@@ -37,6 +37,11 @@ export function useAddAccount() {
   return useMutation({
     mutationFn: async (account: Omit<Account, 'id'>): Promise<string> => {
       if (!user) throw new Error('Not authenticated');
+      if (account.type === 'permuta') {
+        const { data: settings, error } = await supabase.from('user_settings').select('permuta_corte_em').eq('user_id', user.id).maybeSingle();
+        if (error) throw sanitizeDbError(error);
+        if (settings?.permuta_corte_em) throw new Error('As contas antigas de permuta são somente para consulta.');
+      }
       
       const { data, error } = await supabase
         .from('accounts')

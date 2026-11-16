@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { CobrancaSheet } from '@/components/crm/CobrancaSheet';
+import { saldoPendenteDinheiro } from '@/lib/permuta';
 
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -52,10 +53,8 @@ export function ClienteCrmTab({ clientId }: Props) {
     const open = cAppts.filter((a) =>
       ['pendente', 'confirmado', 'retorno_previsto'].includes(a.confirmationStatus),
     );
-    const attendedTotal = attended.reduce((sum, a) => sum + (a.amount || 0), 0);
-    const attendedPaid = attended.reduce((sum, a) => sum + (a.paidAmount || 0), 0);
     return {
-      pendingFromAttended: Math.max(0, attendedTotal - attendedPaid),
+      pendingFromAttended: saldoPendenteDinheiro(attended),
       openScheduledTotal: open.reduce((sum, a) => sum + (a.amount || 0), 0),
     };
   }, [appointments, clientId]);
