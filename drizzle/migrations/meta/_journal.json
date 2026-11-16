@@ -78,6 +78,13 @@
       "when": 1794872011253,
       "tag": "0010_revisao_ativacao_permuta_etapa_2",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794872805388,
+      "tag": "0011_proteger_exclusao_cliente_permuta",
+      "breakpoints": true
     }
   ]
 }
