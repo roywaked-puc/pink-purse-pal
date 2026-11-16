@@ -471,6 +471,7 @@ const Agendamentos = () => {
           if (!open) setEditingAppointment(null);
         }}
         appointment={editingAppointment}
+        onReceber={handleReceive}
         onDelete={() => {
           if (editingAppointment) {
             setDeleteId(editingAppointment.id);

@@ -80,6 +80,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
       valorTotal: 0,
       valorRecebido: 0,
       valorPendente: 0,
+      valorPermuta: 0,
       byConfirmation: {
         pendente: 0,
         confirmado: 0,
@@ -89,9 +90,12 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
     };
 
     filteredAppointments.forEach(a => {
-      result.valorTotal += a.amount;
-      result.valorRecebido += a.paidAmount;
-      result.valorPendente += (a.amount - a.paidAmount);
+      if (a.isPermuta) result.valorPermuta += a.amount;
+      else {
+        result.valorTotal += a.amount;
+        result.valorRecebido += a.paidAmount;
+        result.valorPendente += (a.amount - a.paidAmount);
+      }
       result.byConfirmation[a.confirmationStatus] = (result.byConfirmation[a.confirmationStatus] || 0) + 1;
     });
 
@@ -215,6 +219,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
     const summaryData = [
       ['Total de Agendamentos', String(summary.total)],
       ['Valor Total Esperado', formatCurrency(summary.valorTotal)],
+      ['Valor em Permuta', formatCurrency(summary.valorPermuta)],
       ['Valor Recebido', formatCurrency(summary.valorRecebido)],
       ['Valor Pendente', formatCurrency(summary.valorPendente)],
       ['', ''],
@@ -279,6 +284,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
       'RESUMO DO PERÍODO',
       `Total de Agendamentos;${summary.total}`,
       `Valor Total Esperado;${summary.valorTotal.toFixed(2).replace('.', ',')}`,
+      `Valor em Permuta;${summary.valorPermuta.toFixed(2).replace('.', ',')}`,
       `Valor Recebido;${summary.valorRecebido.toFixed(2).replace('.', ',')}`,
       `Valor Pendente;${summary.valorPendente.toFixed(2).replace('.', ',')}`,
       '',
@@ -468,8 +474,9 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <p className="text-sm text-muted-foreground">Valor Total</p>
+              <p className="text-sm text-muted-foreground">Total em dinheiro</p>
               <p className="text-2xl font-bold">{formatCurrency(summary.valorTotal)}</p>
+              <p className="text-sm text-muted-foreground">Permuta: {formatCurrency(summary.valorPermuta)}</p>
             </CardContent>
           </Card>
           <Card>

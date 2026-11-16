@@ -526,6 +526,7 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
                           </Badge>
                         </div>
                         <p className="text-sm truncate">{t.description || t.category}</p>
+                        {t.acertoPermutaId && <p className="text-xs text-primary">Acerto de permuta</p>}
                         <p className="text-xs text-muted-foreground">{t.category}</p>
                       </div>
                       <div className="text-right">

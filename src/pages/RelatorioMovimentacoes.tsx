@@ -131,11 +131,11 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
           ...t,
           appointmentDate: appointment?.date || null,
           appointmentNotes: appointment?.notes || null,
-          clientName: appointment?.clientName || null,
+          clientName: appointment?.clientName || t.clientName || null,
         };
       })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [transactions, appointments, startDate, endDate, selectedCategory, selectedClient, selectedAccount, selectedType, selectedScope]);
+  }, [transactions, appointments, accounts, startDate, endDate, selectedCategory, selectedClient, selectedAccount, selectedType, selectedScope]);
 
   // Calculate initial balance for a specific scope or account
   const calculateInitialBalance = (filterKey: 'scope' | 'account', filterValue: string): number => {
@@ -614,6 +614,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
                         </TableCell>
                         <TableCell className="text-xs">
                           {t.category || '-'}
+                          {t.acertoPermutaId && <span className="block text-primary">Acerto de permuta</span>}
                         </TableCell>
                         <TableCell className="text-xs">
                           <span className={cn(

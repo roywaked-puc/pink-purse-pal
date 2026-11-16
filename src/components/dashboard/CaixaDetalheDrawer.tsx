@@ -202,6 +202,7 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
                       <p className="text-sm font-medium truncate">
                         {descricao}
                       </p>
+                      {t.acertoPermutaId && <span className="text-xs text-primary">Acerto de permuta</span>}
                       <p className="text-xs flex items-center min-w-0">
                         {cliente && (
                           <span className="font-medium text-foreground whitespace-nowrap shrink-0">
