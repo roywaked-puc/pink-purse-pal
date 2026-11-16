@@ -1,6 +1,6 @@
 # Conta corrente de permuta — execução por etapas
 - [x] Etapa 1: migração 0009 aplicada com critério legado único, preferência independente, views, acerto atômico e congelamento; saldos vazios, corte nulo e 81 referências legadas conferidas, bruto/líquido iguais.
-- [ ] Etapa 2 autorizada: confirmar pasta de migrações; testar proteções com ROLLBACK; criar revisão com sugestões por frequência/nome e ativação atômica, mantendo confirmação desabilitada até Etapas 3–4; não ativar dados reais.
+- [x] Etapa 2: fonte atual Drizzle conferida; proteções e ativação testadas com ROLLBACK; revisão real validada em 360px/1280px, sugestões por frequência/nome, zero avisos positivos; confirmação bloqueada até Etapas 3–4, nenhuma conta ativada.
 - [ ] Etapa 3: aguardar autorização; helper financeiro exclui somente conta permuta, relatórios distinguem dinheiro/permuta, acertos ficam somente leitura e cliente com saldo não zero não pode ser excluída.
 - [ ] Etapas 4–5: aguardar autorização; telas de conta corrente e WhatsApp seguindo a convenção de sinal aprovada.
 
