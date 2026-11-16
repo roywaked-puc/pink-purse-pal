@@ -21,7 +21,7 @@ import { useUserSettings } from '@/hooks/useUserSettings';
 import { logoPublicUrl } from '@/hooks/useMarca';
 import { carregarImagemDataUrl } from '@/lib/marca';
 import { adicionarMarcaPdf } from '@/lib/marcaPdf';
-import { isPermutaTransaction } from '@/lib/accountBalance';
+import { isTransacaoPermuta } from '@/lib/accountBalance';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { BiGastos } from '@/components/relatorios/BiGastos';
@@ -113,7 +113,7 @@ export default function RelatorioFinanceiro({ embedded = false }: Props = {}) {
     filteredTransactions.forEach(t => {
       // Permutas não são dinheiro disponível — ficam fora do saldo geral,
       // a não ser que a própria conta de permuta esteja filtrada.
-      if (selectedAccount === 'todos' && isPermutaTransaction(t, accounts)) return;
+      if (selectedAccount === 'todos' && isTransacaoPermuta(t, accounts)) return;
       if (t.type === 'entrada') {
         result[t.scope].entradas += t.amount;
       } else {

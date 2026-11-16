@@ -25,10 +25,14 @@ import {
 } from '@/components/ui/select';
 import { Client } from '@/types';
 import { toast } from 'sonner';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { preferePermuta } from '@/lib/permuta';
 
 const NOVA_CONTA = '__nova__';
 
 export function ClientList() {
+  const { data: settings } = useUserSettings();
+  const permutaAtiva = Boolean(settings?.permuta_corte_em);
   const { data: clients = [] } = useClients();
   const { data: accounts = [] } = useAccounts();
   const addAccount = useAddAccount();
@@ -75,7 +79,7 @@ export function ClientList() {
     setNotes(client.notes || '');
     setRecurrenceDays(client.recurrenceDays ? String(client.recurrenceDays) : '');
     setBirthDate(client.birthDate || '');
-    setPagaPermuta(Boolean(client.contaPermutaPadraoId));
+    setPagaPermuta(preferePermuta(client, settings?.permuta_corte_em));
     setContaPermutaId(client.contaPermutaPadraoId || '');
     setNovaContaNome('');
     setFormOpen(true);
@@ -110,7 +114,7 @@ export function ClientList() {
       return;
     }
 
-    if (pagaPermuta && (!contaPermutaId || contaPermutaId === NOVA_CONTA)) {
+    if (!permutaAtiva && pagaPermuta && (!contaPermutaId || contaPermutaId === NOVA_CONTA)) {
       toast.error('Escolha o banco padrão para permuta');
       return;
     }
@@ -122,7 +126,8 @@ export function ClientList() {
       notes: notes.trim() || undefined,
       recurrenceDays: recurrence && recurrence > 0 ? recurrence : undefined,
       birthDate: birthDate || undefined,
-      contaPermutaPadraoId: pagaPermuta ? contaPermutaId : undefined,
+      contaPermutaPadraoId: permutaAtiva ? editingClient?.contaPermutaPadraoId : pagaPermuta ? contaPermutaId : undefined,
+      pagaPermuta,
     };
 
     try {
@@ -149,7 +154,7 @@ export function ClientList() {
       setDeleteOpen(false);
       setDeletingClient(null);
     } catch (error) {
-      toast.error('Erro ao excluir cliente. Verifique se não há agendamentos vinculados.');
+      toast.error(error instanceof Error ? error.message : 'Erro ao excluir cliente. Verifique os dados vinculados.');
     }
   };
 
@@ -295,7 +300,7 @@ export function ClientList() {
                   Cliente costuma pagar em permuta
                 </Label>
               </div>
-              {pagaPermuta && (
+              {pagaPermuta && !permutaAtiva && (
                 <div className="space-y-2 pt-1">
                   <Label>Banco padrão para permuta <span className="text-destructive">*</span></Label>
                   <Select value={contaPermutaId} onValueChange={setContaPermutaId}>
