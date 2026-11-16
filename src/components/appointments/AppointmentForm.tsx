@@ -336,10 +336,11 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
 
       if (appointment) {
         await updateAppointmentAsync({ id: appointment.id, appointment: data });
+        if (appointment.confirmationStatus !== 'atendido' && confirmationStatus === 'atendido') avisarCredito({ ...appointment, ...data }, onReceber);
       } else {
-        await addAppointmentAsync(data);
+        const salvo = await addAppointmentAsync(data);
+        if (confirmationStatus === 'atendido') avisarCredito({ id: salvo.id, ...data }, onReceber);
       }
-      if (appointment && appointment.confirmationStatus !== 'atendido' && confirmationStatus === 'atendido') avisarCredito({ ...appointment, ...data }, onReceber);
 
       onOpenChange(false);
       resetForm();

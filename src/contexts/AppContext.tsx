@@ -10,6 +10,7 @@ import { useTransactions, useAddTransaction, useUpdateTransaction, useDeleteTran
 import { isTransacaoPermuta } from '@/lib/accountBalance';
 import { useMarcarLembreteEnviado } from '@/hooks/useLembretesConfirmacao';
 import { useAssinatura } from '@/hooks/useAssinatura';
+import { useUserSettings } from '@/hooks/useUserSettings';
 import type { ResumoAssinatura } from '@/types';
 
 interface AppContextType {
@@ -70,6 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { data: appointments = [], isLoading: appointmentsLoading } = useAppointments();
   const { data: transactions = [], isLoading: transactionsLoading } = useTransactions();
   const { data: assinatura, isLoading: assinaturaCarregando, refetch: atualizarAssinatura } = useAssinatura();
+  const { data: settings } = useUserSettings();
 
   // Mutations
   const addClientMutation = useAddClient();
@@ -203,14 +205,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getAppointmentsWithBalance = useCallback((clientId?: string): Appointment[] => {
     return appointments.filter(a => {
       // Permuta é troca de serviço — nunca gera movimentação financeira.
-      if (a.isPermuta) return false;
+      if (a.isPermuta && !settings?.permuta_corte_em) return false;
       const hasBalance = a.amount - a.paidAmount > 0;
       if (clientId) {
         return hasBalance && a.clientId === clientId;
       }
       return hasBalance;
     });
-  }, [appointments]);
+  }, [appointments, settings?.permuta_corte_em]);
 
   const getAppointmentById = useCallback((id: string): Appointment | undefined => {
     return appointments.find(a => a.id === id);

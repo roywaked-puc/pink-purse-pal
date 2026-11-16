@@ -588,6 +588,7 @@ function AppointmentDetailContent({
                     {t.description && (
                       <p className="text-sm truncate">{t.description}</p>
                     )}
+                    {t.acertoPermutaId && <p className="text-xs text-primary">Acerto de permuta</p>}
                   </div>
                   <span className="text-sm font-semibold text-green-600 flex-shrink-0">
                     {formatCurrency(t.amount)}

@@ -365,7 +365,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       scope: scope as TransactionScope,
       category: selectedCategory.name,
       account,
-      accountId: selectedAccount.id,
+      accountId: transaction?.accountId ?? (permutaAtiva ? selectedAccount.id : undefined),
       amount: finalAmount,
       // Salva o valor bruto se houver desconto de operadora
       grossAmount: showNetAmount ? parseFloat(amount) : undefined,
