@@ -30,6 +30,7 @@ export interface Transaction {
   accountFeeTypeId?: string;
   paymentType?: 'sinal' | 'pagamento';
   createdAt?: Date;
+  acertoPermutaId?: string;
 }
 
 export interface AccountFeeType {
@@ -50,6 +51,7 @@ export interface Client {
   birthDate?: string; // ISO date 'YYYY-MM-DD'
   /** Conta (type='permuta') padrão; preenchida = cliente costuma pagar em permuta */
   contaPermutaPadraoId?: string;
+  pagaPermuta?: boolean;
 }
 
 export interface Appointment {

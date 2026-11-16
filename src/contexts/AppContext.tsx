@@ -7,7 +7,7 @@ import { useCategories, useAddCategory, useUpdateCategory, useDeleteCategory } f
 import { useAccounts, useAddAccount, useUpdateAccount, useDeleteAccount } from '@/hooks/useAccounts';
 import { useAppointments, useAddAppointment, useUpdateAppointment, useDeleteAppointment, useUpdateAppointmentPayment, useSubtractAppointmentPayment } from '@/hooks/useAppointments';
 import { useTransactions, useAddTransaction, useUpdateTransaction, useDeleteTransaction } from '@/hooks/useTransactions';
-import { isPermutaRelated } from '@/lib/accountBalance';
+import { isTransacaoPermuta } from '@/lib/accountBalance';
 import { useMarcarLembreteEnviado } from '@/hooks/useLembretesConfirmacao';
 import { useAssinatura } from '@/hooks/useAssinatura';
 import type { ResumoAssinatura } from '@/types';
@@ -269,7 +269,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return transactions
       .filter(t => {
         // Permuta (conta de permuta ou agendamento de permuta) não é dinheiro real.
-        if (isPermutaRelated(t, accounts, appointments)) return false;
+        if (isTransacaoPermuta(t, accounts)) return false;
         const tDate = new Date(t.date);
         return t.scope === 'pessoal' &&
           t.type === 'saida' &&

@@ -47,7 +47,7 @@ export function ClienteCrmTab({ clientId }: Props) {
   const [cobrancaOpen, setCobrancaOpen] = useState(false);
 
   const { pendingFromAttended, openScheduledTotal } = useMemo(() => {
-    const cAppts = appointments.filter((a) => a.clientId === clientId);
+    const cAppts = appointments.filter((a) => a.clientId === clientId && !a.isPermuta);
     const attended = cAppts.filter((a) => a.confirmationStatus === 'atendido');
     const open = cAppts.filter((a) =>
       ['pendente', 'confirmado', 'retorno_previsto'].includes(a.confirmationStatus),

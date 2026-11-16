@@ -18,6 +18,7 @@ import { format, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, FileText, FileSpreadsheet, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isTransacaoPermuta } from '@/lib/accountBalance';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
@@ -98,6 +99,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
   const enrichedTransactions = useMemo(() => {
     return transactions
       .filter(t => {
+        if (isTransacaoPermuta(t, accounts)) return false;
         const tDate = new Date(t.date);
         // Date range filter
         if (tDate < startDate || tDate > endDate) return false;
@@ -139,6 +141,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
   const calculateInitialBalance = (filterKey: 'scope' | 'account', filterValue: string): number => {
     return transactions
       .filter(t => {
+        if (isTransacaoPermuta(t, accounts)) return false;
         const tDate = new Date(t.date);
         // Only transactions BEFORE the start date
         if (tDate >= startDate) return false;

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { endOfMonth, startOfMonth } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
-import { isPermutaRelated } from '@/lib/accountBalance';
+import { isTransacaoPermuta } from '@/lib/accountBalance';
 import { useUserSettings } from '@/hooks/useUserSettings';
 
 export interface CaixaSummary {
@@ -42,7 +42,7 @@ export function useCaixaSummary(mes: Date = new Date()): CaixaSummary {
 
     for (const t of transactions) {
       // Permutas não são dinheiro disponível — ficam fora do saldo geral.
-      if (isPermutaRelated(t, accounts, appointments)) continue;
+      if (isTransacaoPermuta(t, accounts)) continue;
 
       // Corte pelo início do controle de caixa (quando ativo).
       // Usa a data do lançamento (não a de criação), para ficar comparável

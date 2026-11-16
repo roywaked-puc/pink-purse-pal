@@ -64,7 +64,8 @@ export function useCrm() {
       const totalPaid = cAppts
         .filter((a) => a.confirmationStatus !== 'cancelado')
         .reduce((s, a) => s + a.paidAmount, 0);
-      const pendingBalance = Math.max(0, totalSpent - totalPaid);
+      const pendingBalance = cAppts.filter(a => !a.isPermuta && a.confirmationStatus !== 'cancelado')
+        .reduce((saldo, a) => saldo + Math.max(0, a.amount - a.paidAmount), 0);
 
       const apptIds = new Set(cAppts.map((a) => a.id));
       const cTransactions = transactions

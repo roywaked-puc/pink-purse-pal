@@ -92,7 +92,7 @@ export default function CRM() {
 
   const pendingBalanceAppointments = useMemo(() => {
     return appointments
-      .filter((a) => a.confirmationStatus !== 'cancelado' && a.amount - a.paidAmount > 0.01)
+      .filter((a) => !a.isPermuta && a.confirmationStatus !== 'cancelado' && a.amount - a.paidAmount > 0.01)
       .map((a) => ({
         id: a.id,
         clientName: a.clientName,
