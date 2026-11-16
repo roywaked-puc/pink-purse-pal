@@ -1,7 +1,7 @@
 # Conta corrente de permuta — execução por etapas
 - [x] Etapa 1: migração 0009 aplicada com critério legado único, preferência independente, views, acerto atômico e congelamento; saldos vazios, corte nulo e 81 referências legadas conferidas, bruto/líquido iguais.
 - [x] Etapa 2: fonte atual Drizzle conferida; proteções e ativação testadas com ROLLBACK; revisão real validada em 360px/1280px, sugestões por frequência/nome, zero avisos positivos; confirmação bloqueada até Etapas 3–4, nenhuma conta ativada.
-- [ ] Etapa 3 autorizada: obter SQL de revisão; comparar Home/relatórios novembro e outubro; helper financeiro único, pendências sem permuta, acertos somente leitura e exclusão de cliente protegida; formulários novos somente com corte não nulo; testes sem gravações reais e ativação bloqueada.
+- [x] Etapa 3: SQL de revisão consultado; comparação outubro/novembro registra Home estável e relatórios corrigidos pela exclusão legada; helper financeiro único, pendências sem permuta, acertos somente leitura e exclusão de cliente protegida; formulários condicionais validados por simulação, testes com ROLLBACK e ativação bloqueada.
 - [ ] Etapas 4–5: aguardar autorização; telas de conta corrente e WhatsApp seguindo a convenção de sinal aprovada.
 
 # Assinaturas Belafy — aprovado, sem plano gratuito

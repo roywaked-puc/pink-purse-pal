@@ -195,7 +195,7 @@ export function AppointmentTransactionsDialog({
         description="Esta ação não pode ser desfeita. O valor será subtraído do recebido neste agendamento."
       />
 
-      {transactionToEdit && (
+      {transactionToEdit && !transactionToEdit.acertoPermutaId && (
         <TransactionForm
           open={!!transactionToEdit}
           onOpenChange={(o) => !o && setTransactionToEdit(null)}

@@ -187,7 +187,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
     };
 
     return [...summary, total];
-  }, [enrichedTransactions, startDate, transactions]);
+  }, [enrichedTransactions, startDate, transactions, accounts]);
 
   // Summary by account (banco)
   const accountSummary = useMemo(() => {
@@ -218,7 +218,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
     };
 
     return [...summary, total];
-  }, [enrichedTransactions, startDate, transactions]);
+  }, [enrichedTransactions, startDate, transactions, accounts]);
 
   // Export to CSV
   const exportToCSV = () => {
