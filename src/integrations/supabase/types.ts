@@ -1032,6 +1032,10 @@ export type Database = {
         Args: { p_segmento?: string; p_user_id: string }
         Returns: boolean
       }
+      ativar_conta_corrente_permuta: {
+        Args: { p_itens: Json }
+        Returns: string
+      }
       caixa_reserva_apply: {
         Args: { p_appointment_id: string }
         Returns: undefined
@@ -1059,6 +1063,7 @@ export type Database = {
         }[]
       }
       resumo_assinatura: { Args: never; Returns: Json }
+      revisar_conta_corrente_permuta: { Args: never; Returns: Json }
     }
     Enums: {
       anamnese_question_type:

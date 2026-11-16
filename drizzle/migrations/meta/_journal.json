@@ -71,6 +71,13 @@
       "when": 1794871726912,
       "tag": "0009_conta_corrente_permuta_etapa_1",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794872011253,
+      "tag": "0010_revisao_ativacao_permuta_etapa_2",
+      "breakpoints": true
     }
   ]
 }
