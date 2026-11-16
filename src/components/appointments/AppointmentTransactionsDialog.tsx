@@ -60,7 +60,7 @@ export function AppointmentTransactionsDialog({
   };
 
   const handleConfirmDelete = () => {
-    if (transactionToDelete) {
+    if (transactionToDelete && !transactionToDelete.acertoPermutaId) {
       deleteTransaction(transactionToDelete);
       toast.success('Movimento excluído');
       setTransactionToDelete(null);
@@ -98,7 +98,7 @@ export function AppointmentTransactionsDialog({
                         <span className="text-sm font-semibold text-success mr-1">
                           {formatCurrency(t.amount)}
                         </span>
-                        <Button
+                        {t.acertoPermutaId ? <span className="text-xs text-primary">Acerto de permuta</span> : <><Button
                           type="button"
                           variant="ghost"
                           size="icon"
@@ -117,7 +117,7 @@ export function AppointmentTransactionsDialog({
                           aria-label="Excluir movimento"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </Button></>}
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground">

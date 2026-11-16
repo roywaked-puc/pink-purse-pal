@@ -21,6 +21,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { useApp } from '@/contexts/AppContext';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { getCorServico } from '@/lib/corServico';
+import { useAvisoCreditoPermuta } from '@/hooks/useAvisoCreditoPermuta';
 
 
 interface AppointmentPreviewProps {
@@ -91,6 +92,7 @@ const PROXIMO_PASSO: Partial<Record<ConfirmationStatus, { label: string; status:
 
 export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete, onReceive, getClientPhone, onAtendido }: AppointmentPreviewProps) {
   const { getServiceById } = useApp();
+  const avisarCredito = useAvisoCreditoPermuta();
   const { mutate: updateStatus } = useUpdateConfirmationStatus();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -125,6 +127,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
     if (novo === anterior) return;
     updateStatus({ id: appointment.id, status: novo }, {
       onSuccess: () => {
+        if (novo === 'atendido' && avisarCredito(appointment, onReceive)) return;
         toast(`${appointment.clientName} · ${STATUS_LABELS[novo]}`, {
           action: { label: 'Desfazer', onClick: () => updateStatus({ id: appointment.id, status: anterior }) },
         });

@@ -226,10 +226,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [addTransactionMutation]);
 
   const updateTransaction = useCallback((id: string, transaction: Omit<Transaction, 'id'>) => {
+    if (transactions.find(t => t.id === id)?.acertoPermutaId) return;
     updateTransactionMutation.mutate({ id, transaction });
-  }, [updateTransactionMutation]);
+  }, [updateTransactionMutation, transactions]);
 
   const deleteTransaction = useCallback((transaction: Transaction) => {
+    if (transaction.acertoPermutaId) return;
     // If transaction is linked to an appointment, subtract the amount
     if (transaction.appointmentId) {
       subtractAppointmentPaymentMutation.mutate({
@@ -243,23 +245,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Balance functions
   const getBusinessBalance = useCallback(() => {
     return transactions
-      .filter(t => t.scope === 'empresa')
+      .filter(t => t.scope === 'empresa' && !isTransacaoPermuta(t, accounts))
       .reduce((acc, t) => {
         if (t.type === 'entrada') return acc + t.amount;
         if (t.type === 'saida') return acc - t.amount;
         return acc;
       }, 0);
-  }, [transactions]);
+  }, [transactions, accounts]);
 
   const getPersonalBalance = useCallback(() => {
     return transactions
-      .filter(t => t.scope === 'pessoal')
+      .filter(t => t.scope === 'pessoal' && !isTransacaoPermuta(t, accounts))
       .reduce((acc, t) => {
         if (t.type === 'entrada') return acc + t.amount;
         if (t.type === 'saida') return acc - t.amount;
         return acc;
       }, 0);
-  }, [transactions]);
+  }, [transactions, accounts]);
 
   const getMonthlyPersonalExpenses = useCallback(() => {
     const now = new Date();

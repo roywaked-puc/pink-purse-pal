@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { MoneyDisplay } from '@/components/ds/MoneyDisplay';
+import { Badge } from '@/components/ui/badge';
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -58,7 +59,8 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
           {transaction.clientName && !isLinkedToAppointment && (
             <p className="text-xs text-muted-foreground mt-0.5">Cliente: {transaction.clientName}</p>
           )}
-          {isLinkedToAppointment && (
+          {transaction.acertoPermutaId && <Badge variant="outline" className="mt-1">Acerto de permuta</Badge>}
+          {isLinkedToAppointment && !transaction.acertoPermutaId && (
             <div className="flex items-center gap-1 text-xs text-primary mt-1">
               <CalendarCheck className="w-3 h-3" />
               <span>Vinculado a agendamento (só pode excluir)</span>
@@ -72,7 +74,7 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
           />
         </div>
         <div className="flex gap-1">
-          {!isLinkedToAppointment && (
+          {!isLinkedToAppointment && !transaction.acertoPermutaId && (
             <Button
               variant="ghost"
               size="icon"
@@ -82,14 +84,14 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
               <Pencil className="w-4 h-4" />
             </Button>
           )}
-          <Button
+          {!transaction.acertoPermutaId && <Button
             variant="ghost"
             size="icon"
             onClick={() => onDelete(transaction)}
             className="h-8 w-8 text-destructive hover:text-destructive"
           >
             <Trash2 className="w-4 h-4" />
-          </Button>
+          </Button>}
         </div>
       </div>
     </div>

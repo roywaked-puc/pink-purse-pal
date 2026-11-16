@@ -25,6 +25,8 @@ import { cn } from '@/lib/utils';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { useUpdateConfirmationStatus } from '@/hooks/useAppointments';
 import { getCorServico } from '@/lib/corServico';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { useAvisoCreditoPermuta } from '@/hooks/useAvisoCreditoPermuta';
 
 
 const formatWhatsAppMessage = (appointment: Appointment) => {
@@ -85,6 +87,8 @@ const confirmationStatusConfig = {
 const Agendamentos = () => {
   const { appointments, deleteAppointment, getClientById, getServiceById } = useApp();
   const { mutate: updateConfirmationStatus } = useUpdateConfirmationStatus();
+  const { data: settings } = useUserSettings();
+  const avisarCredito = useAvisoCreditoPermuta();
 
   const getClientPhone = (clientId: string) => {
     const client = getClientById(clientId);
@@ -137,10 +141,15 @@ const Agendamentos = () => {
     }
   };
   const handleConfirmationStatusChange = (appointmentId: string, status: ConfirmationStatus) => {
-    updateConfirmationStatus({ id: appointmentId, status });
+    const apt = appointments.find(a => a.id === appointmentId);
+    updateConfirmationStatus({ id: appointmentId, status }, { onSuccess: () => { if (apt && status === 'atendido' && apt.confirmationStatus !== 'atendido') avisarCredito(apt, handleReceive); } });
   };
 
   const handleMarkAttended = (apt: Appointment) => {
+    if (settings?.permuta_corte_em && apt.isPermuta) {
+      if (apt.confirmationStatus !== 'atendido') updateConfirmationStatus({ id: apt.id, status: 'atendido' }, { onSuccess: () => avisarCredito(apt, handleReceive) });
+      return;
+    }
     if (apt.confirmationStatus !== 'atendido') {
       updateConfirmationStatus({ id: apt.id, status: 'atendido' });
     }

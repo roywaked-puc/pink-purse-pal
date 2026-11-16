@@ -34,6 +34,8 @@ import { AppointmentSelector } from './AppointmentSelector';
 import { useToast } from '@/hooks/use-toast';
 import { useAccountFeeTypes } from '@/hooks/useAccountFeeTypes';
 import { useAddAccount } from '@/hooks/useAccounts';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { contaPermitidaRecebimento, ERRO_ACERTO_PERMUTA } from '@/lib/permuta';
 
 interface TransactionFormProps {
   open: boolean;
@@ -44,6 +46,8 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ open, onOpenChange, transaction, onDelete, prefilledAppointment }: TransactionFormProps) {
+  const { data: settings } = useUserSettings();
+  const permutaAtiva = Boolean(settings?.permuta_corte_em);
   const { 
     categories, 
     accounts, 
@@ -56,7 +60,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
 
   // Conta padrão de permuta do cliente (vínculo por ID, nunca por nome)
   const getDefaultPermutaAccount = (appt: Appointment | null | undefined): string => {
-    if (!appt?.isPermuta || !appt.clientId) return '';
+    if (permutaAtiva || !appt?.isPermuta || !appt.clientId) return '';
     const contaId = getClientById(appt.clientId)?.contaPermutaPadraoId;
     return contaId && accounts.some(a => a.id === contaId) ? contaId : '';
   };
@@ -125,15 +129,15 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   const { data: feeTypes = [] } = useAccountFeeTypes(account || undefined);
 
   // Modo permuta: o atendimento vinculado é permuta (recebimento manual em conta de permuta)
-  const permutaMode = !!selectedAppointment?.isPermuta;
+  const permutaMode = !!selectedAppointment?.isPermuta && !permutaAtiva;
 
   // Em modo permuta, nunca manter uma conta que não seja type = 'permuta'
   useEffect(() => {
-    if (permutaMode && account) {
+    if (account) {
       const acc = accounts.find((a) => a.id === account);
-      if (acc && acc.type !== 'permuta') setAccount('');
+      if (acc && !contaPermitidaRecebimento(acc, Boolean(selectedAppointment?.isPermuta), settings?.permuta_corte_em)) setAccount('');
     }
-  }, [permutaMode, account, accounts]);
+  }, [permutaMode, account, accounts, permutaAtiva, selectedAppointment, settings?.permuta_corte_em]);
 
   const accountFeeTypes = useMemo(
     () => feeTypes.filter(ft => ft.accountId === account),
@@ -286,6 +290,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (transaction?.acertoPermutaId) { toast({ title: 'Acerto de permuta', description: ERRO_ACERTO_PERMUTA, variant: 'destructive' }); return; }
     
     
 
@@ -299,7 +304,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     }
 
     // Validação: conta/banco obrigatório
-    if (!account) {
+    if (!selectedAccount || !contaPermitidaRecebimento(selectedAccount, Boolean(selectedAppointment?.isPermuta), settings?.permuta_corte_em)) {
       toast({
         title: "Erro",
         description: "O campo Conta/Banco é obrigatório",
@@ -360,6 +365,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       scope: scope as TransactionScope,
       category: selectedCategory.name,
       account,
+      accountId: selectedAccount.id,
       amount: finalAmount,
       // Salva o valor bruto se houver desconto de operadora
       grossAmount: showNetAmount ? parseFloat(amount) : undefined,
@@ -400,6 +406,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
             <span>Este atendimento é permuta — o lançamento vai apenas para o extrato da conta de permuta, fora do caixa empresa/pessoal.</span>
           </div>
         )}
+        {permutaAtiva && selectedAppointment?.isPermuta && <div className="rounded-lg border border-primary/30 bg-primary/15 px-3 py-2 text-sm text-primary">Agendamento em permuta. Lance aqui só o que a cliente pagar em dinheiro. O restante fica na conta corrente de permuta.</div>}
+        {transaction?.acertoPermutaId && <p className="text-sm text-primary">Acerto de permuta — somente leitura</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -569,10 +577,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {(permutaMode
-                  ? accounts.filter((a) => a.type === 'permuta')
-                  : accounts
-                ).map((acc) => (
+                {accounts.filter(a => contaPermitidaRecebimento(a, Boolean(selectedAppointment?.isPermuta), settings?.permuta_corte_em)).map((acc) => (
                   <SelectItem key={acc.id} value={acc.id}>
                     {acc.name}
                   </SelectItem>
@@ -650,7 +655,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-            {transaction && onDelete && (
+            {transaction && onDelete && !transaction.acertoPermutaId && (
               <Button
                 type="button"
                 variant="destructive"
@@ -669,7 +674,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="flex-1">
+              <Button type="submit" className="flex-1" disabled={Boolean(transaction?.acertoPermutaId)}>
                 Salvar
               </Button>
             </div>

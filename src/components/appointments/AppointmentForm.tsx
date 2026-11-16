@@ -43,6 +43,9 @@ import { PaywallAssinatura } from '@/components/assinatura/PaywallAssinatura';
 import { AssinaturaNecessariaError } from '@/lib/assinatura';
 
 import { toast } from 'sonner';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { preferePermuta } from '@/lib/permuta';
+import { useAvisoCreditoPermuta } from '@/hooks/useAvisoCreditoPermuta';
 
 export interface AppointmentPrefill {
   date?: Date;
@@ -63,9 +66,12 @@ interface AppointmentFormProps {
   appointment?: Appointment | null;
   onDelete?: () => void;
   prefill?: AppointmentPrefill | null;
+  onReceber?: (appointment: Appointment) => void;
 }
 
-export function AppointmentForm({ open, onOpenChange, appointment, onDelete, prefill }: AppointmentFormProps) {
+export function AppointmentForm({ open, onOpenChange, appointment, onDelete, prefill, onReceber }: AppointmentFormProps) {
+  const { data: settings } = useUserSettings();
+  const avisarCredito = useAvisoCreditoPermuta();
   const { appointments, services, addClientAsync, updateClient, getClientById, addServiceAsync, getServiceById, atualizarAssinatura } = useApp();
   const { mutateAsync: updateAppointmentAsync } = useUpdateAppointment();
   const { mutateAsync: addAppointmentAsync } = useAddAppointment();
@@ -135,7 +141,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
       }
       if (prefill.clientId) {
         setSelectedClientId(prefill.clientId);
-        if (getClientById(prefill.clientId)?.contaPermutaPadraoId) setIsPermuta(true);
+        if (preferePermuta(getClientById(prefill.clientId), settings?.permuta_corte_em)) setIsPermuta(true);
       }
       if (prefill.clientName) setClientName(prefill.clientName);
       if (prefill.clientPhone) setClientPhone(prefill.clientPhone);
@@ -201,7 +207,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
       setClientPhone(client.phone);
       setClientNotes(client.notes || '');
       // Novo agendamento: pré-marca permuta se a cliente costuma pagar assim (editável)
-      if (!appointment) setIsPermuta(Boolean(client.contaPermutaPadraoId));
+      if (!appointment) setIsPermuta(preferePermuta(client, settings?.permuta_corte_em));
     } else {
       setSelectedClientId(null);
       setClientPhone('');
@@ -249,6 +255,10 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+    if (settings?.permuta_corte_em && isPermuta && (!selectedClientId || !getClientById(selectedClientId))) {
+      toast.error('Selecione uma cliente cadastrada para este agendamento em permuta.');
+      return;
+    }
 
     if (!service.trim()) {
       toast.error('Escolha o serviço', {
@@ -294,6 +304,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
           recurrenceDays: existingClient?.recurrenceDays,
           birthDate: existingClient?.birthDate,
           contaPermutaPadraoId: existingClient?.contaPermutaPadraoId,
+          pagaPermuta: existingClient?.pagaPermuta,
         });
       } else if (clientName.trim()) {
         // Cria novo cliente e aguarda o ID real do banco
@@ -328,6 +339,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
       } else {
         await addAppointmentAsync(data);
       }
+      if (appointment && appointment.confirmationStatus !== 'atendido' && confirmationStatus === 'atendido') avisarCredito({ ...appointment, ...data }, onReceber);
 
       onOpenChange(false);
       resetForm();
