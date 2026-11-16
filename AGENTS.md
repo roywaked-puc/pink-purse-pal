@@ -1,4 +1,6 @@
 # Architecture rules
+- Keep barter legacy detection in the invoker view `permuta_transacoes_legadas`, with account_id precedence and same-owner text fallback only for null account_id; preserve legacy rows to prevent migration double counting.
+- Record barter cash settlements through the invoker RPC `registrar_acerto_permuta`; freeze settlement financial fields and initial/settlement ledger rows in database triggers to keep both sides consistent.
 - Keep subscription entitlement in authenticated no-argument RPCs and enforce expiry only on appointment INSERT; signed Stripe invoice.paid events grant paid access atomically with internal event deduplication, never through client writes or business transactions.
 - Keep public legal documents in `src/content/legal.ts` and render them outside ProtectedRoute/MainLayout; public reading must not require a session or show business navigation.
 - Confirm user-settings writes with an explicit safe-column readback; onboarding closes only after a persisted completion timestamp, so write errors cannot masquerade as success.
