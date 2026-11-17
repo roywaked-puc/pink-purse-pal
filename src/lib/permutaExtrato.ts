@@ -1,3 +1,4 @@
+import type { Account, Category } from '@/types';
 export type PeriodoPermuta = 'ultimo_acerto' | '90_dias' | 'tudo';
 export interface LinhaPermuta {
   client_id: string;
@@ -48,3 +49,5 @@ export function montarMensagemPermuta(nome: string, linhas: LinhaPermuta[], peri
   return texto.join('\n');
 }
 export function podeEditarPermuta(tipo: string) { return tipo === 'fui_atendida' || tipo === 'ajuste'; }
+export function contasAcertoPermuta(contas: Account[]) { return contas.filter(a => a.type === 'dinheiro' || a.type === 'banco'); }
+export function categoriasAcertoPermuta(categorias: Category[], direcao: 'recebido' | 'pago', scope: 'empresa' | 'pessoal') { return categorias.filter(c => c.type === (direcao === 'recebido' ? 'entrada' : 'saida') && c.scope === scope); }

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ConfirmarPermutaDialog } from './ConfirmarPermutaDialog';
 import { useApp } from '@/contexts/AppContext';
 import { useMutacoesPermuta, useExtratoPermuta } from '@/hooks/usePermuta';
-import { dinheiroPermuta, type LinhaPermuta } from '@/lib/permutaExtrato';
+import { dinheiroPermuta, contasAcertoPermuta, categoriasAcertoPermuta, type LinhaPermuta } from '@/lib/permutaExtrato';
 import type { Client } from '@/types';
 
 const hoje = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -29,8 +29,7 @@ export function PermutaFormSheet({ cliente, saldo = 0, tipo, linha, onClose }: {
   const valorAssinado = tipo === 'fui_atendida' || (tipo === 'acerto' && direcao === 'recebido') ? -Math.abs(numero) : numero;
   const saldoAtual = cliente ? saldo : extrato.filter(l => l.client_id === clientId).reduce((s, l) => s + l.valor, 0);
   const saldoApos = saldoAtual - (linha?.valor ?? 0) + valorAssinado;
-  const tipoFinanceiro = direcao === 'recebido' ? 'entrada' : 'saida';
-  const categorias = categories.filter(c => c.type === tipoFinanceiro && c.scope === scope);
+  const categorias = categoriasAcertoPermuta(categories, direcao, scope);
   const pendente = salvar.isPending || acerto.isPending;
   const valido = clientId && data && !isFetching && Number.isFinite(numero) && numero !== 0 && Math.abs(numero * 100 - Math.round(numero * 100)) < 0.000001 && (tipo === 'ajuste' || numero > 0) && (tipo === 'acerto' ? Boolean(conta && categorias.some(c => c.id === categoria)) : descricao.trim());
   const enviar = async () => {
@@ -51,7 +50,7 @@ export function PermutaFormSheet({ cliente, saldo = 0, tipo, linha, onClose }: {
         {tipo === 'acerto' && <>
           <div className="space-y-2"><Label>Quem pagou?</Label><Select value={direcao} onValueChange={v => { setDirecao(v as 'recebido' | 'pago'); setCategoria(''); }}><SelectTrigger aria-label="Direção do acerto"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="recebido">{cliente?.name ?? 'A cliente'} me pagou</SelectItem><SelectItem value="pago">Eu paguei {cliente?.name ?? 'a cliente'}</SelectItem></SelectContent></Select></div>
           <div className="space-y-2"><Label>Caixa</Label><Select value={scope} onValueChange={v => { setScope(v as 'empresa' | 'pessoal'); setCategoria(''); }}><SelectTrigger aria-label="Caixa do acerto"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="empresa">Empresa</SelectItem><SelectItem value="pessoal">Pessoal</SelectItem></SelectContent></Select></div>
-          <div className="space-y-2"><Label>Conta / Banco *</Label><Select value={conta} onValueChange={setConta}><SelectTrigger aria-label="Conta do acerto"><SelectValue placeholder="Escolher conta" /></SelectTrigger><SelectContent>{accounts.filter(a => a.type === 'dinheiro' || a.type === 'banco').map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2"><Label>Conta / Banco *</Label><Select value={conta} onValueChange={setConta}><SelectTrigger aria-label="Conta do acerto"><SelectValue placeholder="Escolher conta" /></SelectTrigger><SelectContent>{contasAcertoPermuta(accounts).map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-2"><Label>Categoria *</Label><Select value={categoria} onValueChange={setCategoria}><SelectTrigger aria-label="Categoria do acerto"><SelectValue placeholder="Escolher categoria" /></SelectTrigger><SelectContent>{categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
         </>}
         <div className="space-y-2"><Label htmlFor="permuta-descricao">{tipo === 'acerto' ? 'Descrição' : 'Descrição do serviço *'}</Label><Textarea id="permuta-descricao" value={descricao} onChange={e => setDescricao(e.target.value)} /></div>

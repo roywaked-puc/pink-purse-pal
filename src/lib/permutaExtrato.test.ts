@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { extratoPeriodo, montarMensagemPermuta, podeEditarPermuta, type LinhaPermuta } from './permutaExtrato';
+import { extratoPeriodo, montarMensagemPermuta, podeEditarPermuta, contasAcertoPermuta, categoriasAcertoPermuta, type LinhaPermuta } from './permutaExtrato';
+import type { Account, Category } from '@/types';
 const l = (valor: number, date: string, tipo = 'atendimento'): LinhaPermuta => ({ client_id: 'c', date, origem: tipo === 'atendimento' ? 'agendamento' : 'lancamento', tipo, descricao: 'Serviço simulado', valor, appointment_id: null, permuta_lancamento_id: date });
 test('saldo positivo: eu tenho serviços com você', () => assert.ok(montarMensagemPermuta('Ana Teste', [l(200,'2026-11-01T12:00:00Z')], 'tudo').includes('Saldo atual: eu tenho R$ 200,00 em serviços com você 😊')));
 test('saldo negativo: você tem serviços comigo', () => assert.ok(montarMensagemPermuta('Ana', [l(-120,'2026-11-01T12:00:00Z','fui_atendida')], 'tudo').includes('Saldo atual: você tem R$ 120,00 em serviços comigo 😊')));
@@ -16,3 +17,6 @@ test('limite exato de 90 dias incluso', () => assert.equal(extratoPeriodo([l(10,
 test('datas usam São Paulo e direção do pagamento', () => { const m=montarMensagemPermuta('Ana',[l(-30,'2026-11-02T01:00:00Z','acerto_recebido'),l(20,'2026-11-03T12:00:00Z','acerto_pago')],'tudo'); assert.ok(m.includes('01/11 – Você pagou em dinheiro')); assert.ok(m.includes('Eu paguei em dinheiro')); });
 for (const tipo of ['fui_atendida','ajuste']) test(`${tipo} permite edição/exclusão`,()=>assert.equal(podeEditarPermuta(tipo),true));
 for (const tipo of ['saldo_inicial','acerto_pago','acerto_recebido','atendimento']) test(`${tipo} é somente leitura`,()=>assert.equal(podeEditarPermuta(tipo),false));
+test('acerto aceita somente dinheiro e banco', () => { const contas: Account[] = ['dinheiro','banco','maquininha','permuta'].map((tipo,i) => ({ id: String(i), name: tipo, type: tipo as Account['type'] })); assert.deepEqual(contasAcertoPermuta(contas).map(c => c.type), ['dinheiro','banco']); });
+test('cliente pagou filtra categoria entrada/empresa', () => { const categorias: Category[] = [{ id:'1',name:'Serviços',type:'entrada',scope:'empresa' },{ id:'2',name:'Outros',type:'saida',scope:'empresa' },{ id:'3',name:'Outros',type:'entrada',scope:'pessoal' }]; assert.deepEqual(categoriasAcertoPermuta(categorias,'recebido','empresa').map(c => c.id),['1']); });
+test('profissional pagou filtra categoria saída/pessoal', () => { const categorias: Category[] = [{ id:'1',name:'Outros',type:'saida',scope:'pessoal' },{ id:'2',name:'Outros',type:'saida',scope:'empresa' },{ id:'3',name:'Outros',type:'entrada',scope:'pessoal' }]; assert.deepEqual(categoriasAcertoPermuta(categorias,'pago','pessoal').map(c => c.id),['1']); });
