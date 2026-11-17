@@ -298,19 +298,22 @@ export default function ClienteFicha() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <StatusBadge status={a.confirmationStatus} />
                           {situacaoPagamento(a, permutaCorteEm) === 'permuta' ? (
-                            <>
-                              <StatusBadge status="permuta" />
-                              <span className="text-sm text-muted-foreground">
+                            <span className="flex flex-col items-end gap-1">
+                              <span className="flex items-center gap-1">
+                                <StatusBadge status={a.confirmationStatus} />
+                                <StatusBadge status="permuta" />
+                              </span>
+                              <span className="text-sm text-muted-foreground whitespace-nowrap">
                                 <span className="font-semibold">{formatCurrency(a.amount)}</span> <span className="text-xs">em permuta</span>
                               </span>
-                            </>
-                          ) : (
+                            </span>
+                          ) : (<>
+                            <StatusBadge status={a.confirmationStatus} />
                             <span className="text-sm font-semibold text-primary">
                               {formatCurrency(a.amount)}
                             </span>
-                          )}
+                          </>)}
                           <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
                       </button>

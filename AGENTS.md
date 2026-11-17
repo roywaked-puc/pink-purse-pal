@@ -19,3 +19,4 @@
 
 - Keep Help Center content static in `src/content/manual.ts`; the `/ajuda` page and first-steps checklist render from it, and checklist progress lives only in per-user localStorage.
 - Keep Help AI inference in the authenticated `chat-ajuda` Edge Function with a synchronized text-only manual and no data queries/tools; send only the last ten messages capped at 1,000 characters and clear in-memory chat on close to preserve its privacy boundary.
+- Decide appointment payment badges and cash pending only via `situacaoPagamento`/`saldoAReceberEmDinheiro` in `src/lib/permuta.ts`; post-cut barter appointments keep stored payment fields untouched but never count as receivable.
