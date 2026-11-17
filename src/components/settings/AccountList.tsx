@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { RevisaoPermutaDrawer } from './RevisaoPermutaDrawer';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { PermutasDrawer } from '@/components/clients/PermutasDrawer';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -275,6 +276,7 @@ export function AccountList() {
         </div>
       )}
 
+      <PermutasDrawer />
       <AccountExtratoDrawer
         account={extratoAccount}
         open={!!extratoAccount}

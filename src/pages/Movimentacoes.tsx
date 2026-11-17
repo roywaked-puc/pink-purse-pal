@@ -22,6 +22,9 @@ import { useUserSettings } from '@/hooks/useUserSettings';
 import { CaixaSaldoResumo } from '@/components/ds/CaixaSaldoResumo';
 import { Transaction, TransactionScope } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PermutaFormSheet } from '@/components/clients/PermutaFormSheet';
+import { PermutasDrawer } from '@/components/clients/PermutasDrawer';
 
 const Movimentacoes = () => {
   const navigate = useNavigate();
@@ -29,6 +32,7 @@ const Movimentacoes = () => {
   const { toast } = useToast();
   
   const [showForm, setShowForm] = useState(false);
+  const [fuiAtendida, setFuiAtendida] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
   
@@ -107,17 +111,19 @@ const Movimentacoes = () => {
         title="Movimentações"
         subtitle="Controle suas entradas e saídas"
         action={
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-1 sm:gap-2">
             <BotaoAjuda secao="dinheiro" />
             <Button 
               variant="outline"
               size="sm"
+              aria-label="Relatório de Movimentações"
+              title="Relatório de Movimentações"
               onClick={() => navigate('/relatorio-movimentacoes')}
             >
-              <FileText className="w-4 h-4 mr-1" />
-              Relatório
+              <FileText className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Relatório</span>
             </Button>
-            <Button 
+            {userSettings?.permuta_corte_em ? <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" aria-label="Novo lançamento"><Plus className="w-5 h-5" /></Button></DropdownMenuTrigger><DropdownMenuContent><DropdownMenuItem onSelect={() => { setEditingTransaction(null); setShowForm(true); }}>Movimentação</DropdownMenuItem><DropdownMenuItem onSelect={() => setFuiAtendida(true)}>Fui atendida (permuta)</DropdownMenuItem></DropdownMenuContent></DropdownMenu> : <Button 
               size="icon" 
               onClick={() => {
                 setEditingTransaction(null);
@@ -125,12 +131,13 @@ const Movimentacoes = () => {
               }}
             >
               <Plus className="w-5 h-5" />
-            </Button>
+            </Button>}
           </div>
         }
       />
 
       {/* Search */}
+      {userSettings?.permuta_corte_em && <div className="mb-4"><PermutasDrawer /></div>}
       <div className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -251,6 +258,7 @@ const Movimentacoes = () => {
         title="Excluir movimentação"
         description="Tem certeza que deseja excluir esta movimentação? Os saldos serão atualizados automaticamente."
       />
+      {fuiAtendida && <PermutaFormSheet tipo="fui_atendida" onClose={() => setFuiAtendida(false)} />}
     </MainLayout>
   );
 };

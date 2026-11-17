@@ -103,6 +103,8 @@ export function useAddTransaction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
@@ -137,6 +139,8 @@ export function useUpdateTransaction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
@@ -156,6 +160,8 @@ export function useDeleteTransaction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
