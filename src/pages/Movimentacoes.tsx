@@ -111,15 +111,17 @@ const Movimentacoes = () => {
         title="Movimentações"
         subtitle="Controle suas entradas e saídas"
         action={
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-1 sm:gap-2">
             <BotaoAjuda secao="dinheiro" />
             <Button 
               variant="outline"
               size="sm"
+              aria-label="Relatório de Movimentações"
+              title="Relatório de Movimentações"
               onClick={() => navigate('/relatorio-movimentacoes')}
             >
-              <FileText className="w-4 h-4 mr-1" />
-              Relatório
+              <FileText className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Relatório</span>
             </Button>
             {userSettings?.permuta_corte_em ? <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" aria-label="Novo lançamento"><Plus className="w-5 h-5" /></Button></DropdownMenuTrigger><DropdownMenuContent><DropdownMenuItem onSelect={() => { setEditingTransaction(null); setShowForm(true); }}>Movimentação</DropdownMenuItem><DropdownMenuItem onSelect={() => setFuiAtendida(true)}>Fui atendida (permuta)</DropdownMenuItem></DropdownMenuContent></DropdownMenu> : <Button 
               size="icon" 
