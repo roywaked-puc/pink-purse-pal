@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmarPermutaDialog } from './ConfirmarPermutaDialog';
 import { useApp } from '@/contexts/AppContext';
-import { useMutacoesPermuta } from '@/hooks/usePermuta';
+import { useMutacoesPermuta, useExtratoPermuta } from '@/hooks/usePermuta';
 import { dinheiroPermuta, type LinhaPermuta } from '@/lib/permutaExtrato';
 import type { Client } from '@/types';
 
@@ -16,6 +16,7 @@ export function PermutaFormSheet({ cliente, saldo = 0, tipo, linha, onClose }: {
   const { clients, accounts, categories } = useApp();
   const { salvar, acerto } = useMutacoesPermuta();
   const [clientId, setClientId] = useState(cliente?.id ?? '');
+  const { data: extrato = [], isFetching } = useExtratoPermuta(cliente ? cliente.id : clientId || undefined);
   const [descricao, setDescricao] = useState(linha?.descricao ?? '');
   const [valor, setValor] = useState(linha ? String(tipo === 'fui_atendida' ? Math.abs(linha.valor) : linha.valor) : tipo === 'acerto' && saldo ? String(Math.abs(saldo)) : '');
   const [data, setData] = useState(linha ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(linha.date)) : hoje());
@@ -26,11 +27,12 @@ export function PermutaFormSheet({ cliente, saldo = 0, tipo, linha, onClose }: {
   const [confirmar, setConfirmar] = useState(false);
   const numero = Number(valor.replace(',', '.'));
   const valorAssinado = tipo === 'fui_atendida' || (tipo === 'acerto' && direcao === 'recebido') ? -Math.abs(numero) : numero;
-  const saldoApos = saldo - (linha?.valor ?? 0) + valorAssinado;
+  const saldoAtual = cliente ? saldo : extrato.filter(l => l.client_id === clientId).reduce((s, l) => s + l.valor, 0);
+  const saldoApos = saldoAtual - (linha?.valor ?? 0) + valorAssinado;
   const tipoFinanceiro = direcao === 'recebido' ? 'entrada' : 'saida';
   const categorias = categories.filter(c => c.type === tipoFinanceiro && c.scope === scope);
   const pendente = salvar.isPending || acerto.isPending;
-  const valido = clientId && data && Number.isFinite(numero) && numero !== 0 && (tipo === 'ajuste' || numero > 0) && (tipo === 'acerto' ? Boolean(conta && categorias.some(c => c.id === categoria)) : descricao.trim());
+  const valido = clientId && data && !isFetching && Number.isFinite(numero) && numero !== 0 && Math.abs(numero * 100 - Math.round(numero * 100)) < 0.000001 && (tipo === 'ajuste' || numero > 0) && (tipo === 'acerto' ? Boolean(conta && categorias.some(c => c.id === categoria)) : descricao.trim());
   const enviar = async () => {
     if (!valido || pendente) return;
     try {

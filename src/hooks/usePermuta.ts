@@ -20,6 +20,15 @@ export function useExtratoPermuta(clientId?: string) {
   });
 }
 export interface SalvarPermuta { id?: string; clientId: string; tipo: 'fui_atendida' | 'ajuste'; date: string; descricao: string; valor: number }
+export function useSaldosPermuta() {
+  const { user } = useAuth();
+  const { data: settings } = useUserSettings();
+  return useQuery({ queryKey: ['permuta-saldos', user?.id], enabled: Boolean(user && settings?.permuta_corte_em), queryFn: async () => {
+    const { data, error } = await supabase.from('permuta_saldos').select('*');
+    if (error) throw sanitizeDbError(error);
+    return data ?? [];
+  } });
+}
 export function useMutacoesPermuta() {
   const { user } = useAuth();
   const qc = useQueryClient();
