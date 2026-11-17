@@ -1,0 +1,18 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { extratoPeriodo, montarMensagemPermuta, podeEditarPermuta, type LinhaPermuta } from './permutaExtrato';
+const l = (valor: number, date: string, tipo = 'atendimento'): LinhaPermuta => ({ client_id: 'c', date, origem: tipo === 'atendimento' ? 'agendamento' : 'lancamento', tipo, descricao: 'Serviço simulado', valor, appointment_id: null, permuta_lancamento_id: date });
+test('saldo positivo: eu tenho serviços com você', () => assert.ok(montarMensagemPermuta('Ana Teste', [l(200,'2026-11-01T12:00:00Z')], 'tudo').includes('Saldo atual: eu tenho R$ 200,00 em serviços com você 😊')));
+test('saldo negativo: você tem serviços comigo', () => assert.ok(montarMensagemPermuta('Ana', [l(-120,'2026-11-01T12:00:00Z','fui_atendida')], 'tudo').includes('Saldo atual: você tem R$ 120,00 em serviços comigo 😊')));
+test('saldo zero: quites', () => assert.ok(montarMensagemPermuta('Ana', [l(120,'2026-11-01T12:00:00Z'), l(-120,'2026-11-02T12:00:00Z','fui_atendida')], 'tudo').includes('Estamos quites! ✨')));
+const base = [l(80,'2026-01-01T12:00:00Z','saldo_inicial'), l(-30,'2026-10-01T12:00:00Z','acerto_recebido'),l(100,'2026-11-01T12:00:00Z')];
+test('tudo inclui todas as linhas sem saldo anterior', () => { const p = extratoPeriodo(base,'tudo'); assert.equal(p.linhas.length,3); assert.equal(p.saldoAnterior,0); assert.equal(p.saldo,150); });
+test('últimos 90 dias carrega saldo anterior 80', () => { const p = extratoPeriodo(base,'90_dias',new Date('2026-11-17T12:00:00Z')); assert.equal(p.linhas.length,2); assert.equal(p.saldoAnterior,80); assert.equal(p.saldo,150); });
+test('desde último acerto preserva saldo restante 50', () => { const p=extratoPeriodo(base,'ultimo_acerto'); assert.equal(p.linhas.length,1); assert.equal(p.saldoAnterior,50); assert.equal(p.saldo,150); });
+test('último saldo zero reinicia período', () => { const p=extratoPeriodo([l(80,'2026-10-01T12:00:00Z'),l(-80,'2026-10-02T12:00:00Z','fui_atendida'),l(25,'2026-11-01T12:00:00Z')],'ultimo_acerto'); assert.equal(p.linhas.length,1); assert.equal(p.saldoAnterior,0); });
+test('saldo anterior negativo aparece assinado', () => assert.ok(montarMensagemPermuta('Ana',[l(-80,'2026-01-01T12:00:00Z','ajuste')],'90_dias',new Date('2026-11-17T12:00:00Z')).includes('Saldo anterior: − R$ 80,00')));
+test('90 dias sem movimento mantém saldo total no anterior', () => { const p=extratoPeriodo([l(80,'2026-01-01T12:00:00Z')],'90_dias',new Date('2026-11-17T12:00:00Z')); assert.equal(p.linhas.length,0); assert.equal(p.saldoAnterior,80); assert.equal(p.saldo,80); });
+test('limite exato de 90 dias incluso', () => assert.equal(extratoPeriodo([l(10,'2026-08-19T12:00:00Z')],'90_dias',new Date('2026-11-17T12:00:00Z')).linhas.length,1));
+test('datas usam São Paulo e direção do pagamento', () => { const m=montarMensagemPermuta('Ana',[l(-30,'2026-11-02T01:00:00Z','acerto_recebido'),l(20,'2026-11-03T12:00:00Z','acerto_pago')],'tudo'); assert.ok(m.includes('01/11 – Você pagou em dinheiro')); assert.ok(m.includes('Eu paguei em dinheiro')); });
+for (const tipo of ['fui_atendida','ajuste']) test(`${tipo} permite edição/exclusão`,()=>assert.equal(podeEditarPermuta(tipo),true));
+for (const tipo of ['saldo_inicial','acerto_pago','acerto_recebido','atendimento']) test(`${tipo} é somente leitura`,()=>assert.equal(podeEditarPermuta(tipo),false));
