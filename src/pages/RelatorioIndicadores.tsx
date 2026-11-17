@@ -100,7 +100,7 @@ export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
               <p className="text-sm text-muted-foreground">Faturamento</p>
               <DollarSign className="w-5 h-5 text-primary opacity-70 shrink-0" />
             </div>
-            <p className="text-xl md:text-2xl font-bold break-words">{formatCurrency(totals.faturamento)}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold whitespace-nowrap tabular-nums">{formatCurrency(totals.faturamento)}</p>
             <p className="text-xs text-muted-foreground">{formatCurrency(totals.aReceber)} a receber</p>
           </CardContent>
         </Card>
@@ -110,7 +110,7 @@ export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
               <p className="text-sm text-muted-foreground">Permuta</p>
               <Repeat className="w-5 h-5 text-primary opacity-70 shrink-0" />
             </div>
-            <p className="text-xl md:text-2xl font-bold break-words">{formatCurrency(totals.permuta)}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold whitespace-nowrap tabular-nums">{formatCurrency(totals.permuta)}</p>
             <p className="text-xs text-muted-foreground">em {year}</p>
           </CardContent>
         </Card>
@@ -138,7 +138,7 @@ export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
                   <Tooltip content={<TooltipAtendimentos comparar={mostrarComparacao} anoPrev={year - 1} />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="pagos" name="Pagos" stackId="a" fill="hsl(var(--primary))" />
-                  <Bar dataKey="permutaQtd" name="Permuta" stackId="a" fill="hsl(var(--primary))" fillOpacity={0.35} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="permutaQtd" name="Permuta" stackId="a" fill="hsl(var(--primary) / 0.35)" radius={[4, 4, 0, 0]} />
                   {mostrarComparacao && (
                     <Line type="monotone" dataKey="totalPrev" name={`Total ${year - 1}`} stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="4 4" dot={false} />
                   )}
