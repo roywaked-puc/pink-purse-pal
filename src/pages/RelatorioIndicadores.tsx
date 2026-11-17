@@ -32,7 +32,7 @@ type Linha = {
 
 const tooltipBox = 'rounded-lg border border-border bg-background px-3 py-2 text-xs shadow-md max-w-[240px] leading-relaxed';
 
-function TooltipAtendimentos({ active, payload, comparar, anoPrev }: any) {
+function TooltipAtendimentos({ active, payload, comparar, anoPrev }: { active?: boolean; payload?: { payload: Linha }[]; comparar?: boolean; anoPrev?: number }) {
   if (!active || !payload?.length) return null;
   const d: Linha = payload[0].payload;
   return (
@@ -44,7 +44,7 @@ function TooltipAtendimentos({ active, payload, comparar, anoPrev }: any) {
   );
 }
 
-function TooltipFaturamento({ active, payload, comparar, anoPrev }: any) {
+function TooltipFaturamento({ active, payload, comparar, anoPrev }: { active?: boolean; payload?: { payload: Linha }[]; comparar?: boolean; anoPrev?: number }) {
   if (!active || !payload?.length) return null;
   const d: Linha = payload[0].payload;
   return (
