@@ -20,7 +20,7 @@ export interface PassoInicial {
 }
 
 export const primeirosPassos: PassoInicial[] = [
-  { id: 'conta', titulo: 'Crie sua conta.', texto: 'Abra app.marcinhacilios.com.br, informe e-mail e senha. O app mostra se a senha está forte enquanto você digita.', destino: '/configuracoes' },
+  { id: 'conta', titulo: 'Crie sua conta.', texto: 'Crie sua conta com e-mail e senha.', destino: '/configuracoes' },
   { id: 'contas', titulo: 'Cadastre onde o dinheiro entra.', texto: 'Em Configurações → Contas e Bancos, crie uma conta para cada lugar: dinheiro, banco (Pix) e maquininha.', destino: '/configuracoes?abrir=accounts' },
   { id: 'taxas', titulo: 'Informe as taxas da maquininha.', texto: 'Dentro da conta da maquininha, cadastre cada tipo de cobrança (débito, crédito à vista, parcelado) com a sua taxa. O app passa a calcular quanto cai de verdade na sua conta.', destino: '/configuracoes?abrir=accounts' },
   { id: 'servicos', titulo: 'Cadastre seus serviços.', texto: 'Em Configurações → Serviços, informe nome, valor, duração e cor de cada um. Se o serviço tem manutenção, ligue a chave "Possui manutenção" e cadastre as faixas de dias com o valor de cada uma.', destino: '/configuracoes?abrir=services' },

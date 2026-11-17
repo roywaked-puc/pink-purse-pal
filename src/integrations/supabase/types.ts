@@ -880,6 +880,7 @@ export type Database = {
           nome_negocio: string | null
           onboarding_concluido_em: string | null
           permuta_corte_em: string | null
+          primeiros_passos_oculto_em: string | null
           retention_color_aguardando: string
           retention_color_confirmado: string
           retention_color_previsto: string
@@ -912,6 +913,7 @@ export type Database = {
           nome_negocio?: string | null
           onboarding_concluido_em?: string | null
           permuta_corte_em?: string | null
+          primeiros_passos_oculto_em?: string | null
           retention_color_aguardando?: string
           retention_color_confirmado?: string
           retention_color_previsto?: string
@@ -944,6 +946,7 @@ export type Database = {
           nome_negocio?: string | null
           onboarding_concluido_em?: string | null
           permuta_corte_em?: string | null
+          primeiros_passos_oculto_em?: string | null
           retention_color_aguardando?: string
           retention_color_confirmado?: string
           retention_color_previsto?: string

@@ -17,6 +17,6 @@
 - Keep attendance completion free of follow-up callbacks or photo prompt state; manual photo access remains independent of status changes.
 - Generate future agenda WhatsApp messages in the pure `agendaWhatsapp` helpers and reuse the existing service-description and WhatsApp-link helpers; this keeps eligibility and formatting reusable without changing other flows.- Compute 'days since last attendance' only via `src/lib/diasDesdeUltimoAtendimento.ts`; Home/Agenda chips and the client file must never diverge.
 
-- Keep Help Center content static in `src/content/manual.ts`; the `/ajuda` page and first-steps checklist render from it, and checklist progress lives only in per-user localStorage.
+- Keep Help Center content static in `src/content/manual.ts`; the `/ajuda` page renders from it. The first-steps checklist status is derived from real user data in the single `usePrimeirosPassos` hook, and its Home "hide" flag lives in `user_settings.primeiros_passos_oculto_em` so it survives domains and devices.
 - Keep Help AI inference in the authenticated `chat-ajuda` Edge Function with a synchronized text-only manual and no data queries/tools; send only the last ten messages capped at 1,000 characters and clear in-memory chat on close to preserve its privacy boundary.
 - Decide appointment payment badges and cash pending only via `situacaoPagamento`/`saldoAReceberEmDinheiro` in `src/lib/permuta.ts`; post-cut barter appointments keep stored payment fields untouched but never count as receivable.

@@ -1,0 +1,2 @@
+ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS primeiros_passos_oculto_em timestamptz NULL;
+GRANT SELECT (primeiros_passos_oculto_em), INSERT (primeiros_passos_oculto_em), UPDATE (primeiros_passos_oculto_em) ON public.user_settings TO authenticated;
