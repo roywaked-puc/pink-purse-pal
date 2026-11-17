@@ -48,6 +48,7 @@ import type { Appointment, Transaction } from '@/types';
 import { getCorServico } from '@/lib/corServico';
 import { selecionarAgendaFutura } from '@/lib/agendaWhatsapp';
 import { EnviarAgendaSheet } from '@/components/clients/EnviarAgendaSheet';
+import { CardPermuta } from '@/components/clients/CardPermuta';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -151,6 +152,7 @@ export default function ClienteFicha() {
         </TabsList>
 
         <TabsContent value="dados" className="space-y-6">
+          <CardPermuta cliente={client} onAppointment={setSelectedAppointment} />
           {/* Info */}
           <section className="p-4 rounded-xl bg-card border border-border shadow-soft space-y-2">
             {client.phone && (

@@ -7,12 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/components/ui/drawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAtivarPermuta } from '@/hooks/usePermuta';
+import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { toast } from 'sonner';
 
 const dinheiro = (valor: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
 
 export function RevisaoPermutaDrawer() {
   const { clients } = useApp();
   const [aberto, setAberto] = useState(false);
+  const [confirmar, setConfirmar] = useState(false);
+  const ativar = useAtivarPermuta();
   const [escolhas, setEscolhas] = useState<Record<string, string>>({});
   const [incluidos, setIncluidos] = useState<Record<string, string>>({});
   const { data, isFetching, error, refetch } = useRevisaoPermuta(aberto);
@@ -26,7 +31,7 @@ export function RevisaoPermutaDrawer() {
       <div className="flex items-center gap-2"><ArrowLeftRight className="h-5 w-5 text-primary" /><p className="font-medium">Nova conta corrente de permuta</p></div>
       <Button variant="outline" className="min-h-11" onClick={() => { setEscolhas({}); setIncluidos({}); setAberto(true); }}>Revisar contas antigas</Button>
     </div>
-    <Drawer open={aberto} onOpenChange={setAberto}>
+    <Drawer open={aberto} onOpenChange={o => { if (!ativar.isPending) setAberto(o); }}>
       <DrawerContent className="max-h-[90dvh] mx-auto max-w-2xl">
         <DrawerHeader className="text-left pr-14">
           <DrawerTitle>Nova conta corrente de permuta</DrawerTitle>
@@ -63,9 +68,16 @@ export function RevisaoPermutaDrawer() {
           </section>}
         </div>
         <DrawerFooter>
-          <Button disabled={!podeAtivar || isFetching || Boolean(error)} className="min-h-11 h-auto whitespace-normal">Disponível após a atualização dos formulários</Button>
+          <Button onClick={() => setConfirmar(true)} disabled={!data || !podeAtivar || isFetching || Boolean(error) || ativar.isPending} className="min-h-11 h-auto whitespace-normal">{ativar.isPending ? 'Ativando…' : 'Ativar'}</Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+    <DeleteConfirmDialog open={confirmar} onOpenChange={o => { if (!ativar.isPending) setConfirmar(o); }} title="Ativar conta corrente de permuta?" description="Os saldos revisados serão registrados e os novos formulários passarão a usar a conta corrente por cliente. O histórico antigo será preservado." onConfirm={async () => {
+      if (!data || !podeAtivar || ativar.isPending) return;
+      try {
+        await ativar.mutateAsync(contas.map(c => ({ conta_legada_id: c.conta_legada_id, client_id: clienteConta(c.conta_legada_id, c.client_id_sugerido) || null, valor: saldoConta(c.conta_legada_id, Number(c.saldo_bruto)), appointment_ids: Object.entries(incluidos).filter(([, id]) => id === c.conta_legada_id).map(([id]) => id) })));
+        toast.success('Conta corrente de permuta ativada'); setConfirmar(false); setAberto(false);
+      } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível ativar. Reabra a revisão.'); setConfirmar(false); }
+    }} />
   </>;
 }

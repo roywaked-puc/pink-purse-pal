@@ -1,4 +1,4 @@
-export const ETAPAS_FORMULARIOS_PERMUTA_PRONTAS = false;
+export const ETAPAS_FORMULARIOS_PERMUTA_PRONTAS = true;
 
 export interface ContaPermutaRevisao {
   conta_legada_id: string;
