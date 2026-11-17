@@ -2,7 +2,8 @@
 - Classify monetary barter exclusions only through `isTransacaoPermuta` using ID precedence over legacy text in the user's scoped accounts; real receipts on barter appointments must remain money.
 - Gate barter form behavior on the persisted activation cut, derive completion credit with the same view eligibility, and classify settlements via ledger transaction IDs before exposing mutations; this preserves legacy forms and settlement consistency.
 - Check client barter balances in both the delete hook and an invoker database trigger; the trigger prevents bypassing the UI safeguard.
-- Keep barter activation in the invoker RPC `ativar_conta_corrente_permuta`, recalculating reviewed legacy balances and saving the cut and initial entries atomically; the review UI stays non-mutating until payment forms and ledger screens are ready.
+- Keep barter activation in the invoker RPC `ativar_conta_corrente_permuta`, recalculating reviewed balances and saving the cut and initial entries atomically; only explicit confirmed activation may call it.
+- Build barter statements and WhatsApp periods with `permutaExtrato` and fetch/write ledger data through `usePermuta`; shared card/forms keep client and general-list balances consistent.
 - Keep barter legacy detection in the invoker view `permuta_transacoes_legadas`, with account_id precedence and same-owner text fallback only for null account_id; preserve legacy rows to prevent migration double counting.
 - Record barter cash settlements through the invoker RPC `registrar_acerto_permuta`; freeze settlement financial fields and initial/settlement ledger rows in database triggers to keep both sides consistent.
 - Keep subscription entitlement in authenticated no-argument RPCs and enforce expiry only on appointment INSERT; signed Stripe invoice.paid events grant paid access atomically with internal event deduplication, never through client writes or business transactions.
