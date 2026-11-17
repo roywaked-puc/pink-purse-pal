@@ -294,6 +294,7 @@ const Index = () => {
         }}
         appointment={editingAppointment}
         prefill={returnPrefill}
+        onReceber={handleReceiveAppointment}
         onDelete={() => {
           if (editingAppointment) {
             setDeleteAppointmentId(editingAppointment.id);

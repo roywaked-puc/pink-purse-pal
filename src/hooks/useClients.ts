@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Client } from '@/types';
 import { sanitizeDbError } from '@/lib/sanitizeError';
+import { ERRO_CLIENTE_PERMUTA } from '@/lib/permuta';
 
 export function useClients() {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ export function useClients() {
 
       if (error) throw sanitizeDbError(error);
 
-      return data.map((c: any) => ({
+      return data.map(c => ({
         id: c.id,
         name: c.name,
         phone: c.phone,
@@ -27,6 +28,7 @@ export function useClients() {
         recurrenceDays: c.recurrence_days ?? undefined,
         birthDate: c.birth_date ?? undefined,
         contaPermutaPadraoId: c.conta_permuta_padrao_id ?? undefined,
+        pagaPermuta: c.paga_permuta,
       }));
     },
     enabled: !!user,
@@ -62,7 +64,8 @@ export function useAddClient() {
           recurrence_days: client.recurrenceDays ?? null,
           birth_date: client.birthDate ?? null,
           conta_permuta_padrao_id: client.contaPermutaPadraoId ?? null,
-        } as any)
+          paga_permuta: client.pagaPermuta ?? Boolean(client.contaPermutaPadraoId),
+        })
         .select('id')
         .single();
 
@@ -99,7 +102,8 @@ export function useUpdateClient() {
           recurrence_days: client.recurrenceDays ?? null,
           birth_date: client.birthDate ?? null,
           conta_permuta_padrao_id: client.contaPermutaPadraoId ?? null,
-        } as any)
+          ...(client.pagaPermuta !== undefined ? { paga_permuta: client.pagaPermuta } : {}),
+        })
         .eq('id', id);
 
       if (error) throw sanitizeDbError(error);
@@ -116,6 +120,9 @@ export function useDeleteClient() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: saldos, error: saldoError } = await supabase.from('permuta_saldos').select('saldo').eq('client_id', id);
+      if (saldoError) throw sanitizeDbError(saldoError);
+      if (saldos.some(s => Number(s.saldo) !== 0)) throw new Error(ERRO_CLIENTE_PERMUTA);
       const { error } = await supabase
         .from('clients')
         .delete()

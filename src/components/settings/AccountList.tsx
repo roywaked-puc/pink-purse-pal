@@ -16,6 +16,8 @@ import { AccountFeeTypes } from './AccountFeeTypes';
 import { AccountExtratoDrawer } from './AccountExtratoDrawer';
 import { cn } from '@/lib/utils';
 import { RevisaoPermutaDrawer } from './RevisaoPermutaDrawer';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -32,6 +34,8 @@ const typeConfig = {
 };
 
 export function AccountList() {
+  const { data: settings } = useUserSettings();
+  const permutaAtiva = Boolean(settings?.permuta_corte_em);
   const { accounts, addAccount, updateAccount, deleteAccount, getAccountBalance } = useApp();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -119,7 +123,7 @@ export function AccountList() {
                         <SelectItem value="dinheiro">Dinheiro</SelectItem>
                         <SelectItem value="banco">Banco</SelectItem>
                         <SelectItem value="maquininha">Maquininha</SelectItem>
-                        <SelectItem value="permuta">Permuta</SelectItem>
+                        {!permutaAtiva && <SelectItem value="permuta">Permuta</SelectItem>}
                       </SelectContent>
                     </Select>
                     <Input
@@ -229,7 +233,7 @@ export function AccountList() {
                   <SelectItem value="dinheiro">Dinheiro</SelectItem>
                   <SelectItem value="banco">Banco</SelectItem>
                   <SelectItem value="maquininha">Maquininha</SelectItem>
-                  <SelectItem value="permuta">Permuta</SelectItem>
+                  {!permutaAtiva && <SelectItem value="permuta">Permuta</SelectItem>}
                 </SelectContent>
               </Select>
               <Input
@@ -256,6 +260,10 @@ export function AccountList() {
       </div>
 
       {contasPermuta.length > 0 && (
+        permutaAtiva ? <Collapsible>
+          <CollapsibleTrigger asChild><Button variant="ghost" className="min-h-11">Permutas (legado)</Button></CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2">{contasPermuta.map(a => <div key={a.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3"><span>{a.name}</span><Button variant="outline" onClick={() => setExtratoAccount(a)}>Ver extrato</Button></div>)}</CollapsibleContent>
+        </Collapsible> :
         <div className="space-y-2 pt-2">
           <div>
             <p className="text-sm font-medium">Controle de Permutas</p>

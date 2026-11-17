@@ -18,6 +18,7 @@ import { format, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, FileText, FileSpreadsheet, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isTransacaoPermuta } from '@/lib/accountBalance';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
@@ -98,6 +99,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
   const enrichedTransactions = useMemo(() => {
     return transactions
       .filter(t => {
+        if (isTransacaoPermuta(t, accounts)) return false;
         const tDate = new Date(t.date);
         // Date range filter
         if (tDate < startDate || tDate > endDate) return false;
@@ -129,16 +131,17 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
           ...t,
           appointmentDate: appointment?.date || null,
           appointmentNotes: appointment?.notes || null,
-          clientName: appointment?.clientName || null,
+          clientName: appointment?.clientName || t.clientName || null,
         };
       })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [transactions, appointments, startDate, endDate, selectedCategory, selectedClient, selectedAccount, selectedType, selectedScope]);
+  }, [transactions, appointments, accounts, startDate, endDate, selectedCategory, selectedClient, selectedAccount, selectedType, selectedScope]);
 
   // Calculate initial balance for a specific scope or account
   const calculateInitialBalance = (filterKey: 'scope' | 'account', filterValue: string): number => {
     return transactions
       .filter(t => {
+        if (isTransacaoPermuta(t, accounts)) return false;
         const tDate = new Date(t.date);
         // Only transactions BEFORE the start date
         if (tDate >= startDate) return false;
@@ -184,7 +187,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
     };
 
     return [...summary, total];
-  }, [enrichedTransactions, startDate, transactions]);
+  }, [enrichedTransactions, startDate, transactions, accounts]);
 
   // Summary by account (banco)
   const accountSummary = useMemo(() => {
@@ -215,7 +218,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
     };
 
     return [...summary, total];
-  }, [enrichedTransactions, startDate, transactions]);
+  }, [enrichedTransactions, startDate, transactions, accounts]);
 
   // Export to CSV
   const exportToCSV = () => {
@@ -611,6 +614,7 @@ export default function RelatorioMovimentacoes({ embedded = false }: Props = {})
                         </TableCell>
                         <TableCell className="text-xs">
                           {t.category || '-'}
+                          {t.acertoPermutaId && <span className="block text-primary">Acerto de permuta</span>}
                         </TableCell>
                         <TableCell className="text-xs">
                           <span className={cn(

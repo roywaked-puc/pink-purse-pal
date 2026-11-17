@@ -1,0 +1,26 @@
+/// <reference types="node" />
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { isTransacaoPermuta } from './accountBalance';
+import { preferePermuta, saldoPendenteDinheiro, creditoAtendimentoPermuta, contaPermitidaRecebimento } from './permuta';
+import type { Account, Appointment, Transaction } from '@/types';
+const contas: Account[] = [{ id:'real',name:'Pix',type:'banco' },{ id:'troca',name:'Tati',type:'permuta' }];
+const ap: Appointment = { id:'ap',clientId:'cliente',clientName:'Tati',date:new Date('2026-11-20T12:00Z'),service:'Serviço',duration:60,amount:200,paidAmount:0,paymentStatus:'nao_pago',confirmationStatus:'atendido',isPermuta:true };
+const tx: Transaction = { id:'tx',date:ap.date,type:'entrada',scope:'empresa',category:'Serviços',account:'Pix',accountId:'real',amount:50,appointmentId:'ap' };
+const corte='2026-11-19T12:00Z';
+test('ID real prevalece sobre texto de conta permuta',()=>assert.equal(isTransacaoPermuta({...tx,account:'Tati'},contas),false));
+test('ID permuta exclui mesmo com texto real',()=>assert.equal(isTransacaoPermuta({...tx,accountId:'troca'},contas),true));
+test('legado nulo aceita nome',()=>assert.equal(isTransacaoPermuta({...tx,accountId:undefined,account:'Tati'},contas),true));
+test('legado nulo aceita ID textual',()=>assert.equal(isTransacaoPermuta({...tx,accountId:undefined,account:'troca'},contas),true));
+test('Pix de agendamento permuta é dinheiro',()=>assert.equal(isTransacaoPermuta(tx,contas),false));
+test('pendência exclui permuta mesmo sem corte',()=>assert.equal(saldoPendenteDinheiro([ap,{...ap,id:'real',isPermuta:false,amount:130,paidAmount:30}]),100));
+test('crédito sem pagamento é 200',()=>assert.equal(creditoAtendimentoPermuta(ap,corte,[],contas),200));
+test('Pix de 50 deixa crédito 150',()=>assert.equal(creditoAtendimentoPermuta(ap,corte,[tx],contas),150));
+test('bruto é descontado, não líquido',()=>assert.equal(creditoAtendimentoPermuta(ap,corte,[{...tx,amount:48,grossAmount:50}],contas),150));
+test('cancelado não gera crédito',()=>assert.equal(creditoAtendimentoPermuta({...ap,confirmationStatus:'cancelado'},corte,[],contas),0));
+test('antes do corte não anuncia crédito',()=>assert.equal(creditoAtendimentoPermuta(ap,'2026-11-21T00:00Z',[],contas),0));
+test('legado impede crédito duplicado',()=>assert.equal(creditoAtendimentoPermuta(ap,corte,[{...tx,accountId:'troca'}],contas),0));
+test('preferência antes da ativação usa banco padrão',()=>assert.equal(preferePermuta({id:'c',name:'Tati',phone:'',pagaPermuta:true},null),false));
+test('preferência ativada independe de banco',()=>assert.equal(preferePermuta({id:'c',name:'Tati',phone:'',pagaPermuta:true},corte),true));
+test('receber legado lista permuta',()=>assert.deepEqual(contas.filter(c=>contaPermitidaRecebimento(c,true,null)).map(c=>c.id),['troca']));
+test('receber ativado lista reais',()=>assert.deepEqual(contas.filter(c=>contaPermitidaRecebimento(c,true,corte)).map(c=>c.id),['real']));

@@ -76,6 +76,7 @@ const Movimentacoes = () => {
   }, [transactions, filterScope, filterCategory, searchQuery, accounts]);
 
   const handleEdit = (transaction: Transaction) => {
+    if (transaction.acertoPermutaId) return;
     if (transaction.appointmentId) {
       toast({
         title: "Edição não permitida",
@@ -89,11 +90,12 @@ const Movimentacoes = () => {
   };
 
   const handleDelete = (transaction: Transaction) => {
+    if (transaction.acertoPermutaId) return;
     setDeletingTransaction(transaction);
   };
 
   const confirmDelete = () => {
-    if (deletingTransaction) {
+    if (deletingTransaction && !deletingTransaction.acertoPermutaId) {
       deleteTransaction(deletingTransaction);
       setDeletingTransaction(null);
     }

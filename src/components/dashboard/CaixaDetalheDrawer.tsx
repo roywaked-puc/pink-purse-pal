@@ -13,7 +13,7 @@ import { MoneyDisplay } from '@/components/ds/MoneyDisplay';
 import { EmptyState } from '@/components/ds/EmptyState';
 import { useApp } from '@/contexts/AppContext';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { isPermutaRelated } from '@/lib/accountBalance';
+import { isTransacaoPermuta } from '@/lib/accountBalance';
 import { Transaction } from '@/types';
 import { Receipt } from 'lucide-react';
 
@@ -65,7 +65,7 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
     return transactions
       .filter((t) => {
         // Permuta nunca entra — mesma regra dos cards.
-        if (isPermutaRelated(t, accounts, appointments)) return false;
+        if (isTransacaoPermuta(t, accounts)) return false;
         const data = new Date(t.date);
 
         if (tipo === 'empresa' || tipo === 'pessoal') {
@@ -202,6 +202,7 @@ export function CaixaDetalheDrawer({ tipo, mesReferencia, onOpenChange }: CaixaD
                       <p className="text-sm font-medium truncate">
                         {descricao}
                       </p>
+                      {t.acertoPermutaId && <span className="text-xs text-primary">Acerto de permuta</span>}
                       <p className="text-xs flex items-center min-w-0">
                         {cliente && (
                           <span className="font-medium text-foreground whitespace-nowrap shrink-0">

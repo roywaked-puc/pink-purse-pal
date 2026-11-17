@@ -3,6 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Transaction } from '@/types';
 import { sanitizeDbError } from '@/lib/sanitizeError';
+import { ERRO_ACERTO_PERMUTA } from '@/lib/permuta';
+
+async function conferirAcerto(id: string) {
+  const { data, error } = await supabase.from('permuta_lancamentos').select('id').eq('transaction_id', id).limit(1);
+  if (error) throw sanitizeDbError(error);
+  if (data.length) throw new Error(ERRO_ACERTO_PERMUTA);
+}
 
 interface UseTransactionsOptions {
   startDate?: Date;
@@ -34,9 +41,14 @@ export function useTransactions(options: UseTransactionsOptions = {}) {
       const { data, error } = await query.order('date', { ascending: false });
       
       if (error) throw sanitizeDbError(error);
+
+      const { data: acertos, error: acertosError } = await supabase.from('permuta_lancamentos').select('id, transaction_id').not('transaction_id', 'is', null);
+      if (acertosError) throw sanitizeDbError(acertosError);
+      const acertoIds = new Map(acertos.map(a => [a.transaction_id, a.id]));
       
       return data.map(t => ({
         id: t.id,
+        acertoPermutaId: acertoIds.get(t.id),
         date: new Date(t.date),
         type: t.type as 'entrada' | 'saida',
         scope: t.scope as 'empresa' | 'pessoal',
@@ -49,7 +61,7 @@ export function useTransactions(options: UseTransactionsOptions = {}) {
         description: t.description || undefined,
         clientName: t.client_name || undefined,
         appointmentId: t.appointment_id || undefined,
-        accountFeeTypeId: (t as any).account_fee_type_id || undefined,
+        accountFeeTypeId: t.account_fee_type_id || undefined,
         paymentType: t.payment_type as 'sinal' | 'pagamento' | undefined,
         createdAt: t.created_at ? new Date(t.created_at) : undefined,
       }));
@@ -100,6 +112,7 @@ export function useUpdateTransaction() {
 
   return useMutation({
     mutationFn: async ({ id, transaction }: { id: string; transaction: Omit<Transaction, 'id'> }) => {
+      await conferirAcerto(id);
       const { error } = await supabase
         .from('transactions')
         .update({
@@ -133,6 +146,7 @@ export function useDeleteTransaction() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      await conferirAcerto(id);
       const { error } = await supabase
         .from('transactions')
         .delete()

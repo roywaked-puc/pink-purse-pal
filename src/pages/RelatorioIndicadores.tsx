@@ -9,7 +9,8 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useTransactions } from '@/hooks/useTransactions';
+import { useApp } from '@/contexts/AppContext';
+import { isTransacaoPermuta } from '@/lib/accountBalance';
 
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -20,7 +21,7 @@ interface Props { embedded?: boolean }
 
 export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
   const navigate = useNavigate();
-  const { data: transactions = [] } = useTransactions();
+  const { transactions, accounts } = useApp();
 
   const now = new Date();
   const year = now.getFullYear();
@@ -31,15 +32,15 @@ export default function RelatorioIndicadores({ embedded = false }: Props = {}) {
     transactions.filter(t => {
       const d = new Date(t.date);
       return (
-        t.type === 'entrada' &&
+        !isTransacaoPermuta(t, accounts) && t.type === 'entrada' &&
         t.scope === 'empresa' &&
         d.getFullYear() === yr &&
         d.getMonth() <= currentMonth
       );
     });
 
-  const incomeTx = useMemo(() => filterIncome(year), [transactions, year, currentMonth]);
-  const incomeTxPrev = useMemo(() => filterIncome(year - 1), [transactions, year, currentMonth]);
+  const incomeTx = useMemo(() => filterIncome(year), [transactions, accounts, year, currentMonth]);
+  const incomeTxPrev = useMemo(() => filterIncome(year - 1), [transactions, accounts, year, currentMonth]);
 
   const aggregateByMonth = (txs: typeof transactions) => {
     const arr = Array.from({ length: currentMonth + 1 }, (_, i) => ({
