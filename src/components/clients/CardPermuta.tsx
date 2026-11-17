@@ -3,13 +3,13 @@ import { ArrowLeftRight, Calendar, MoreHorizontal, Pencil, Trash2, MessageCircle
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { useExtratoPermuta, useMutacoesPermuta } from '@/hooks/usePermuta';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
 import { ordenarExtrato, dinheiroPermuta, podeEditarPermuta, type LinhaPermuta } from '@/lib/permutaExtrato';
 import { PermutaFormSheet } from './PermutaFormSheet';
 import { PermutaWhatsappSheet } from './PermutaWhatsappSheet';
+import { ConfirmarPermutaDialog } from './ConfirmarPermutaDialog';
 import type { Client, Appointment } from '@/types';
 
 export function CardPermuta({ cliente, onAppointment, sempre = false }: { cliente: Client; onAppointment?: (a: Appointment) => void; sempre?: boolean }) {
@@ -43,6 +43,6 @@ export function CardPermuta({ cliente, onAppointment, sempre = false }: { client
     </>}
     {form && <PermutaFormSheet cliente={cliente} saldo={saldo} tipo={form.tipo} linha={form.linha} onClose={() => setForm(null)} />}
     {whatsapp && <PermutaWhatsappSheet cliente={cliente} linhas={linhas} onClose={() => setWhatsapp(false)} />}
-    <DeleteConfirmDialog open={Boolean(remover)} onOpenChange={o => !o && setRemover(null)} title="Excluir lançamento de permuta?" description="O saldo será recalculado. Esta ação não pode ser desfeita." onConfirm={async () => { if (!remover?.permuta_lancamento_id || excluir.isPending) return; try { await excluir.mutateAsync(remover.permuta_lancamento_id); setRemover(null); toast.success('Lançamento excluído'); } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível excluir.'); } }} />
+    <ConfirmarPermutaDialog open={Boolean(remover)} pending={excluir.isPending} label="Excluir" onOpenChange={o => !o && setRemover(null)} title="Excluir lançamento de permuta?" description="O saldo será recalculado. Esta ação não pode ser desfeita." onConfirm={async () => { if (!remover?.permuta_lancamento_id || excluir.isPending) return; try { await excluir.mutateAsync(remover.permuta_lancamento_id); setRemover(null); toast.success('Lançamento excluído'); } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível excluir.'); } }} />
   </section>;
 }

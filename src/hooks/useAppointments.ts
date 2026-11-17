@@ -193,6 +193,8 @@ export function useAddAppointment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
@@ -278,6 +280,8 @@ export function useUpdateAppointment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
@@ -315,6 +319,8 @@ export function useDeleteAppointment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
@@ -355,6 +361,8 @@ export function useUpdateAppointmentPayment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
@@ -393,6 +401,8 @@ export function useSubtractAppointmentPayment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
@@ -455,6 +465,8 @@ export function useUpdateConfirmationStatus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-extrato'] });
+      queryClient.invalidateQueries({ queryKey: ['permuta-saldos'] });
     },
   });
 }
