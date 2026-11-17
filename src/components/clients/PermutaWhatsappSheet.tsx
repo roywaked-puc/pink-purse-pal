@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { FormSheet } from '@/components/ds/FormSheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { ConfirmarPermutaDialog } from './ConfirmarPermutaDialog';
 import { montarMensagemPermuta, type LinhaPermuta, type PeriodoPermuta } from '@/lib/permutaExtrato';
 import { whatsappLink } from '@/lib/whatsapp';
 import type { Client } from '@/types';
@@ -27,6 +27,6 @@ export function PermutaWhatsappSheet({ cliente, linhas, onClose }: { cliente: Cl
         <div className="flex flex-wrap gap-2"><Button className="min-h-11 flex-1" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(texto); toast.success('Mensagem copiada'); } catch { toast.error('Não foi possível copiar.'); } }}><Copy className="h-4 w-4" />Copiar</Button><Button className="min-h-11 flex-1" disabled={!link || !texto.trim()} onClick={() => { if (link) window.open(link, '_blank', 'noopener,noreferrer'); }}><MessageCircle className="h-4 w-4" />Abrir WhatsApp</Button></div>
       </div>
     </FormSheet>
-    <DeleteConfirmDialog open={Boolean(proximo)} onOpenChange={o => !o && setProximo(null)} title="Trocar período?" description="O texto editado será substituído pelo extrato do novo período." onConfirm={() => proximo && mudar(proximo)} />
+    <ConfirmarPermutaDialog open={Boolean(proximo)} onOpenChange={o => !o && setProximo(null)} title="Trocar período?" description="O texto editado será substituído pelo extrato do novo período." label="Trocar período" onConfirm={() => proximo && mudar(proximo)} />
   </>;
 }

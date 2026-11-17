@@ -8,7 +8,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAtivarPermuta } from '@/hooks/usePermuta';
-import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { ConfirmarPermutaDialog } from '@/components/clients/ConfirmarPermutaDialog';
 import { toast } from 'sonner';
 
 const dinheiro = (valor: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
@@ -72,7 +72,7 @@ export function RevisaoPermutaDrawer() {
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
-    <DeleteConfirmDialog open={confirmar} onOpenChange={o => { if (!ativar.isPending) setConfirmar(o); }} title="Ativar conta corrente de permuta?" description="Os saldos revisados serão registrados e os novos formulários passarão a usar a conta corrente por cliente. O histórico antigo será preservado." onConfirm={async () => {
+    <ConfirmarPermutaDialog open={confirmar} pending={ativar.isPending} label="Confirmar ativação" onOpenChange={o => { if (!ativar.isPending) setConfirmar(o); }} title="Ativar conta corrente de permuta?" description="Os saldos revisados serão registrados e os novos formulários passarão a usar a conta corrente por cliente. O histórico antigo será preservado." onConfirm={async () => {
       if (!data || !podeAtivar || ativar.isPending) return;
       try {
         await ativar.mutateAsync(contas.map(c => ({ conta_legada_id: c.conta_legada_id, client_id: clienteConta(c.conta_legada_id, c.client_id_sugerido) || null, valor: saldoConta(c.conta_legada_id, Number(c.saldo_bruto)), appointment_ids: Object.entries(incluidos).filter(([, id]) => id === c.conta_legada_id).map(([id]) => id) })));

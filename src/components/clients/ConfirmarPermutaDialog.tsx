@@ -1,0 +1,5 @@
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+export function ConfirmarPermutaDialog({ open, onOpenChange, title, description, label, onConfirm, pending = false }: { open: boolean; onOpenChange: (open: boolean) => void; title: string; description: string; label: string; onConfirm: () => void; pending?: boolean }) {
+  return <AlertDialog open={open} onOpenChange={o => { if (!pending) onOpenChange(o); }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{title}</AlertDialogTitle><AlertDialogDescription>{description}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><Button className="min-h-11" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>Cancelar</Button><Button className="min-h-11" disabled={pending} onClick={onConfirm}>{pending ? 'Aguarde…' : label}</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>;
+}

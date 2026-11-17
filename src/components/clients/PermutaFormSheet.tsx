@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { ConfirmarPermutaDialog } from './ConfirmarPermutaDialog';
 import { useApp } from '@/contexts/AppContext';
 import { useMutacoesPermuta } from '@/hooks/usePermuta';
 import { dinheiroPermuta, type LinhaPermuta } from '@/lib/permutaExtrato';
@@ -57,6 +57,6 @@ export function PermutaFormSheet({ cliente, saldo = 0, tipo, linha, onClose }: {
         {Number.isFinite(numero) && <p className="text-sm font-medium">Saldo após este lançamento: {dinheiroPermuta(saldoApos)}</p>}
       </div>
     </FormSheet>
-    <DeleteConfirmDialog open={confirmar} onOpenChange={setConfirmar} title="Confirmar edição" description="Salvar as alterações deste lançamento de permuta?" onConfirm={enviar} />
+    <ConfirmarPermutaDialog open={confirmar} onOpenChange={setConfirmar} title="Confirmar edição" description="Salvar as alterações deste lançamento de permuta?" label="Salvar alterações" pending={pendente} onConfirm={enviar} />
   </>;
 }
