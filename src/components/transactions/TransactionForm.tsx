@@ -35,7 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAccountFeeTypes } from '@/hooks/useAccountFeeTypes';
 import { useAddAccount } from '@/hooks/useAccounts';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { contaPermitidaRecebimento, ERRO_ACERTO_PERMUTA } from '@/lib/permuta';
+import { contaPermitidaRecebimento, ERRO_ACERTO_PERMUTA, saldoAReceberEmDinheiro, situacaoPagamento } from '@/lib/permuta';
 
 interface TransactionFormProps {
   open: boolean;
@@ -119,8 +119,13 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
 
   const balanceToReceive = useMemo(() => {
     if (!selectedAppointment) return 0;
-    return selectedAppointment.amount - selectedAppointment.paidAmount;
-  }, [selectedAppointment]);
+    return saldoAReceberEmDinheiro(selectedAppointment, settings?.permuta_corte_em);
+  }, [selectedAppointment, settings?.permuta_corte_em]);
+  // Permuta depois do corte: nada a cobrar; o limite do que pode entrar em dinheiro é o restante do valor.
+  const permutaPosCorte = !!selectedAppointment && situacaoPagamento(selectedAppointment, settings?.permuta_corte_em) === 'permuta';
+  const limiteRecebimento = permutaPosCorte && selectedAppointment
+    ? Math.max(0, selectedAppointment.amount - selectedAppointment.paidAmount)
+    : balanceToReceive;
 
   const selectedAccount = useMemo(() => {
     return accounts.find(a => a.id === account);
@@ -235,8 +240,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
       setClientName(prefilledAppointment.clientName);
       setSelectedClientId(prefilledAppointment.clientId || null);
       setSelectedAppointment(prefilledAppointment);
-      const balance = prefilledAppointment.amount - prefilledAppointment.paidAmount;
-      setAmount(balance.toFixed(2));
+      const balance = saldoAReceberEmDinheiro(prefilledAppointment, settings?.permuta_corte_em);
+      setAmount(situacaoPagamento(prefilledAppointment, settings?.permuta_corte_em) === 'permuta' ? '' : balance.toFixed(2));
       setDescription(`${prefilledAppointment.service} - ${prefilledAppointment.clientName}`);
       setPaymentType('pagamento');
       const contaPermuta = getDefaultPermutaAccount(prefilledAppointment);
@@ -249,12 +254,12 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
   // Quando selecionar agendamento, sugere o valor do saldo
   useEffect(() => {
     if (selectedAppointment && !transaction) {
-      setAmount(balanceToReceive.toFixed(2));
+      setAmount(permutaPosCorte ? '' : balanceToReceive.toFixed(2));
       setDescription(`${selectedAppointment.service} - ${selectedAppointment.clientName}`);
       const contaPermuta = getDefaultPermutaAccount(selectedAppointment);
       if (contaPermuta) setAccount((prev) => prev || contaPermuta);
     }
-  }, [selectedAppointment, balanceToReceive, transaction]);
+  }, [selectedAppointment, balanceToReceive, permutaPosCorte, transaction]);
 
   const resetForm = () => {
     setDate(new Date());
@@ -345,10 +350,10 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
     }
 
     // Validação: valor não pode exceder o saldo disponível do agendamento
-    if (selectedAppointment && parsedAmount > balanceToReceive) {
+    if (selectedAppointment && parsedAmount > limiteRecebimento) {
       toast({
         title: "Erro",
-        description: `O valor não pode exceder o saldo disponível de R$ ${balanceToReceive.toFixed(2).replace('.', ',')}`,
+        description: `O valor não pode exceder o saldo disponível de R$ ${limiteRecebimento.toFixed(2).replace('.', ',')}`,
         variant: "destructive",
       });
       return;
@@ -549,8 +554,8 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete, pre
                       <span className="text-foreground">R$ {selectedAppointment.paidAmount.toFixed(2).replace('.', ',')}</span>
                     </div>
                     <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1">
-                      <span className="text-muted-foreground">Saldo a receber:</span>
-                      <span className="text-primary">R$ {balanceToReceive.toFixed(2).replace('.', ',')}</span>
+                      <span className="text-muted-foreground">{permutaPosCorte ? 'Em permuta:' : 'Saldo a receber:'}</span>
+                      <span className={permutaPosCorte ? 'text-muted-foreground' : 'text-primary'}>R$ {(permutaPosCorte ? limiteRecebimento : balanceToReceive).toFixed(2).replace('.', ',')}</span>
                     </div>
                   </div>
                 </>

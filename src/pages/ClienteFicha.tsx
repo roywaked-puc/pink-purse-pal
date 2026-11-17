@@ -1,3 +1,5 @@
+import { situacaoPagamento } from '@/lib/permuta';
+import { useUserSettings } from '@/hooks/useUserSettings';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { format, addDays, isAfter, differenceInCalendarDays } from 'date-fns';
@@ -66,6 +68,8 @@ export default function ClienteFicha() {
     return transactions.filter((t) => t.appointmentId && apptIds.has(t.appointmentId));
   }, [transactions, clientAppointments]);
 
+  const { data: fichaSettings } = useUserSettings();
+  const permutaCorteEm = fichaSettings?.permuta_corte_em;
   const temAgendaFutura = selecionarAgendaFutura(clientAppointments).length > 0;
 
   const stats = useMemo(() => {
@@ -295,9 +299,18 @@ export default function ClienteFicha() {
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <StatusBadge status={a.confirmationStatus} />
-                          <span className="text-sm font-semibold text-primary">
-                            {formatCurrency(a.amount)}
-                          </span>
+                          {situacaoPagamento(a, permutaCorteEm) === 'permuta' ? (
+                            <>
+                              <StatusBadge status="permuta" />
+                              <span className="text-sm text-muted-foreground">
+                                <span className="font-semibold">{formatCurrency(a.amount)}</span> <span className="text-xs">em permuta</span>
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-semibold text-primary">
+                              {formatCurrency(a.amount)}
+                            </span>
+                          )}
                           <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
                       </button>

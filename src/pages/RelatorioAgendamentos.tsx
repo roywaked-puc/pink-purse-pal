@@ -1,3 +1,4 @@
+import { situacaoPagamento, saldoAReceberEmDinheiro, type SituacaoPagamento } from '@/lib/permuta';
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -31,7 +32,7 @@ import { carregarImagemDataUrl } from '@/lib/marca';
 import { adicionarMarcaPdf } from '@/lib/marcaPdf';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { ConfirmationStatus, PaymentStatus } from '@/types';
+import { ConfirmationStatus } from '@/types';
 import { getAppointmentDescription } from '@/lib/maintenance';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 
@@ -43,6 +44,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
   const { data: clients = [] } = useClients();
   const { data: services = [] } = useServices();
   const { data: settings } = useUserSettings();
+  const corte = settings?.permuta_corte_em;
   const { toast } = useToast();
   const serviceDescription = (appointment: (typeof appointments)[number]) =>
     getAppointmentDescription(
@@ -67,11 +69,11 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
         const matchClient = selectedClient === 'todos' || a.clientId === selectedClient || a.clientName === selectedClient;
         const matchService = selectedService === 'todos' || a.serviceId === selectedService || a.service === selectedService;
         const matchConfirmation = selectedConfirmation === 'todos' || a.confirmationStatus === selectedConfirmation;
-        const matchPayment = selectedPayment === 'todos' || a.paymentStatus === selectedPayment;
+        const matchPayment = selectedPayment === 'todos' || situacaoPagamento(a, corte) === selectedPayment;
         return inPeriod && matchClient && matchService && matchConfirmation && matchPayment;
       })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [appointments, startDate, endDate, selectedClient, selectedService, selectedConfirmation, selectedPayment]);
+  }, [appointments, startDate, endDate, selectedClient, selectedService, selectedConfirmation, selectedPayment, corte]);
 
   // Calculate summary
   const summary = useMemo(() => {
@@ -94,13 +96,13 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
       else {
         result.valorTotal += a.amount;
         result.valorRecebido += a.paidAmount;
-        result.valorPendente += (a.amount - a.paidAmount);
+        result.valorPendente += saldoAReceberEmDinheiro(a, corte);
       }
       result.byConfirmation[a.confirmationStatus] = (result.byConfirmation[a.confirmationStatus] || 0) + 1;
     });
 
     return result;
-  }, [filteredAppointments]);
+  }, [filteredAppointments, corte]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -120,8 +122,9 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
     return labels[status] || status;
   };
 
-  const getPaymentLabel = (status: PaymentStatus) => {
-    const labels: Record<PaymentStatus, string> = {
+  const getPaymentLabel = (status: SituacaoPagamento) => {
+    const labels: Record<SituacaoPagamento, string> = {
+      permuta: 'Permuta',
       pago: 'Pago',
       sinal: 'Sinal',
       nao_pago: 'Não Pago',
@@ -143,7 +146,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
       filters.push(`Status: ${getConfirmationLabel(selectedConfirmation as ConfirmationStatus)}`);
     }
     if (selectedPayment !== 'todos') {
-      filters.push(`Pagamento: ${getPaymentLabel(selectedPayment as PaymentStatus)}`);
+      filters.push(`Pagamento: ${getPaymentLabel(selectedPayment as SituacaoPagamento)}`);
     }
     return filters.length > 0 ? filters.join(' | ') : 'Todos';
   };
@@ -186,8 +189,8 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
       getConfirmationLabel(a.confirmationStatus),
       formatCurrency(a.amount),
       formatCurrency(a.paidAmount),
-      formatCurrency(a.amount - a.paidAmount),
-      getPaymentLabel(a.paymentStatus),
+      formatCurrency(saldoAReceberEmDinheiro(a, corte)),
+      getPaymentLabel(situacaoPagamento(a, corte)),
       a.notes || '',
     ]);
 
@@ -272,8 +275,8 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
         getConfirmationLabel(a.confirmationStatus),
         a.amount.toFixed(2).replace('.', ','),
         a.paidAmount.toFixed(2).replace('.', ','),
-        (a.amount - a.paidAmount).toFixed(2).replace('.', ','),
-        getPaymentLabel(a.paymentStatus),
+        saldoAReceberEmDinheiro(a, corte).toFixed(2).replace('.', ','),
+        getPaymentLabel(situacaoPagamento(a, corte)),
         (a.notes || '').replace(/;/g, ','),
       ].join(';');
     });
@@ -458,6 +461,7 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
                   <SelectItem value="pago">Pago</SelectItem>
                   <SelectItem value="sinal">Sinal</SelectItem>
                   <SelectItem value="nao_pago">Não Pago</SelectItem>
+                  <SelectItem value="permuta">Permuta</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -560,9 +564,9 @@ export default function RelatorioAgendamentos({ embedded = false }: Props = {}) 
                         </TableCell>
                         <TableCell className={cn(
                           "text-right text-sm",
-                          (a.amount - a.paidAmount) > 0 ? "text-warning" : "text-muted-foreground"
+                          saldoAReceberEmDinheiro(a, corte) > 0 ? "text-warning" : "text-muted-foreground"
                         )}>
-                          {formatCurrency(a.amount - a.paidAmount)}
+                          {formatCurrency(saldoAReceberEmDinheiro(a, corte))}
                         </TableCell>
                         <TableCell>
                           <Badge 

@@ -22,6 +22,7 @@ import { useApp } from '@/contexts/AppContext';
 import { AppointmentChips } from '@/components/ds/AppointmentChips';
 import { getCorServico } from '@/lib/corServico';
 import { useAvisoCreditoPermuta } from '@/hooks/useAvisoCreditoPermuta';
+import { situacaoPagamento, saldoAReceberEmDinheiro } from '@/lib/permuta';
 
 
 interface AppointmentPreviewProps {
@@ -42,11 +43,6 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-const getPaymentStatus = (appointment: Appointment) => {
-  if (appointment.paidAmount >= appointment.amount) return 'pago';
-  if (appointment.paidAmount > 0) return 'sinal';
-  return 'nao_pago';
-};
 
 const formatWhatsAppMessage = (appointment: Appointment) => {
   const date = format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR });
@@ -59,8 +55,7 @@ Passando para lembrar do seu agendamento:
 📅 Data: ${date}
 ⏰ Horário: ${time}
 💅 Serviço: ${appointment.service}
-💰 Valor: ${formatCurrency(appointment.amount)}
-
+${appointment.isPermuta ? '' : `💰 Valor: ${formatCurrency(appointment.amount)}\n`}
 Em caso de imprevistos ou necessidade de cancelamento, por favor entre em contato por este WhatsApp o mais breve possível.
 
 Aguardamos você! ✨`;
@@ -101,10 +96,12 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
 
   const appointmentDate = new Date(appointment.date);
   const isAppointmentToday = isToday(appointmentDate);
-  const paymentStatus = getPaymentStatus(appointment);
   const appointmentService = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
   const resolvedServiceColor = getCorServico(appointmentService) ?? serviceColor;
   const { data: userSettings } = useUserSettings();
+  const corte = userSettings?.permuta_corte_em;
+  const paymentStatus = situacaoPagamento(appointment, corte);
+  const emPermuta = paymentStatus === 'permuta';
   const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
   const reserva = appointment.caixaReservaValorAplicado ?? userSettings?.caixa_reserva_valor ?? 0;
   const showCaixaSplit =
@@ -112,8 +109,7 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
   const caixaEmpresa = Math.min(appointment.paidAmount, reserva);
   const caixaPessoal = appointment.paidAmount - caixaEmpresa;
 
-  // Permuta também usa o "$ Receber" — a baixa vai para uma conta de permuta.
-  const hasBalance = appointment.paidAmount < appointment.amount;
+  const hasBalance = saldoAReceberEmDinheiro(appointment, corte) > 0;
   const canDelete = appointment.paidAmount === 0;
   const proximoPasso = PROXIMO_PASSO[appointment.confirmationStatus];
 
@@ -231,7 +227,13 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
       )}
 
       <div className="border-t border-border pt-2 flex items-center justify-between gap-1">
-        <MoneyDisplay value={appointment.amount} size="sm" className="text-primary shrink-0" />
+        {emPermuta ? (
+          <p className="shrink-0 text-sm text-muted-foreground tabular-nums">
+            <span className="font-semibold">{formatCurrency(appointment.amount)}</span> <span className="text-xs">em permuta</span>
+          </p>
+        ) : (
+          <MoneyDisplay value={appointment.amount} size="sm" className="text-primary shrink-0" />
+        )}
         <div className="flex shrink-0">
           <Button variant="ghost" size="icon" className="h-11 w-11 text-success" aria-label="WhatsApp" title="WhatsApp"
             disabled={!hasPhone} onClick={() => window.open(whatsappLink, '_blank', 'noopener,noreferrer')}>
@@ -245,16 +247,21 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
               {proximoPasso.label}
             </Button>
           )}
+{!emPermuta && (
           <Button variant="ghost" size="icon" className="h-11 w-11 text-success" aria-label="Registrar pagamento" title="Registrar pagamento"
             disabled={!hasBalance || !onReceive} onClick={() => onReceive?.(appointment)}>
             <DollarSign className="w-4 h-4" />
           </Button>
+          )}
           <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Mais ações" title="Mais ações" onClick={() => setMoreOpen(true)}>
             <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
       </div>
-      {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
+      {emPermuta && appointment.paidAmount > 0 && (
+        <p className="text-xs text-muted-foreground">{formatCurrency(appointment.paidAmount)} em dinheiro · {formatCurrency(Math.max(0, appointment.amount - appointment.paidAmount))} em permuta</p>
+      )}
+      {!emPermuta && appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
         <p className="text-xs text-muted-foreground">Recebido: {formatCurrency(appointment.paidAmount)}</p>
       )}
       {showCaixaSplit && (
@@ -285,6 +292,11 @@ export function AppointmentPreview({ appointment, serviceColor, onEdit, onDelete
                   <CalendarPlus className="w-5 h-5" /> Google Calendar
                 </a>
               </Button>
+              {emPermuta && onReceive && (
+                <Button variant="ghost" className="h-[52px] w-full justify-start gap-3" onClick={() => { setMoreOpen(false); onReceive(appointment); }}>
+                  <DollarSign className="w-5 h-5" /> Recebeu algo em dinheiro?
+                </Button>
+              )}
               <div className="border-t border-border my-2" />
               <Button variant="ghost" className="h-[52px] w-full justify-start gap-3 text-destructive hover:text-destructive" disabled={!canDelete}
                 onClick={() => { setMoreOpen(false); onDelete(appointment.id); }}>

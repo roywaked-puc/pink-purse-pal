@@ -44,7 +44,7 @@ import { AssinaturaNecessariaError } from '@/lib/assinatura';
 
 import { toast } from 'sonner';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { preferePermuta } from '@/lib/permuta';
+import { preferePermuta , situacaoPagamento } from '@/lib/permuta';
 import { useAvisoCreditoPermuta } from '@/hooks/useAvisoCreditoPermuta';
 
 export interface AppointmentPrefill {
@@ -576,8 +576,7 @@ export function AppointmentForm({ open, onOpenChange, appointment, onDelete, pre
                 <Label>Status do Pagamento</Label>
                 <Input 
                   value={
-                    appointment.paidAmount >= appointment.amount ? 'Pago' :
-                    appointment.paidAmount > 0 ? 'Sinal' : 'Não pago'
+                    ({ pago: 'Pago', sinal: 'Sinal', nao_pago: 'Não pago', permuta: 'Permuta' } as const)[situacaoPagamento(appointment, settings?.permuta_corte_em)]
                   }
                   disabled 
                   className="bg-muted"

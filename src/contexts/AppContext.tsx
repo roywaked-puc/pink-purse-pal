@@ -1,3 +1,4 @@
+import { saldoAReceberEmDinheiro } from '@/lib/permuta';
 import { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { Transaction, Appointment, Category, Account, Client, Service } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -204,9 +205,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getAppointmentsWithBalance = useCallback((clientId?: string): Appointment[] => {
     return appointments.filter(a => {
-      // Permuta é troca de serviço — nunca gera movimentação financeira.
+      // Permuta sem corte: troca de serviço, nunca entra. Depois do corte: saldo em dinheiro é 0.
       if (a.isPermuta && !settings?.permuta_corte_em) return false;
-      const hasBalance = a.amount - a.paidAmount > 0;
+      const hasBalance = saldoAReceberEmDinheiro(a, settings?.permuta_corte_em) > 0;
       if (clientId) {
         return hasBalance && a.clientId === clientId;
       }

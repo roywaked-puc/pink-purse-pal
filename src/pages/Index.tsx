@@ -1,3 +1,4 @@
+import { saldoAReceberEmDinheiro } from '@/lib/permuta';
 import { useState } from 'react';
 import { format, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -78,7 +79,7 @@ const Index = () => {
       const d = new Date(a.date);
       const isFuture = d >= new Date() && !isToday(d);
       const isCompleted = a.confirmationStatus === 'atendido' || a.confirmationStatus === 'cancelado';
-      const isPaid = a.paidAmount >= a.amount;
+      const isPaid = saldoAReceberEmDinheiro(a, userSettings?.permuta_corte_em) <= 0;
       return matchesSearch(a) && isFuture && (!isCompleted || !isPaid);
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -89,7 +90,7 @@ const Index = () => {
       const d = new Date(a.date);
       const isPast = d < new Date() && !isToday(d);
       const isNotCompleted = a.confirmationStatus === 'pendente' || a.confirmationStatus === 'confirmado';
-      const isNotPaid = a.paidAmount < a.amount;
+      const isNotPaid = saldoAReceberEmDinheiro(a, userSettings?.permuta_corte_em) > 0;
       return (
         matchesSearch(a) &&
         isPast &&

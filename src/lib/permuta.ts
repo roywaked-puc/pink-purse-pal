@@ -19,3 +19,15 @@ export function creditoAtendimentoPermuta(agendamento: Appointment, corte: strin
 export function contaPermitidaRecebimento(conta: Account, agendamentoPermuta: boolean, corte: string | null | undefined) {
   return corte ? conta.type !== 'permuta' : !agendamentoPermuta || conta.type === 'permuta';
 }
+export type SituacaoPagamento = 'pago' | 'sinal' | 'nao_pago' | 'permuta';
+type AgendamentoPagamento = Pick<Appointment, 'isPermuta' | 'date' | 'paymentStatus' | 'amount' | 'paidAmount'>;
+/** Situação exibida: permuta depois do corte vira 'permuta'; o resto usa o status salvo. */
+export function situacaoPagamento(a: AgendamentoPagamento, permutaCorteEm: string | null | undefined): SituacaoPagamento {
+  if (a.isPermuta && permutaCorteEm && new Date(a.date).getTime() >= new Date(permutaCorteEm).getTime()) return 'permuta';
+  return a.paymentStatus;
+}
+/** Quanto falta receber em dinheiro: 0 para permuta depois do corte; senão total − pago, piso 0. */
+export function saldoAReceberEmDinheiro(a: AgendamentoPagamento, permutaCorteEm: string | null | undefined): number {
+  if (situacaoPagamento(a, permutaCorteEm) === 'permuta') return 0;
+  return Math.max(0, a.amount - (a.paidAmount || 0));
+}

@@ -1,4 +1,6 @@
+import { StatusBadge } from '@/components/ds/StatusBadge';
 import { useState, useMemo } from 'react';
+import { situacaoPagamento, saldoAReceberEmDinheiro } from '@/lib/permuta';
 import { Plus, Calendar, DollarSign, MessageCircle, List, CalendarDays, FileText, Clock, User, Pencil, Trash2, Check, CheckCheck, X, CalendarPlus, Search, Grid3X3 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format, isToday, isFuture, isPast, addMinutes } from 'date-fns';
@@ -40,8 +42,7 @@ Passando para lembrar do seu agendamento:
 📅 Data: ${date}
 ⏰ Horário: ${time}
 💅 Serviço: ${appointment.service}
-💰 Valor: ${formatCurrency(appointment.amount)}
-
+${appointment.isPermuta ? '' : `💰 Valor: ${formatCurrency(appointment.amount)}\n`}
 Em caso de imprevistos ou necessidade de cancelamento, por favor entre em contato por este WhatsApp o mais breve possível.
 
 Aguardamos você! ✨`;
@@ -54,12 +55,6 @@ const formatCurrency = (value: number) => {
     style: 'currency',
     currency: 'BRL',
   }).format(value);
-};
-
-const getPaymentStatus = (appointment: Appointment) => {
-  if (appointment.paidAmount >= appointment.amount) return 'pago';
-  if (appointment.paidAmount > 0) return 'sinal';
-  return 'nao_pago';
 };
 
 const formatGoogleCalendarUrl = (appointment: Appointment, durationMinutes: number = 60) => {
@@ -153,7 +148,7 @@ const Agendamentos = () => {
     if (apt.confirmationStatus !== 'atendido') {
       updateConfirmationStatus({ id: apt.id, status: 'atendido' });
     }
-    const stillHasBalance = apt.paidAmount < apt.amount;
+    const stillHasBalance = saldoAReceberEmDinheiro(apt, settings?.permuta_corte_em) > 0;
     if (stillHasBalance) {
       handleReceive(apt);
     }
@@ -162,8 +157,9 @@ const Agendamentos = () => {
   const renderAppointment = (appointment: Appointment, index: number) => {
     const appointmentDate = new Date(appointment.date);
     const isAppointmentToday = isToday(appointmentDate);
-    const paymentStatus = getPaymentStatus(appointment);
-    const hasBalance = appointment.paidAmount < appointment.amount;
+    const paymentStatus = situacaoPagamento(appointment, settings?.permuta_corte_em);
+    const emPermuta = paymentStatus === 'permuta';
+    const hasBalance = saldoAReceberEmDinheiro(appointment, settings?.permuta_corte_em) > 0;
     const canDelete = appointment.paidAmount === 0;
     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;
     const serviceColor = getCorServico(service);
@@ -236,14 +232,14 @@ const Agendamentos = () => {
             )}>
               {confirmationConfig.label}
             </span>
-            <span className={cn(
+            {emPermuta ? <StatusBadge status="permuta" className="px-2.5 py-1" /> : <span className={cn(
               "text-xs font-medium px-2.5 py-1 rounded-full",
               paymentStatus === 'pago' && "status-paid",
               paymentStatus === 'nao_pago' && "status-pending",
               paymentStatus === 'sinal' && "status-today"
             )}>
               {paymentStatus === 'pago' ? 'Pago' : paymentStatus === 'sinal' ? 'Sinal' : 'Não pago'}
-            </span>
+            </span>}
           </div>
         </div>
 
@@ -264,8 +260,18 @@ const Agendamentos = () => {
         <div className="flex items-center justify-between">
           <div>
             <AppointmentChips comIntervalo appointment={appointment} service={service} className="mb-0.5" />
-            <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>
-            {appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
+            {emPermuta ? (
+              <>
+                <p className="text-sm text-muted-foreground"><span className="font-semibold">{formatCurrency(appointment.amount)}</span> <span className="text-xs">em permuta</span></p>
+                {appointment.paidAmount > 0 && (
+                  <p className="text-xs text-muted-foreground">{formatCurrency(appointment.paidAmount)} em dinheiro · {formatCurrency(Math.max(0, appointment.amount - appointment.paidAmount))} em permuta</p>
+                )}
+                <button type="button" onClick={() => handleReceive(appointment)} className="min-h-[44px] text-xs text-muted-foreground underline underline-offset-2">
+                  Recebeu algo em dinheiro?
+                </button>
+              </>
+            ) : <p className="font-semibold text-primary">{formatCurrency(appointment.amount)}</p>}
+            {!emPermuta && appointment.paidAmount > 0 && appointment.paidAmount < appointment.amount && (
               <p className="text-xs text-muted-foreground">
                 Recebido: {formatCurrency(appointment.paidAmount)}
               </p>

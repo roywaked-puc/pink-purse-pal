@@ -30,12 +30,6 @@ const START_HOUR = 7;
 const END_HOUR = 21;
 const HOUR_HEIGHT = 60; // pixels per hour
 
-const getPaymentStatus = (appointment: Appointment) => {
-  if (appointment.paidAmount >= appointment.amount) return 'pago';
-  if (appointment.paidAmount > 0) return 'sinal';
-  return 'nao_pago';
-};
-
 const confirmationIcons = {
   pendente: Clock,
   confirmado: Check,
@@ -201,7 +195,6 @@ export function WeeklyCalendar({ appointments, onAppointmentClick }: WeeklyCalen
 
                 {/* Appointments */}
                 {dayAppointments.map((appointment) => {
-                  const status = getPaymentStatus(appointment);
                   const aptDate = new Date(appointment.date);
                   const endTime = addMinutes(aptDate, appointment.duration);
                     const service = appointment.serviceId ? getServiceById(appointment.serviceId) : undefined;

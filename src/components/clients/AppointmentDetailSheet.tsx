@@ -10,6 +10,7 @@ import { useClientPhotos, type ClientPhotoWithUrls } from '@/hooks/useClientPhot
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
+import { situacaoPagamento, saldoAReceberEmDinheiro } from '@/lib/permuta';
 import type { Appointment, Transaction } from '@/types';
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 const paymentStatusLabels: Record<string, string> = { pago: 'Pago', nao_pago: 'Não pago', sinal: 'Sinal' };
@@ -39,13 +40,8 @@ export function AppointmentDetailSheet({
 
   if (!appointment) return null;
 
-  const paymentStatus =
-    appointment.paidAmount >= appointment.amount
-      ? 'pago'
-      : appointment.paidAmount > 0
-        ? 'sinal'
-        : 'nao_pago';
-  const remaining = Math.max(appointment.amount - appointment.paidAmount, 0);
+  const paymentStatus = situacaoPagamento(appointment, userSettings?.permuta_corte_em);
+  const remaining = saldoAReceberEmDinheiro(appointment, userSettings?.permuta_corte_em);
 
   const caixaAtivo = !!userSettings?.caixa_reserva_ativo;
   const reserva = appointment.caixaReservaValorAplicado ?? userSettings?.caixa_reserva_valor ?? 0;
@@ -161,7 +157,7 @@ function AppointmentDetailContent({
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             <StatusBadge status={appointment.confirmationStatus} />
-            <span
+            {paymentStatus === 'permuta' ? <StatusBadge status="permuta" className="px-2.5 py-1" /> : <span
               className={cn(
                 'text-xs font-medium px-2.5 py-1 rounded-full',
                 paymentStatus === 'pago' && 'status-paid',
@@ -170,13 +166,19 @@ function AppointmentDetailContent({
               )}
             >
               {paymentStatusLabels[paymentStatus]}
-            </span>
+            </span>}
           </div>
           <div className="text-sm space-y-0.5">
             <p>
               Valor: <span className="font-semibold">{formatCurrency(appointment.amount)}</span>
+              {paymentStatus === 'permuta' && <span className="text-muted-foreground"> em permuta</span>}
             </p>
-            {appointment.paidAmount > 0 && (
+            {paymentStatus === 'permuta' && appointment.paidAmount > 0 && (
+              <p className="text-muted-foreground">
+                {formatCurrency(appointment.paidAmount)} em dinheiro · {formatCurrency(Math.max(0, appointment.amount - appointment.paidAmount))} em permuta
+              </p>
+            )}
+            {paymentStatus !== 'permuta' && appointment.paidAmount > 0 && (
               <p className="text-muted-foreground">
                 Recebido: {formatCurrency(appointment.paidAmount)}
                 {remaining > 0 && ` · falta ${formatCurrency(remaining)}`}
