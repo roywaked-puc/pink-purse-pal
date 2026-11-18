@@ -9,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { PrimeirosPassos } from '@/components/ajuda/PrimeirosPassos';
 import { ChatAjuda } from '@/components/ajuda/ChatAjuda';
 import { CardChatAssistente } from '@/components/ajuda/CardChatAssistente';
+import { CardFaleConosco } from '@/components/ajuda/CardFaleConosco';
 import { LogoBelafy } from '@/components/ds/LogoBelafy';
 import { comoFaco, secoesManual, normalizarBusca, type BlocoManual, type SecaoManual } from '@/content/manual';
 
@@ -175,6 +176,7 @@ const Ajuda = () => {
           )}
         </>
       )}
+      <CardFaleConosco />
     </MainLayout>
   );
 };
