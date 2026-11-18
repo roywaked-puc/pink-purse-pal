@@ -19,7 +19,7 @@ atendimento → pagamento → financeiro → retorno/CRM → relatórios.
 - **Idioma do domínio: português.** Rotas, tipos, enums e status em pt-BR — decisão consciente.
 
 **URLs**
-- Produção (domínio próprio): https://app.marcinhacilios.com.br
+- Produção (domínio próprio, primário): https://app.belafy.com.br
 - Publicado (Lovable): https://pink-purse-pal.lovable.app
 
 ## 2. Usuário e prioridades de UX
