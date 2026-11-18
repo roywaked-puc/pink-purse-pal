@@ -1,3 +1,4 @@
+import { NOME_APP } from '@/lib/constantes';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -134,7 +135,7 @@ export function BoasVindasSheet() {
             ))}
           </div>
           <SheetTitle className="text-lg pt-3">
-            {passo === 0 ? 'Bem-vinda à Belafy' : titulos[passo]}
+            {passo === 0 ? `Bem-vinda à ${NOME_APP}` : titulos[passo]}
           </SheetTitle>
           <SheetDescription className="text-sm">
             {passo === 0 ? 'Comece pela sua marca. É ela que suas clientes vão ver.' : descricoes[passo]}

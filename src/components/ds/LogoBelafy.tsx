@@ -1,3 +1,4 @@
+import { NOME_APP } from '@/lib/constantes';
 import { cn } from '@/lib/utils';
 
 type VarianteLogo = 'claro' | 'escuro' | 'mono';
@@ -29,7 +30,7 @@ export function LogoBelafy({ variante = 'claro', tamanho = 32, somenteSimbolo = 
   return (
     <span
       role="img"
-      aria-label="Belafy"
+      aria-label={NOME_APP}
       className={cn('inline-flex items-center', className)}
       style={{ gap: tamanho * 0.25 }}
     >

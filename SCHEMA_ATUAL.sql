@@ -1,5 +1,5 @@
 -- =====================================================================
--- SCHEMA_ATUAL.sql — Pink Purse Pal
+-- SCHEMA_ATUAL.sql — Belafy
 -- Estado consolidado do banco (Lovable Cloud / Postgres), NÃO histórico.
 -- Gerado a partir de supabase/migrations/ (24 migrações, até 2026-09-05).
 -- Referência rápida para consultas — a fonte de verdade real continua

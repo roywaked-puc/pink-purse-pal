@@ -1,4 +1,4 @@
-# BÍBLIA.md — Pink Purse Pal (App Marcinha Cílios)
+# BÍBLIA.md — Belafy (App Marcinha Cílios)
 
 > Documento **de produto e domínio**: o "o quê" e o "porquê".
 > Para regras de execução/código do agente, veja `CLAUDE.md`.
@@ -8,7 +8,7 @@
 
 ## 1. Identidade do produto
 
-**Pink Purse Pal** é um ERP + Agenda + CRM para **profissionais autônomas da beleza**
+**Belafy** é um ERP + Agenda + CRM para **profissionais autônomas da beleza**
 (lash designer, sobrancelhas, nail designer, esteticista, cabeleireira, maquiadora).
 Cobre o ciclo completo da cliente: cadastro → anamnese → fotos → agendamento →
 atendimento → pagamento → financeiro → retorno/CRM → relatórios.

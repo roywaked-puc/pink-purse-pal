@@ -55,3 +55,4 @@
 - [x] Adicionar chat-ajuda autenticado com manual espelhado, streaming, 10 mensagens e 1.000 caracteres por mensagem, sem acesso a dados.
 - [x] Adicionar Drawer na Ajuda com histórico em memória, sugestões e tratamento seguro de erros.
 - [x] Testar limites, autenticação, respostas reais e fechamento em celular/desktop; documentar arquitetura. Seis testes locais, rejeição real de 11 mensagens/1.001 caracteres, JWT inválido 401, recusas de dados/saúde e avisos simulados 429/402 com pergunta preservada.
+- [x] Renomear app para Belafy (nome central em src/lib/constantes.ts; URLs/infra preservadas).
