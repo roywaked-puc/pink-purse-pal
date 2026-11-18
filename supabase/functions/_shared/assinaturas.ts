@@ -14,7 +14,7 @@ export async function autenticar(req: Request) {
 }
 export function origem(req: Request) {
   const origin = req.headers.get('origin');
-  const permitidas = ['http://localhost:8080', 'https://app.belafy.com.br', 'https://app.marcinhacilios.com.br', 'https://pink-purse-pal.lovable.app', 'https://id-preview--4fe47bd7-5174-4e32-962b-5d239f25105c.lovable.app'];
+  const permitidas = ['http://localhost:8080', 'https://app.belafy.com.br', 'https://pink-purse-pal.lovable.app', 'https://id-preview--4fe47bd7-5174-4e32-962b-5d239f25105c.lovable.app'];
   if (!origin || !permitidas.includes(origin)) throw new Error('ORIGEM_INVALIDA');
   return origin;
 }
