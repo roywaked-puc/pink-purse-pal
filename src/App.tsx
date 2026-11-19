@@ -23,6 +23,8 @@ import NotFound from "./pages/NotFound";
 import Ajuda from "./pages/Ajuda";
 import DocumentoLegal from "./pages/DocumentoLegal";
 import { Loader2 } from "lucide-react";
+import { useExclusaoConta } from '@/hooks/useExclusaoConta';
+import { ContaEmExclusao } from '@/components/conta/ContaEmExclusao';
 
 const queryClient = new QueryClient();
 
@@ -40,7 +42,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-  
+
+  return <GuardaExclusaoConta>{children}</GuardaExclusaoConta>;
+}
+
+/** Com exclusão agendada, mostra só a tela de reativação. Em erro de consulta, não bloqueia o app. */
+function GuardaExclusaoConta({ children }: { children: React.ReactNode }) {
+  const { data: exclusao, isLoading } = useExclusaoConta();
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (exclusao) return <ContaEmExclusao exclusao={exclusao} />;
   return <>{children}</>;
 }
 

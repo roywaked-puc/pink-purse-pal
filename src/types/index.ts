@@ -13,6 +13,13 @@ export interface ResumoAssinatura {
   tem_customer: boolean;
 }
 
+/** Exclusão de conta agendada (30 dias para desistir). */
+export interface ExclusaoConta {
+  solicitado_em: string;
+  excluir_apos: string;
+  reembolsado: boolean;
+}
+
 export interface Transaction {
   id: string;
   date: Date;

@@ -144,7 +144,7 @@ export const termos: DocumentoLegal = {
         },
         {
           "tipo": "paragrafo",
-          "texto": "Cancelamento, falha de pagamento ou fim do teste não apagam seus dados."
+          "texto": "Cancelamento, falha de pagamento ou fim do teste não apagam seus dados. Se você excluir a conta em até 7 dias após a primeira contratação de um plano pago, o valor é devolvido automaticamente."
         }
       ]
     },
@@ -254,7 +254,7 @@ export const termos: DocumentoLegal = {
       "blocos": [
         {
           "tipo": "paragrafo",
-          "texto": "Você pode pedir o encerramento da conta a qualquer momento por belafy@hotmail.com. Exporte seus dados antes: após o encerramento, eles são excluídos em até 30 dias, salvo o que a lei nos obriga a guardar."
+          "texto": "Você pode excluir sua conta a qualquer momento em Configurações → Excluir minha conta (ou pedir por belafy@hotmail.com). A assinatura é cancelada na hora e você tem 30 dias para desistir, entrando de novo e reativando a conta. Depois desse prazo, todos os dados da conta, inclusive fotos e fichas de anamnese assinadas, são apagados de vez, salvo o que a lei nos obriga a guardar. Exporte seus dados antes."
         },
         {
           "tipo": "paragrafo",
@@ -530,8 +530,8 @@ export const privacidade: DocumentoLegal = {
               "Enquanto a conta existir"
             ],
             [
-              "Após o encerramento da conta",
-              "Exclusão em até 30 dias"
+              "Após o pedido de exclusão da conta",
+              "30 dias para desistir; depois, exclusão definitiva"
             ],
             [
               "Registros de acesso",

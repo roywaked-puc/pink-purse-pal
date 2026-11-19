@@ -620,6 +620,21 @@ _Exclusão dos totais em dinheiro_
   `invoice.paid` com valor pago concede Pro**; checkout concluído sozinho não concede. Aplicação
   atômica por `aplicar_evento_stripe` com deduplicação em `eventos_stripe`; eventos de
   assinaturas antigas não sobrescrevem a atual; o fim do período pago nunca retrocede.
+- **Cancelar assinatura (18/11/2026):** botão “Cancelar assinatura” no Meu Plano, só com Pro
+  vivo (`active`/`past_due`/`trialing`), com confirmação. Desliga a renovação
+  (`cancel_at_period_end`) via Edge Function `cancelar-assinatura`; o Pro segue até o fim do
+  período pago e “Desfazer cancelamento” religa. Com Pro vivo, “Assinar Pro” fica oculto.
+  Cancelamento comum **não estorna** (arrependimento de 7 dias segue por e-mail).
+- **Excluir conta (18/11/2026):** “Excluir minha conta” no fim de Configurações, confirmação
+  digitando EXCLUIR. Edge Function `excluir-conta`: encerra a cobrança primeiro (até 7 dias da
+  primeira cobrança paga → **estorno automático** e cancelamento imediato; depois disso só desliga a
+  renovação) e então agenda a exclusão em `contas_exclusao` para **30 dias**. Nesse prazo o app
+  mostra só a tela “Sua conta será excluída” (Reativar / Sair); reativar não religa a assinatura
+  sozinho. Vencido o prazo, `purgar-contas-excluidas` (agendada 1×/dia, segredo
+  `PURGA_CONTAS_SEGREDO`) cancela o que restar no Stripe sem estorno, roda `purgar_dados_conta`
+  (todas as tabelas `public` com `user_id`, inclusive anamnese assinada), apaga as pastas
+  `{user_id}/` de todos os buckets e remove o usuário do Auth. Fica só o registro mínimo
+  (datas, `stripe_customer_id`, sem e-mail) para fins fiscais.
 - **Separação do financeiro:** mensalidade da Belafy **não vira movimentação** em
   `transactions`; nenhum dado de cartão é armazenado.
 - **A confirmar:** conexão da chave Stripe de produção, cadastro do webhook live e
@@ -667,6 +682,9 @@ serviço, cor própria de manutenção e passo Próxima manutenção / `Schedule
    silenciosamente; usar status quando aplicável. Confirmar sempre antes de excluir.
    Na migração de permuta, transações legadas são preservadas, nunca convertidas ou apagadas.
 3. **Anamnese assinada é imutável** — versionar.
+   Única exceção: a purga da conta inteira, após o prazo de 30 dias do pedido de exclusão da
+   titular (ver 4.14). O guardrail 2 também vale dentro de uma conta ativa, não contra a exclusão
+   da conta pedida pela própria dona.
 4. **Permuta não entra em receita nem em meta.** Só dinheiro real recebido (recebimento em
    dinheiro num atendimento em permuta ou acerto de permuta) entra no caixa.
 5. **Sinal ≠ pagamento** — são estados distintos, não percentual.

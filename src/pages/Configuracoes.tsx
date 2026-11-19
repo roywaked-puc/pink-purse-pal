@@ -13,6 +13,7 @@ import { CaixaSettings } from '@/components/settings/CaixaSettings';
 import { AnamneseTemplatesSettings } from '@/components/settings/AnamneseTemplatesSettings';
 import { MinhaMarcaSettings } from '@/components/settings/MinhaMarcaSettings';
 import { MeuPlano } from '@/components/assinatura/MeuPlano';
+import { ExcluirConta } from '@/components/conta/ExcluirConta';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
@@ -282,6 +283,8 @@ const Configuracoes = () => {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+
+        <ExcluirConta />
 
         <nav aria-label="Documentos legais" className="flex flex-wrap justify-center gap-x-6">
           <Button variant="link" asChild className="min-h-11 px-0"><Link to="/termos">Termos de Uso</Link></Button>
