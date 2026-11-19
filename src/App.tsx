@@ -23,11 +23,14 @@ import NotFound from "./pages/NotFound";
 import Ajuda from "./pages/Ajuda";
 import DocumentoLegal from "./pages/DocumentoLegal";
 import { Loader2 } from "lucide-react";
+import { useExclusaoConta } from '@/hooks/useExclusaoConta';
+import { ContaEmExclusao } from '@/components/conta/ContaEmExclusao';
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const exclusao = useExclusaoConta();
   
   if (loading) {
     return (
@@ -40,6 +43,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
+  if (exclusao.isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (!exclusao.isError && exclusao.data) return <ContaEmExclusao exclusao={exclusao.data} />;
   
   return <>{children}</>;
 }

@@ -92,6 +92,20 @@
       "when": 1794929633543,
       "tag": "0012_primeiros_passos_oculto",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795049035837,
+      "tag": "0013_cancelamento_exclusao_conta",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795049296927,
+      "tag": "0014_restringir_escrita_exclusao",
+      "breakpoints": true
     }
   ]
 }

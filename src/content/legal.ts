@@ -136,11 +136,11 @@ export const termos: DocumentoLegal = {
       "blocos": [
         {
           "tipo": "paragrafo",
-          "texto": "Você pode cancelar a qualquer momento em Configurações → Meu Plano. O acesso Pro continua até o fim do período já pago e depois a conta volta ao plano Gratuito."
+          "texto": "Você pode cancelar a qualquer momento em Configurações → Meu Plano. A renovação automática é desligada, sem estorno no cancelamento comum. O acesso Pro continua até o fim do período já pago; depois, somente a criação de novos agendamentos exige assinatura. Seus dados não são apagados, e você pode desfazer o cancelamento até o fim do período."
         },
         {
           "tipo": "paragrafo",
-          "texto": "Se você pedir o cancelamento em até 7 dias após a primeira contratação de um plano pago, devolvemos o valor integral (direito de arrependimento, art. 49 do Código de Defesa do Consumidor). Após esse prazo, não há reembolso proporcional do período em curso, inclusive no plano anual."
+          "texto": "Excluir a conta em até 7 dias da primeira contratação paga gera estorno automático do valor pago e encerramento imediato do Pro (direito de arrependimento, art. 49 do Código de Defesa do Consumidor). Para exercer esse direito sem excluir a conta, contate belafy@hotmail.com. Após esse prazo, não há reembolso proporcional do período em curso, inclusive no plano anual."
         },
         {
           "tipo": "paragrafo",
@@ -254,7 +254,7 @@ export const termos: DocumentoLegal = {
       "blocos": [
         {
           "tipo": "paragrafo",
-          "texto": "Você pode pedir o encerramento da conta a qualquer momento por belafy@hotmail.com. Exporte seus dados antes: após o encerramento, eles são excluídos em até 30 dias, salvo o que a lei nos obriga a guardar."
+          "texto": "Você pode excluir sua conta em Configurações → Excluir minha conta. A cobrança da assinatura é encerrada na hora: em até 7 dias da primeira contratação paga, há estorno e cancelamento imediato; fora desse prazo, desligamos a renovação automática. Você tem 30 dias para desistir, entrando novamente e reativando a conta; isso não religa a assinatura automaticamente. Depois, todos os dados são apagados de vez, inclusive fotos, anamneses assinadas e login, preservando apenas registros mínimos exigidos pela legislação fiscal. Exporte seus dados antes: o CSV não inclui fotos nem fichas de anamnese."
         },
         {
           "tipo": "paragrafo",
@@ -531,7 +531,7 @@ export const privacidade: DocumentoLegal = {
             ],
             [
               "Após o encerramento da conta",
-              "Exclusão em até 30 dias"
+              "30 dias para desistir; depois, exclusão definitiva"
             ],
             [
               "Registros de acesso",

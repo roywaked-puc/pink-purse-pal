@@ -402,6 +402,7 @@ export type Database = {
           atualizado_em: string
           cancelar_no_fim_do_periodo: boolean
           criado_em: string
+          estorno_exclusao_em: string | null
           isento: boolean
           periodicidade: string | null
           periodo_atual_fim: string | null
@@ -416,6 +417,7 @@ export type Database = {
           atualizado_em?: string
           cancelar_no_fim_do_periodo?: boolean
           criado_em?: string
+          estorno_exclusao_em?: string | null
           isento?: boolean
           periodicidade?: string | null
           periodo_atual_fim?: string | null
@@ -430,6 +432,7 @@ export type Database = {
           atualizado_em?: string
           cancelar_no_fim_do_periodo?: boolean
           criado_em?: string
+          estorno_exclusao_em?: string | null
           isento?: boolean
           periodicidade?: string | null
           periodo_atual_fim?: string | null
@@ -558,6 +561,48 @@ export type Database = {
             referencedColumns: ["conta_legada_id"]
           },
         ]
+      }
+      contas_exclusao: {
+        Row: {
+          cancelada_em: string | null
+          concluida_em: string | null
+          email: string | null
+          excluir_apos: string
+          id: string
+          reembolsado: boolean
+          solicitado_em: string
+          status: string
+          stripe_customer_id: string | null
+          ultimo_erro: string | null
+          user_id: string
+        }
+        Insert: {
+          cancelada_em?: string | null
+          concluida_em?: string | null
+          email?: string | null
+          excluir_apos?: string
+          id?: string
+          reembolsado?: boolean
+          solicitado_em?: string
+          status?: string
+          stripe_customer_id?: string | null
+          ultimo_erro?: string | null
+          user_id: string
+        }
+        Update: {
+          cancelada_em?: string | null
+          concluida_em?: string | null
+          email?: string | null
+          excluir_apos?: string
+          id?: string
+          reembolsado?: boolean
+          solicitado_em?: string
+          status?: string
+          stripe_customer_id?: string | null
+          ultimo_erro?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       eventos_stripe: {
         Row: {
@@ -1043,12 +1088,15 @@ export type Database = {
         Args: { p_appointment_id: string }
         Returns: undefined
       }
+      exclusao_conta_pendente: { Args: never; Returns: Json }
       gerar_modelo_inicial: {
         Args: { p_email: string; p_nome?: string; p_segmento?: string }
         Returns: undefined
       }
       google_calendar_secret_configured: { Args: never; Returns: boolean }
       plano_efetivo: { Args: never; Returns: string }
+      purgar_dados_conta: { Args: { p_user_id: string }; Returns: undefined }
+      reativar_conta_exclusao: { Args: { p_user_id: string }; Returns: boolean }
       registrar_acerto_permuta: {
         Args: {
           p_account_id: string

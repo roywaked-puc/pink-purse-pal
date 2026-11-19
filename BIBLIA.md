@@ -592,6 +592,10 @@ _Exclusão dos totais em dinheiro_
 
 ### 4.14 Assinaturas Belafy (Stripe)
 
+- **Cancelar assinatura:** Meu Plano permite desligar a renovação Pro e desfazer até o fim do período pago, com confirmação e sem estorno comum. `cancelar-assinatura` valida sessão, origem e vínculo Stripe; exclusão agendada bloqueia desfazer. Assinar Pro fica oculto enquanto há Pro ativo.
+- **Excluir conta:** Configurações → Excluir minha conta exige digitar EXCLUIR; recomenda exportar CSV (sem fotos/anamneses). `excluir-conta` encerra cobrança antes de agendar; até sete dias do primeiro pagamento, estorna com idempotência e encerra Pro imediatamente. Há 30 dias para desistir; a tela exclusiva permite Reativar ou Sair, sem religar a assinatura.
+- **Exclusão definitiva:** `contas_exclusao`, RPC própria e purga restrita a service_role; rotina diária apaga dados public, pastas de todos os buckets e login, com tentativas em falhas. Mantém registro fiscal mínimo e limpa o e-mail. A purga não afeta outras contas.
+
 - **Planos:** teste de **40 dias** a partir da criação da conta, sem cartão; **Pro Mensal
   R$ 39,90** e **Pro Anual R$ 359,00** (cobrado à vista; “economize 25%”). Sem plano gratuito,
   sem contagem mensal de agendamentos. As contas que já existiam antes da cobrança são
@@ -666,7 +670,7 @@ serviço, cor própria de manutenção e passo Próxima manutenção / `Schedule
 2. **Nunca apagar histórico**: movimentações, pagamentos, fotos e anamneses não são excluídos
    silenciosamente; usar status quando aplicável. Confirmar sempre antes de excluir.
    Na migração de permuta, transações legadas são preservadas, nunca convertidas ou apagadas.
-3. **Anamnese assinada é imutável** — versionar.
+3. **Anamnese assinada é imutável** — versionar. Exceção: purga integral da conta pedida pela titular, após 30 dias para desistência; inclui histórico, fotos e fichas assinadas.
 4. **Permuta não entra em receita nem em meta.** Só dinheiro real recebido (recebimento em
    dinheiro num atendimento em permuta ou acerto de permuta) entra no caixa.
 5. **Sinal ≠ pagamento** — são estados distintos, não percentual.

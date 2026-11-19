@@ -6,6 +6,8 @@ import { useApp } from '@/contexts/AppContext';
 import { useGerenciarAssinatura } from '@/hooks/useAssinatura';
 import { diasRestantesTeste } from '@/lib/assinatura';
 import { PaywallAssinatura } from './PaywallAssinatura';
+import { CancelarAssinatura } from './CancelarAssinatura';
+import { podeCancelarPro } from '../../../supabase/functions/_shared/exclusao-regras';
 
 const dataBr = (data: string) => new Date(data).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 export function MeuPlano() {
@@ -35,7 +37,8 @@ export function MeuPlano() {
     {assinatura.cancelar_no_fim_do_periodo && <p className="text-sm text-muted-foreground">Cancelamento agendado para o fim do período pago.</p>}
     {retorno === 'sucesso' && assinatura.estado !== 'pro' && <p role="status" className="text-sm text-muted-foreground">Aguardando confirmação do pagamento. O plano será atualizado automaticamente.</p>}
     {retorno === 'cancelado' && <p className="text-sm text-muted-foreground">Pagamento não concluído. Seu plano não foi alterado.</p>}
-    {assinatura.estado !== 'isento' && <Button className="min-h-11" onClick={() => setOpen(true)}>Assinar Pro</Button>}
+    {!['isento','pro'].includes(assinatura.estado) && <Button className="min-h-11" onClick={() => setOpen(true)}>Assinar Pro</Button>}
+    {podeCancelarPro(assinatura.estado,assinatura.status) && <CancelarAssinatura assinatura={assinatura} atualizar={atualizarAssinatura} />}
     {assinatura.tem_customer && <Button variant="outline" className="min-h-11 ml-2" disabled={portal.isPending} onClick={() => portal.mutate(undefined, { onError: e => toast.error(e.message) })}>Gerenciar assinatura</Button>}
     <PaywallAssinatura open={open} onOpenChange={setOpen} />
   </div>;

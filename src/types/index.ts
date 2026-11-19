@@ -3,6 +3,12 @@ export type TransactionScope = 'empresa' | 'pessoal';
 export type PaymentStatus = 'pago' | 'nao_pago' | 'sinal';
 export type ConfirmationStatus = 'pendente' | 'confirmado' | 'atendido' | 'cancelado' | 'retorno_previsto';
 
+export interface ExclusaoContaPendente {
+  solicitado_em: string;
+  excluir_apos: string;
+  reembolsado: boolean;
+}
+
 export interface ResumoAssinatura {
   estado: 'isento' | 'teste' | 'pro' | 'expirado';
   teste_ate: string;
