@@ -399,10 +399,13 @@ export type Database = {
       }
       assinaturas: {
         Row: {
+          acao_conta_ate: string | null
+          acao_conta_token: string | null
           atualizado_em: string
           cancelar_no_fim_do_periodo: boolean
           criado_em: string
           estorno_exclusao_em: string | null
+          exclusao_tentativa_em: string | null
           isento: boolean
           periodicidade: string | null
           periodo_atual_fim: string | null
@@ -414,10 +417,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          acao_conta_ate?: string | null
+          acao_conta_token?: string | null
           atualizado_em?: string
           cancelar_no_fim_do_periodo?: boolean
           criado_em?: string
           estorno_exclusao_em?: string | null
+          exclusao_tentativa_em?: string | null
           isento?: boolean
           periodicidade?: string | null
           periodo_atual_fim?: string | null
@@ -429,10 +435,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          acao_conta_ate?: string | null
+          acao_conta_token?: string | null
           atualizado_em?: string
           cancelar_no_fim_do_periodo?: boolean
           criado_em?: string
           estorno_exclusao_em?: string | null
+          exclusao_tentativa_em?: string | null
           isento?: boolean
           periodicidade?: string | null
           periodo_atual_fim?: string | null
@@ -441,6 +450,24 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           teste_ate?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      assinaturas_estornadas: {
+        Row: {
+          encerrada_em: string
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          encerrada_em: string
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          encerrada_em?: string
+          subscription_id?: string
           user_id?: string
         }
         Relationships: []
@@ -1089,11 +1116,19 @@ export type Database = {
         Returns: undefined
       }
       exclusao_conta_pendente: { Args: never; Returns: Json }
+      finalizar_acao_conta: {
+        Args: { p_token: string; p_user_id: string }
+        Returns: undefined
+      }
       gerar_modelo_inicial: {
         Args: { p_email: string; p_nome?: string; p_segmento?: string }
         Returns: undefined
       }
       google_calendar_secret_configured: { Args: never; Returns: boolean }
+      iniciar_acao_conta: {
+        Args: { p_token: string; p_user_id: string }
+        Returns: boolean
+      }
       plano_efetivo: { Args: never; Returns: string }
       purgar_dados_conta: { Args: { p_user_id: string }; Returns: undefined }
       reativar_conta_exclusao: { Args: { p_user_id: string }; Returns: boolean }

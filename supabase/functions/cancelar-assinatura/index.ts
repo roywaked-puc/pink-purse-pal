@@ -1,3 +1,4 @@
+import { iniciarAcaoConta, finalizarAcaoConta, bloquearExclusaoPendente } from '../_shared/acao-conta.ts';
 import { z } from 'npm:zod@3';
 import { banco, stripe, autenticar, origem, resposta } from '../_shared/assinaturas.ts';
 Deno.serve(async req => {
@@ -5,12 +6,15 @@ Deno.serve(async req => {
   if (req.method !== 'POST') return resposta({ error: 'Método não permitido.' }, 405);
   const user = await autenticar(req);
   if (!user) return resposta({ error: 'Entre novamente para continuar.' }, 401);
+  let token: string | null = null;
   try {
+    token = await iniciarAcaoConta(user.id);
     origem(req);
     const parsed = z.object({ acao: z.enum(['cancelar','desfazer']) }).strict().safeParse(await req.json());
     if (!parsed.success) return resposta({ error: 'Escolha cancelar ou desfazer.' }, 400);
     const db = banco();
     if (parsed.data.acao === 'desfazer') {
+      await bloquearExclusaoPendente(user.id);
       const { data, error } = await db.from('contas_exclusao').select('id').eq('user_id',user.id).eq('status','agendada').maybeSingle();
       if (error) throw error;
       if (data) return resposta({ error: 'Reative sua conta antes de desfazer o cancelamento.' }, 409);
@@ -28,4 +32,5 @@ Deno.serve(async req => {
     if (erro || salvo?.cancelar_no_fim_do_periodo !== cancelar) throw new Error('NAO_SALVO');
     return resposta({ cancelar_no_fim_do_periodo: cancelar });
   } catch { return resposta({ error: 'Não foi possível alterar a assinatura. Tente novamente.' },500); }
+  finally { await finalizarAcaoConta(user.id,token); }
 });

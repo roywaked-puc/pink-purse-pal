@@ -1,7 +1,7 @@
 import { banco, stripe } from './assinaturas.ts';
 import { elegivelReembolso } from './exclusao-regras.ts';
 
-export async function encerrarCobranca(userId: string, customerId: string | null, permitirEstorno: boolean) {
+export async function encerrarCobranca(userId: string, customerId: string | null, permitirEstorno: boolean, solicitadoEm = Date.now()) {
   if (!customerId) return false;
   const api = stripe();
   const customer = await api.customers.retrieve(customerId);
@@ -22,7 +22,7 @@ export async function encerrarCobranca(userId: string, customerId: string | null
     if (!pagoEm) throw new Error('DATA_PAGAMENTO_AUSENTE');
     return min === null ? pagoEm * 1000 : Math.min(min, pagoEm * 1000);
   }, null);
-  const estornar = permitirEstorno && elegivelReembolso(primeira);
+  const estornar = permitirEstorno && elegivelReembolso(primeira,solicitadoEm);
   // Stop billing before refunds; every operation is safe to retry after a partial provider failure.
   for (const sub of subs) {
     if (['canceled', 'incomplete_expired'].includes(sub.status)) continue;
@@ -37,13 +37,16 @@ export async function encerrarCobranca(userId: string, customerId: string | null
       let encontrou = false;
       for await (const payment of api.invoicePayments.list({ invoice: invoice.id, status: 'paid', limit: 100 })) {
         const pi = payment.payment.payment_intent;
-        if (!pi) throw new Error('PAGAMENTO_NAO_REEMBOLSAVEL');
-        const intent = await api.paymentIntents.retrieve(typeof pi === 'string' ? pi : pi.id);
-        const chargeId = typeof intent.latest_charge === 'string' ? intent.latest_charge : intent.latest_charge?.id;
+        const direta = payment.payment.charge;
+        console.info('exclusao-stripe etapa pagamento');
+        const intent = pi ? await api.paymentIntents.retrieve(typeof pi === 'string' ? pi : pi.id) : null;
+        const chargeId = direta ? (typeof direta === 'string' ? direta : direta.id) : (typeof intent?.latest_charge === 'string' ? intent.latest_charge : intent?.latest_charge?.id);
         if (!chargeId) throw new Error('COBRANCA_AUSENTE');
         encontrou = true;
+        console.info('exclusao-stripe etapa cobranca');
         const charge = await api.charges.retrieve(chargeId);
         if (!charge.refunded) {
+          console.info('exclusao-stripe etapa estorno');
           const refund = await api.refunds.create({ charge: chargeId, reason: 'requested_by_customer' }, { idempotencyKey: `belafy-exclusao-reembolso-${chargeId}` });
           if (refund.status !== 'succeeded' && refund.status !== 'pending') throw new Error('ESTORNO_FALHOU');
         }

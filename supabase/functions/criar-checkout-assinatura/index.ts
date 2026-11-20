@@ -1,3 +1,4 @@
+import { iniciarAcaoConta, finalizarAcaoConta, bloquearExclusaoPendente } from '../_shared/acao-conta.ts';
 import { z } from 'npm:zod@3';
 import { banco, stripe, resposta, autenticar, origem, preco } from '../_shared/assinaturas.ts';
 
@@ -6,9 +7,12 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return resposta({ error: 'Método não permitido.' }, 405);
   const user = await autenticar(req);
   if (!user) return resposta({ error: 'Entre novamente para assinar.' }, 401);
+  let token: string | null = null;
   try {
+    token = await iniciarAcaoConta(user.id);
     const parsed = z.object({ periodicidade: z.enum(['mensal', 'anual']) }).strict().safeParse(await req.json());
     if (!parsed.success) return resposta({ error: 'Escolha mensal ou anual.' }, 400);
+    await bloquearExclusaoPendente(user.id);
     const origin = origem(req);
     const db = banco();
     const api = stripe();
@@ -47,4 +51,5 @@ Deno.serve(async (req) => {
     console.error('criar-checkout-assinatura', err instanceof Error ? err.name : 'erro');
     return resposta({ error: 'Não foi possível abrir o pagamento. Tente novamente.' }, 500);
   }
+  finally { await finalizarAcaoConta(user.id,token); }
 });

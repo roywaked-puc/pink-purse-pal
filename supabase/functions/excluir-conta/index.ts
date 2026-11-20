@@ -1,3 +1,4 @@
+import { iniciarAcaoConta, finalizarAcaoConta } from '../_shared/acao-conta.ts';
 import { z } from 'npm:zod@3';
 import { banco, autenticar, origem, resposta } from '../_shared/assinaturas.ts';
 import { encerrarCobranca } from '../_shared/exclusao-stripe.ts';
@@ -7,7 +8,9 @@ Deno.serve(async req => {
   if (req.method !== 'POST') return resposta({ error: 'Método não permitido.' },405);
   const user = await autenticar(req);
   if (!user) return resposta({ error: 'Entre novamente para continuar.' },401);
+  let token: string | null = null;
   try {
+    token = await iniciarAcaoConta(user.id);
     origem(req);
     const parsed = esquema.safeParse(await req.json());
     if (!parsed.success) return resposta({ error: 'Confirme digitando EXCLUIR.' },400);
@@ -16,14 +19,19 @@ Deno.serve(async req => {
       const { data, error } = await db.rpc('reativar_conta_exclusao',{ p_user_id: user.id });
       if (error) throw error;
       if (!data) return resposta({ error: 'O prazo de reativação terminou.' },409);
+      const { error: limparErro } = await db.from('assinaturas').update({ exclusao_tentativa_em:null }).eq('user_id',user.id);
+      if (limparErro) throw limparErro;
       return resposta({ reativada: true });
     }
     const { data: existente, error: erroBusca } = await db.from('contas_exclusao').select('solicitado_em,excluir_apos,reembolsado').eq('user_id',user.id).eq('status','agendada').maybeSingle();
     if (erroBusca) throw erroBusca;
     if (existente) return resposta(existente);
-    const { data: a, error } = await db.from('assinaturas').select('stripe_customer_id').eq('user_id',user.id).maybeSingle();
+    const { data: a, error } = await db.from('assinaturas').select('stripe_customer_id,exclusao_tentativa_em').eq('user_id',user.id).maybeSingle();
     if (error) throw error;
-    const reembolsado = await encerrarCobranca(user.id,a?.stripe_customer_id ?? null,true);
+    const tentativa = a?.exclusao_tentativa_em ?? new Date().toISOString();
+    const { error: tentativaErro } = await db.from('assinaturas').update({ exclusao_tentativa_em:tentativa }).eq('user_id',user.id);
+    if (tentativaErro) throw tentativaErro;
+    const reembolsado = await encerrarCobranca(user.id,a?.stripe_customer_id ?? null,true,Date.parse(tentativa));
     const { data: salvo, error: erroSalvar } = await db.from('contas_exclusao').insert({ user_id: user.id, email: user.email ?? null, stripe_customer_id: a?.stripe_customer_id ?? null, reembolsado }).select('solicitado_em,excluir_apos,reembolsado').single();
     if (erroSalvar?.code === '23505') {
       const { data: repetido, error: e } = await db.from('contas_exclusao').select('solicitado_em,excluir_apos,reembolsado').eq('user_id',user.id).eq('status','agendada').single();
@@ -32,5 +40,9 @@ Deno.serve(async req => {
     }
     if (erroSalvar || !salvo) throw new Error('NAO_AGENDADA');
     return resposta(salvo);
-  } catch { return resposta({ error: 'Nada foi excluído. Tente novamente.' },500); }
+  } catch (error) {
+    console.error('excluir-conta', error instanceof Error ? error.name : 'erro', typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : 'sem_codigo');
+    return resposta({ error: 'Nada foi excluído. Tente novamente.' },500);
+  }
+  finally { await finalizarAcaoConta(user.id,token); }
 });

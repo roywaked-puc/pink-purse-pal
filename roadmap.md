@@ -1,8 +1,9 @@
 # Conta corrente de permuta — execução por etapas
-\n+# Cancelamento e exclusão da conta
-- [ ] Cancelar/desfazer renovação Pro com confirmação e validação Stripe.
-- [ ] Exclusão com confirmação EXCLUIR, estorno em 7 dias e reativação em 30 dias.
-- [ ] Purga restrita, rotina diária, textos legais e testes sem operações em contas reais.
+# Cancelamento e exclusão da conta
+- [x] Cancelar/desfazer renovação Pro com confirmação e validação Stripe.
+- [x] Exclusão com confirmação EXCLUIR, estorno em 7 dias e reativação em 30 dias.
+- [x] Purga restrita, rotina diária, textos legais e testes sem operações em contas reais.
+- [ ] Repetir estorno fictício após permissão Refunds habilitada.
 - [x] Etapa 1: migração 0009 aplicada com critério legado único, preferência independente, views, acerto atômico e congelamento; saldos vazios, corte nulo e 81 referências legadas conferidas, bruto/líquido iguais.
 - [x] Etapa 2: fonte atual Drizzle conferida; proteções e ativação testadas com ROLLBACK; revisão real validada em 360px/1280px, sugestões por frequência/nome, zero avisos positivos; confirmação bloqueada até Etapas 3–4, nenhuma conta ativada.
 - [x] Etapa 3: SQL de revisão consultado; comparação outubro/novembro registra Home estável e relatórios corrigidos pela exclusão legada; helper financeiro único, pendências sem permuta, acertos somente leitura e exclusão de cliente protegida; formulários condicionais validados por simulação, testes com ROLLBACK e ativação bloqueada.
