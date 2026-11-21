@@ -25,7 +25,6 @@ import DocumentoLegal from "./pages/DocumentoLegal";
 import { Loader2 } from "lucide-react";
 import { useExclusaoConta } from '@/hooks/useExclusaoConta';
 import { ContaEmExclusao } from '@/components/conta/ContaEmExclusao';
-import { Button } from '@/components/ui/button';
 
 const queryClient = new QueryClient();
 
@@ -46,8 +45,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (exclusao.isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (exclusao.data) return <ContaEmExclusao exclusao={exclusao.data} />;
-  if (exclusao.isError) return <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-background"><p>Não foi possível consultar sua conta.</p><Button onClick={() => void exclusao.refetch()}>Tentar novamente</Button></div>;
+  if (!exclusao.isError && exclusao.data) return <ContaEmExclusao exclusao={exclusao.data} />;
   
   return <>{children}</>;
 }

@@ -1,6 +1,6 @@
 # Architecture rules
 - Keep account deletion in service-only lifecycle functions with Stripe ownership checks and retry-safe refunds; a managed daily adapter authenticates scheduling and forwards the separate purge secret, while transactional purge locks all affected tables before temporarily disabling user triggers.
-- Persist refunded entitlement termination on the subscription and guard it against delayed webhook writes; reopening an account must never restore refunded access or renew billing.
+- Serialize account billing actions with service-only claims and preserve refunded subscription IDs in a private ledger; delayed webhooks and reopening must never restore refunded access or renew billing, and retry eligibility uses the original request timestamp.
 - Classify monetary barter exclusions only through `isTransacaoPermuta` using ID precedence over legacy text in the user's scoped accounts; real receipts on barter appointments must remain money.
 - Gate barter form behavior on the persisted activation cut, derive completion credit with the same view eligibility, and classify settlements via ledger transaction IDs before exposing mutations; this preserves legacy forms and settlement consistency.
 - Check client barter balances in both the delete hook and an invoker database trigger; the trigger prevents bypassing the UI safeguard.

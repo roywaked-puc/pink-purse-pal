@@ -113,6 +113,13 @@
       "when": 1795137264069,
       "tag": "0015_serializar_acoes_conta_proteger_estorno",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795297743614,
+      "tag": "0016_preservar_assinatura_estornada_original",
+      "breakpoints": true
     }
   ]
 }
