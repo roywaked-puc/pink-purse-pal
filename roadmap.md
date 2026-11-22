@@ -3,7 +3,7 @@
 - [x] Cancelar/desfazer renovação Pro com confirmação e validação Stripe.
 - [x] Exclusão com confirmação EXCLUIR, estorno em 7 dias e reativação em 30 dias.
 - [x] Purga restrita, rotina diária, textos legais e testes sem operações em contas reais.
-- [ ] Repetir estorno fictício e limpar clientes Stripe temporários: bloqueado pela permissão “Charges and Refunds Write” (charge_write), ainda recusada pelo Stripe; assinaturas de teste canceladas. Fixtures: cus_Vecn3xm327AjGX/sub_1UdJYEGUlATVOs8Msep4cHk1 e cus_Vf0MsXLJ8N9odF/sub_1UdgM9GUlATVOs8MXlGzogsh. Nenhuma cobrança real.
+- [x] Estorno fictício validado após liberar charge_write: R$ 39,90 succeeded, pedido repetido sem duplicar, persistência ao recarregar e reativação sem Pro conferidas no celular; quatro clientes Stripe fictícios removidos após cancelar assinaturas/estornar pagamentos, registros temporários de assinatura/exclusão limpos; nenhuma cobrança ou conta real alterada.
 - [x] Etapa 1: migração 0009 aplicada com critério legado único, preferência independente, views, acerto atômico e congelamento; saldos vazios, corte nulo e 81 referências legadas conferidas, bruto/líquido iguais.
 - [x] Etapa 2: fonte atual Drizzle conferida; proteções e ativação testadas com ROLLBACK; revisão real validada em 360px/1280px, sugestões por frequência/nome, zero avisos positivos; confirmação bloqueada até Etapas 3–4, nenhuma conta ativada.
 - [x] Etapa 3: SQL de revisão consultado; comparação outubro/novembro registra Home estável e relatórios corrigidos pela exclusão legada; helper financeiro único, pendências sem permuta, acertos somente leitura e exclusão de cliente protegida; formulários condicionais validados por simulação, testes com ROLLBACK e ativação bloqueada.
