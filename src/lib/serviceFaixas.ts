@@ -28,6 +28,17 @@ export function getFaixasDoServico(serviceId: string, services: Service[]): Faix
   );
 }
 
+/**
+ * Valida o "Até" de uma faixa que começa em `de` (regra do editor de faixas).
+ * `proximaAte` = fim da faixa seguinte; `outrosFins` = fins das demais faixas do serviço.
+ */
+export function erroAteFaixa(ate: number, de: number, proximaAte: number | undefined, outrosFins: number[]): string | null {
+  if (!(ate >= de)) return `Até precisa ser maior ou igual a ${de}`;
+  if (proximaAte != null && ate >= proximaAte) return `Não pode passar de ${proximaAte - 1} (fim da faixa seguinte é ${proximaAte})`;
+  if (outrosFins.includes(ate)) return 'Já existe uma faixa terminando nesse dia';
+  return null;
+}
+
 export function faixaDescription(nomePai: string, ate: number) {
   return `${nomePai.trim()} - manutenção de ${ate} dias`;
 }

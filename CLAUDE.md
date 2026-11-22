@@ -47,7 +47,15 @@ npm run lint       # ESLint
 npm run preview    # servir o build
 ```
 
-Não há suíte de testes automatizados. Validação = `npm run lint` + `npm run build` + teste manual.
+Testes automatizados: funções puras de `src/lib/` em `src/lib/*.test.ts` (`node:test` +
+`node:assert/strict`). Rodar com:
+
+```bash
+npx tsx --test src/lib/*.test.ts
+```
+
+(`tsx` já vem como dependência do `drizzle-kit`; não instale nada para rodar.)
+Validação = testes + `npm run lint` + `npm run build` + teste manual.
 
 > ⚠️ Existem `bun.lock` **e** `package-lock.json`. **Use npm** por padrão e confirme com o
 > usuário antes de instalar pacotes, para não gerar lockfiles conflitantes.
@@ -140,7 +148,7 @@ antes de responder (findings de segurança já corrigidos nesse sentido).
 - [ ] Nova tabela → RLS + GRANTs na mesma migração.
 - [ ] Textos de UI em português, tom simples e direto.
 - [ ] Testado no viewport mobile.
-- [ ] `npm run lint` e `npm run build` passam.
+- [ ] Testes (`npx tsx --test src/lib/*.test.ts`), `npm run lint` e `npm run build` passam.
 - [ ] Diff pequeno e localizado (sincronização com o Lovable).
 - [ ] `BIBLIA.md` atualizado se a mudança criou/alterou regra de negócio.
 

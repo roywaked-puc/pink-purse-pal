@@ -13,8 +13,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useSaveServiceWithFaixas, FaixaDraft } from '@/hooks/useServices';
-import { calcularFaixas, getFaixasDoServico } from '@/lib/serviceFaixas';
+import { useSaveServiceWithFaixas, useConsultarAtendimentosPorFaixa, FaixaDraft } from '@/hooks/useServices';
+import { calcularFaixas, erroAteFaixa, getFaixasDoServico, type FaixaCalculada } from '@/lib/serviceFaixas';
+import { detectarMudancaEstrutura, type ResultadoDeteccao } from '@/lib/replicarFaixa';
 import { cn } from '@/lib/utils';
 import type { Service } from '@/types';
 
@@ -53,14 +54,19 @@ interface Props {
   onOpenChange: (o: boolean) => void;
   service: Service | null;
   services: Service[];
+  /** Chamado após salvar um serviço que já existia e já tinha faixas, com a mudança de estrutura detectada. */
+  onEstruturaAlterada?: (origem: Service, resultado: ResultadoDeteccao) => void;
 }
 
 let keySeq = 0;
 const newKey = () => `k${++keySeq}`;
 
-export function ServiceFormSheet({ open, onOpenChange, service, services }: Props) {
+export function ServiceFormSheet({ open, onOpenChange, service, services, onEstruturaAlterada }: Props) {
   const { toast } = useToast();
   const save = useSaveServiceWithFaixas();
+  const consultarAtendimentos = useConsultarAtendimentosPorFaixa();
+  const [verificando, setVerificando] = useState(false);
+  const [confirmUso, setConfirmUso] = useState<{ faixas: number; atendimentos: number } | null>(null);
 
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -70,6 +76,7 @@ export function ServiceFormSheet({ open, onOpenChange, service, services }: Prop
   const [possui, setPossui] = useState(false);
   const [faixas, setFaixas] = useState<LocalFaixa[]>([]);
   const [removed, setRemoved] = useState<string[]>([]);
+  const [faixasAntes, setFaixasAntes] = useState<FaixaCalculada[]>([]);
   const [tab, setTab] = useState('dados');
   const [confirmOff, setConfirmOff] = useState(false);
 
@@ -91,6 +98,7 @@ export function ServiceFormSheet({ open, onOpenChange, service, services }: Prop
     setTab('dados');
     setRemoved([]);
     const existing = service ? getFaixasDoServico(service.id, services) : [];
+    setFaixasAntes(existing);
     setFaixas(existing.map(f => ({ id: f.id, ate: f.ate, ateOriginal: f.ate, amount: f.amount, duration: f.duration, key: newKey() })));
     setPossui(service ? !!service.possuiManutencao || existing.length > 0 : false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,13 +114,7 @@ export function ServiceFormSheet({ open, onOpenChange, service, services }: Prop
   const fAteNum = parseInt(fAte, 10);
   const ateError = !fAte
     ? 'Informe até quantos dias'
-    : !(fAteNum > faixaDe - 1) || fAteNum < faixaDe
-      ? `Até precisa ser maior ou igual a ${faixaDe}`
-      : nextFaixa && fAteNum >= nextFaixa.ate
-        ? `Não pode passar de ${nextFaixa.ate - 1} (fim da faixa seguinte é ${nextFaixa.ate})`
-        : calc.some(f => f.key !== editingKey && f.ate === fAteNum)
-          ? 'Já existe uma faixa terminando nesse dia'
-          : null;
+    : erroAteFaixa(fAteNum, faixaDe, nextFaixa?.ate, calc.filter(f => f.key !== editingKey).map(f => f.ate));
 
   const openNewFaixa = () => {
     setEditingKey(null);
@@ -155,6 +157,27 @@ export function ServiceFormSheet({ open, onOpenChange, service, services }: Prop
       toast({ title: 'Verifique os dados', description: parsed.error.issues[0].message, variant: 'destructive' });
       return;
     }
+    // Faixas que serão excluídas ao salvar: se alguma tem atendimentos, pede confirmação antes.
+    const idsSaindo = possui ? removed : [...removed, ...faixas.filter(f => f.id).map(f => f.id!)];
+    if (idsSaindo.length) {
+      setVerificando(true);
+      try {
+        const emUso = Object.values(await consultarAtendimentos(idsSaindo)).filter(n => n > 0);
+        if (emUso.length) {
+          setConfirmUso({ faixas: emUso.length, atendimentos: emUso.reduce((a, b) => a + b, 0) });
+          return;
+        }
+      } catch (e) {
+        toast({ title: 'Não foi possível verificar os atendimentos das faixas', description: (e as Error).message, variant: 'destructive' });
+        return;
+      } finally {
+        setVerificando(false);
+      }
+    }
+    await salvar();
+  };
+
+  const salvar = async () => {
     try {
       await save.mutateAsync({
         id: service?.id,
@@ -170,6 +193,10 @@ export function ServiceFormSheet({ open, onOpenChange, service, services }: Prop
       });
       toast({ title: 'Serviço salvo' });
       onOpenChange(false);
+      // Replicar nos outros serviços: só serviço que já existia, já tinha faixas e continua com manutenção.
+      if (service && possui && faixasAntes.length > 0) {
+        onEstruturaAlterada?.(service, detectarMudancaEstrutura(faixasAntes, faixas));
+      }
     } catch (e) {
       toast({ title: 'Não foi possível salvar', description: (e as Error).message, variant: 'destructive' });
     }
@@ -282,7 +309,7 @@ export function ServiceFormSheet({ open, onOpenChange, service, services }: Prop
         title={service ? 'Editar serviço' : 'Novo serviço'}
         onSubmit={handleSave}
         submitLabel="Salvar serviço"
-        submitting={save.isPending}
+        submitting={save.isPending || verificando}
       >
         {possui ? (
           <Tabs value={tab} onValueChange={setTab}>
@@ -351,6 +378,29 @@ export function ServiceFormSheet({ open, onOpenChange, service, services }: Prop
         title="Remover faixa"
         description="A faixa será removida ao salvar o serviço."
       />
+
+      <AlertDialog open={!!confirmUso} onOpenChange={o => !o && setConfirmUso(null)}>
+        <AlertDialogContent className="max-w-[90%] sm:max-w-md rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmUso?.faixas === 1 ? 'Faixa em uso' : 'Faixas em uso'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmUso && (() => {
+                const n = `${confirmUso.atendimentos} ${confirmUso.atendimentos === 1 ? 'atendimento' : 'atendimentos'}`;
+                return confirmUso.faixas === 1
+                  ? `Esta faixa foi usada em ${n}. Se excluir, eles perdem o vínculo com a faixa. Excluir mesmo assim?`
+                  : `Estas ${confirmUso.faixas} faixas foram usadas em ${n}. Se excluir, eles perdem o vínculo com as faixas. Excluir mesmo assim?`;
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2">
+            <AlertDialogCancel className="flex-1 mt-0">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { setConfirmUso(null); salvar(); }}>
+              Excluir mesmo assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={confirmOff} onOpenChange={setConfirmOff}>
         <AlertDialogContent className="max-w-[90%] sm:max-w-md rounded-xl">

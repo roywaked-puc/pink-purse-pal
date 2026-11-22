@@ -516,7 +516,31 @@ _Exclusão dos totais em dinheiro_
   Caminhos atuais chamam DELETE, inclusive remoção de faixas/desativação da manutenção;
   restrições podem impedir exclusão, mas isso não é arquivamento. Marcar o arquivamento como
   implementado seria incorreto. Preservar texto legado do atendimento não garante manter o
-  vínculo a um serviço que foi excluído.
+  vínculo a um serviço que foi excluído. Hoje `appointments.service_id` é `ON DELETE SET NULL`:
+  excluir na origem uma faixa com atendimentos é permitido e o atendimento perde o vínculo.
+  Ao salvar exclusão de faixa (ou desligar “Possui manutenção”) com faixa em uso, o app pede
+  confirmação informando quantos atendimentos perdem o vínculo; não bloqueia. Excluir o serviço
+  principal pela lista (cascata nas faixas) ainda não tem esse aviso.
+- **Replicar mudança de faixa nos outros serviços — implementado.** Depois de “Salvar serviço”,
+  se o serviço já existia, já tinha faixas, continua com manutenção e houve **exatamente uma**
+  mudança de estrutura (faixa incluída, excluída ou com “Até” alterado; valor/duração e o ajuste
+  automático da faixa seguinte não contam), abre um Drawer com os outros principais com
+  manutenção (avulsos e o grupo “Revisar” ficam de fora). Com 2+ mudanças, só um aviso.
+  Faixas se correspondem pelos dias, nunca por posição ou nome. Cada operação grava numa única
+  chamada (tudo-ou-nada), sem migração. Lógica pura em `src/lib/replicarFaixa.ts`.
+  - **Incluir:** “Mesmas faixas” (marcado), “Faixas diferentes” (desmarcado; nova faixa começa
+    no último fim + 1, ou em 1 se não houver faixas) e “Já cobre” (sem ação). Valor sugerido
+    por diferença em R$ (padrão), por % arredondado a R$ 5 ou mesmo valor; valor e duração
+    editáveis.
+    Confirmação no Drawer com “Desfazer” (apaga só as faixas recém-criadas, sem atendimentos).
+  - **Alterar “Até”:** mesmo início e mesmo fim antigo → marcado (“Mesmas faixas” se toda a
+    estrutura é igual à da origem antes da mudança; senão “Tem x–y”). Só o fim antigo bate →
+    “Faixas diferentes”, desmarcado. A seguinte começa no novo fim + 1. Bloqueia “Já está
+    assim”, “Não tem” e conflito, usando a mesma validação do editor de faixas
+    (`erroAteFaixa`; fim = início é permitido). Valores e durações não mudam.
+  - **Excluir:** casa pelo mesmo intervalo; a seguinte passa a começar onde a excluída começava.
+    Faixa com qualquer atendimento (“Em uso”) nunca é apagada por aqui; a checagem é refeita
+    imediatamente antes de excluir.
 
 ### 4.10 Minha Marca
 

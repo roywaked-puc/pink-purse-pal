@@ -170,6 +170,29 @@ export interface SaveServiceInput {
   removeFaixaIds: string[];
 }
 
+interface PaiDaFaixa {
+  id: string;
+  description: string;
+  color?: string | null;
+  techniqueName?: string;
+}
+
+/** Monta a linha de `services` de uma faixa de manutenção (inclui campos legados). */
+function linhaFaixa(pai: PaiDaFaixa, f: { de: number; ate: number; amount: number; duration: number }) {
+  return {
+    description: faixaDescription(pai.description, f.ate),
+    amount: f.amount,
+    duration: f.duration,
+    color: pai.color ?? null,
+    servico_pai_id: pai.id,
+    manutencao_ate_dias: f.ate,
+    technique_name: pai.techniqueName || pai.description,
+    tier_type: 'manutencao',
+    dias_min: f.de,
+    dias_max: f.ate,
+  };
+}
+
 /** Salva o serviço principal e depois suas faixas de manutenção. */
 export function useSaveServiceWithFaixas() {
   const queryClient = useQueryClient();
@@ -217,19 +240,8 @@ export function useSaveServiceWithFaixas() {
       if (!input.possuiManutencao) return parentId!;
 
       const calc = calcularFaixas(input.faixas);
-      const technique = input.techniqueName || input.description;
-      const row = (f: (typeof calc)[number]) => ({
-        description: faixaDescription(input.description, f.ate),
-        amount: f.amount,
-        duration: f.duration,
-        color: input.color ?? null,
-        servico_pai_id: parentId,
-        manutencao_ate_dias: f.ate,
-        technique_name: technique,
-        tier_type: 'manutencao',
-        dias_min: f.de,
-        dias_max: f.ate,
-      });
+      const pai = { id: parentId!, description: input.description, color: input.color, techniqueName: input.techniqueName };
+      const row = (f: (typeof calc)[number]) => linhaFaixa(pai, f);
 
       // Evita colisão temporária do "até" único: reduções em ordem crescente, aumentos em ordem decrescente.
       const existing = calc.filter(f => f.id);
@@ -251,4 +263,131 @@ export function useSaveServiceWithFaixas() {
       queryClient.invalidateQueries({ queryKey: ['services'] });
     },
   });
+}
+
+// ---------------------------------------------------------------------------
+// Replicar mudança de faixa nos outros serviços (cada operação grava numa única chamada)
+// ---------------------------------------------------------------------------
+
+type FaixaGravada = { id?: string; de: number; ate: number; amount: number; duration: number };
+
+/** Quantos atendimentos (qualquer status) apontam para cada faixa. */
+async function contarAtendimentosPorFaixa(ids: string[]): Promise<Record<string, number>> {
+  const pares = await Promise.all(
+    ids.map(async id => {
+      const { count, error } = await supabase
+        .from('appointments')
+        .select('id', { count: 'exact', head: true })
+        .eq('service_id', id);
+      if (error) throw sanitizeDbError(error);
+      return [id, count ?? 0] as const;
+    }),
+  );
+  return Object.fromEntries(pares);
+}
+
+const chaveAtendimentosPorFaixa = (userId: string | undefined, ids: string[]) => ['atendimentos-por-faixa', userId, [...ids].sort()];
+
+export function useAtendimentosPorFaixa(ids: string[], enabled = true) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: chaveAtendimentosPorFaixa(user?.id, ids),
+    queryFn: () => contarAtendimentosPorFaixa(ids),
+    enabled: !!user && enabled && ids.length > 0,
+    staleTime: 0,
+  });
+}
+
+/** Mesma contagem do "Em uso", sob demanda (ex.: antes de salvar a exclusão de faixas). */
+export function useConsultarAtendimentosPorFaixa() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return (ids: string[]) =>
+    queryClient.fetchQuery({ queryKey: chaveAtendimentosPorFaixa(user?.id, ids), queryFn: () => contarAtendimentosPorFaixa(ids), staleTime: 0 });
+}
+
+/** (a) Inclui uma faixa em vários serviços num único insert. Retorna os ids criados. */
+export function useIncluirFaixaEmLote() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (itens: { pai: PaiDaFaixa; faixa: FaixaGravada }[]): Promise<string[]> => {
+      if (!user) throw new Error('Not authenticated');
+      const linhas = itens.map(i => ({ ...linhaFaixa(i.pai, i.faixa), user_id: user.id }));
+      const { data, error } = await supabase.from('services').insert(linhas).select('id');
+      if (error) throw sanitizeDbError(error);
+      return data.map(d => d.id);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['services'] }),
+  });
+}
+
+/** Desfaz a inclusão em lote: apaga só as faixas recém-criadas, se ainda sem atendimentos. */
+export function useDesfazerInclusaoFaixa() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await garantirSemAtendimentos(ids);
+      const { error } = await supabase.from('services').delete().in('id', ids);
+      if (error) throw sanitizeDbError(error);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['services'] }),
+  });
+}
+
+/**
+ * (b) Altera o "Até" de uma faixa em vários serviços num único upsert (tudo-ou-nada),
+ * regravando também a faixa seguinte, que passa a começar em fimNovo + 1.
+ */
+export function useAlterarLimiteEmLote() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (itens: { pai: PaiDaFaixa; faixa: FaixaGravada; seguinte?: FaixaGravada; fimNovo: number }[]) => {
+      if (!user) throw new Error('Not authenticated');
+      const linhas = itens.flatMap(i => [
+        { id: i.faixa.id!, user_id: user.id, ...linhaFaixa(i.pai, { ...i.faixa, ate: i.fimNovo }) },
+        ...(i.seguinte ? [{ id: i.seguinte.id!, user_id: user.id, ...linhaFaixa(i.pai, { ...i.seguinte, de: i.fimNovo + 1 }) }] : []),
+      ]);
+      const { error } = await supabase.from('services').upsert(linhas, { onConflict: 'id' });
+      if (error) throw sanitizeDbError(error);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['services'] }),
+  });
+}
+
+/**
+ * (c) Exclui uma faixa de vários serviços num único delete (tudo-ou-nada). Nunca apaga
+ * faixa com atendimento: confere de novo antes de excluir.
+ */
+export function useExcluirFaixaEmLote() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (itens: { pai: PaiDaFaixa; faixa: FaixaGravada; seguinte?: FaixaGravada }[]) => {
+      if (!user) throw new Error('Not authenticated');
+      const ids = itens.map(i => i.faixa.id!);
+      await garantirSemAtendimentos(ids);
+      const { error } = await supabase.from('services').delete().in('id', ids);
+      if (error) throw sanitizeDbError(error);
+      // Campos legados (dias_min) da faixa seguinte: ninguém os lê; atualiza como a edição individual faz.
+      const seguintes = itens
+        .filter(i => i.seguinte)
+        .map(i => ({ id: i.seguinte!.id!, user_id: user.id, ...linhaFaixa(i.pai, { ...i.seguinte!, de: i.faixa.de }) }));
+      if (seguintes.length) await supabase.from('services').upsert(seguintes, { onConflict: 'id' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: ['atendimentos-por-faixa'] });
+    },
+  });
+}
+
+async function garantirSemAtendimentos(ids: string[]) {
+  const { count, error } = await supabase
+    .from('appointments')
+    .select('id', { count: 'exact', head: true })
+    .in('service_id', ids);
+  if (error) throw sanitizeDbError(error);
+  if ((count ?? 0) > 0) throw new Error('Uma das faixas passou a ter atendimentos e foi mantida. Feche e confira de novo.');
 }

@@ -7,6 +7,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { getFaixasDoServico } from '@/lib/serviceFaixas';
 import { ServiceFormSheet, formatBRL } from './ServiceFormSheet';
+import { ReplicarFaixaDrawer, type ServicoComFaixas } from './ReplicarFaixaDrawer';
+import { useToast } from '@/hooks/use-toast';
+import type { MudancaFaixa, ResultadoDeteccao } from '@/lib/replicarFaixa';
 import type { Service } from '@/types';
 
 type Filtro = 'todos' | 'com' | 'sem';
@@ -20,6 +23,9 @@ export function ServiceList() {
   const [editing, setEditing] = useState<Service | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+  const [replicar, setReplicar] = useState<{ chave: number; origem: Service; mudanca: MudancaFaixa; outros: ServicoComFaixas[] } | null>(null);
+  const [replicarOpen, setReplicarOpen] = useState(false);
 
   const { principais, revisar } = useMemo(() => {
     const principais = services
@@ -34,6 +40,19 @@ export function ServiceList() {
     const com = !!service.possuiManutencao || faixas.length > 0;
     return filtro === 'todos' || (filtro === 'com' ? com : !com);
   });
+
+  // Depois de salvar uma mudança de estrutura de faixas, oferece replicar nos outros serviços com manutenção.
+  const handleEstruturaAlterada = (origem: Service, { quantidade, mudanca }: ResultadoDeteccao) => {
+    const outros = principais.filter(p => p.service.id !== origem.id && (!!p.service.possuiManutencao || p.faixas.length > 0));
+    if (quantidade === 0 || outros.length === 0) return;
+    if (quantidade > 1) {
+      toast({ description: 'Mais de uma faixa mudou, então nada foi aplicado nos outros serviços. Para replicar, faça uma mudança por vez e salve.' });
+      return;
+    }
+    if (!mudanca) return;
+    setReplicar(r => ({ chave: (r?.chave ?? 0) + 1, origem, mudanca, outros }));
+    setReplicarOpen(true);
+  };
 
   const openNew = () => { setEditing(null); setSheetOpen(true); };
   const openEdit = (s: Service) => { setEditing(s); setSheetOpen(true); };
@@ -125,7 +144,12 @@ export function ServiceList() {
         </div>
       )}
 
-      <ServiceFormSheet open={sheetOpen} onOpenChange={setSheetOpen} service={editing} services={services} />
+      <ServiceFormSheet open={sheetOpen} onOpenChange={setSheetOpen} service={editing} services={services} onEstruturaAlterada={handleEstruturaAlterada} />
+
+      {replicar && (
+        <ReplicarFaixaDrawer key={replicar.chave} open={replicarOpen} onOpenChange={setReplicarOpen}
+          origem={replicar.origem} mudanca={replicar.mudanca} outros={replicar.outros} />
+      )}
 
       <DeleteConfirmDialog
         open={!!deleteId}
