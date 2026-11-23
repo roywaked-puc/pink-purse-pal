@@ -2,7 +2,7 @@
 
 > Documento **de produto e domínio**: o "o quê" e o "porquê".
 > Para regras de execução/código do agente, veja `CLAUDE.md`.
-> Última revisão: 18/novembro/2026 (conferência contra o repositório até o commit `5ee02cb`).
+> Última revisão: 23/novembro/2026 (conferência contra o repositório até o commit `670bb4e`).
 
 ---
 
@@ -118,8 +118,9 @@ Esta seção descreve o que existe no código, não uma proposta de redesenho.
 | Relatório de Movimentações — `/relatorio-movimentacoes`  | Cabeçalho e voltar a Movimentações; filtros, tabela, resumo por origem e banco                                                                                                                                                                                  | Exportação do resultado                                                                                                                                                                                     |
 | Relatório de Agendamentos — `/relatorio-agendamentos`    | Cabeçalho e voltar a Relatórios; filtros, quatro métricas, resumo por status e lista                                                                                                                                                                            | Exportação do resultado                                                                                                                                                                                     |
 | Indicadores — `/relatorio-indicadores`                   | Cabeçalho, ano e voltar a Relatórios; métricas, atendimentos por mês e faturamento mês a mês; chave “comparar com ano anterior”                                                                                                                                 | Controles de período e tooltips por mês                                                                                                                                                                     |
-| Configurações — `/configuracoes`                         | Cabeçalho, ajuda, conta conectada, senha e sair; accordion único expansível; links para Termos/Privacidade; selo Belafy no fim                                                                                                                                  | Plano/assinatura, cadastros, marca, contas/taxas/extratos, revisão de permuta, anamnese, configurações e confirmações                                                                                       |
-| Ajuda — `/ajuda`                                         | Logo Belafy, cabeçalho, busca, **card do chat com a assistente**, manual em accordion, atalhos “Como eu faço para...?” e checklist                                                                                                                              | Drawer do chat com IA; conteúdo estático; tabelas adaptadas em cards no celular                                                                                                                             |
+| Configurações — `/configuracoes`                         | Cabeçalho, ajuda, conta conectada, senha e sair; accordion único expansível; links para Termos/Privacidade; selo Belafy no fim                                                                                                                                  | Plano/assinatura (incl. `CancelarAssinatura`), cadastros, `ReplicarFaixaDrawer` após salvar serviço, marca, contas/taxas/extratos, revisão de permuta, anamnese, `ExcluirConta`, configurações e confirmações                                                                                       |
+| Ajuda — `/ajuda`                                         | Logo Belafy, cabeçalho, busca, **card do chat com a assistente**, manual em accordion, atalhos “Como eu faço para...?”, checklist e card **Fale com a gente** no fim                                                                                                                              | Drawer do chat com IA; conteúdo estático; tabelas adaptadas em cards no celular                                                                                                                             |
+| Conta em exclusão (sem rota própria)                     | Tela exclusiva `ContaEmExclusao` exibida pelo ProtectedRoute quando há exclusão agendada; bloqueia as telas de negócio durante os 30 dias e mostra a data da exclusão | Ações **Reativar conta** e **Sair**; reativar não religa a assinatura |
 | Página não encontrada — `*`                              | Página pública para endereço sem correspondência                                                                                                                                                                                                                | Não representa funcionalidade autenticada                                                                                                                                                                   |
 
 - **Configurações:** ordem dos grupos: **Meu Plano**, Minha Marca, Clientes, Serviços, Categorias,
@@ -600,8 +601,11 @@ _Exclusão dos totais em dinheiro_
   “Ocultar na Home” grava `user_settings.primeiros_passos_oculto_em` (vale em todos os
   aparelhos e domínios); o valor antigo do localStorage é migrado e apagado. **Removido:**
   progresso marcado à mão em localStorage. Continua independente das boas-vindas.
+- **Fale com a gente:** `CardFaleConosco` no fim da página, com e-mail oficial
+  `belafy@hotmail.com` (constante `EMAIL_SUPORTE` em `src/lib/constantes.ts`), ações `mailto:`
+  “Relatar um problema” e “Enviar uma sugestão” com assunto pronto e botão de copiar o e-mail.
 - **Dependências:** conteúdo estático, navegação, user_settings, dados do AppContext e
-  `chat-ajuda`; nenhum serviço de envio.
+  `chat-ajuda`; nenhum serviço de envio automático.
 
 ### 4.13 Páginas legais (`/termos`, `/privacidade`)
 
@@ -619,6 +623,22 @@ _Exclusão dos totais em dinheiro_
 - **Cancelar assinatura:** Meu Plano permite desligar a renovação Pro e desfazer até o fim do período pago, com confirmação e sem estorno comum. `cancelar-assinatura` valida sessão, origem e vínculo Stripe; exclusão agendada bloqueia desfazer. Assinar Pro fica oculto enquanto há Pro ativo.
 - **Excluir conta:** Configurações → Excluir minha conta exige digitar EXCLUIR; recomenda exportar CSV (sem fotos/anamneses). `excluir-conta` encerra cobrança antes de agendar; até sete dias do primeiro pagamento, estorna com idempotência e encerra Pro imediatamente. Há 30 dias para desistir; a tela exclusiva permite Reativar ou Sair, sem religar a assinatura.
 - **Exclusão definitiva:** `contas_exclusao`, RPC própria e purga restrita a service_role; rotina diária apaga dados public, pastas de todos os buckets e login, com tentativas em falhas. Mantém registro fiscal mínimo e limpa o e-mail. A purga não afeta outras contas.
+
+- **Telas/componentes:** `CancelarAssinatura` (Meu Plano), `ExcluirConta` (Configurações),
+  `ContaEmExclusao` (bloqueio no ProtectedRoute), hook `useExclusaoConta`; regras puras em
+  `supabase/functions/_shared/exclusao-regras.ts` (testes em `src/lib/exclusaoConta.test.ts`).
+- **Estorno em 7 dias:** conta-se do primeiro pagamento; a data da primeira tentativa
+  (`assinaturas.exclusao_tentativa_em`) é preservada, então uma nova tentativa após falha não
+  perde o direito. Estorno idempotente; Pro encerrado na hora (`estorno_exclusao_em`).
+- **Serialização:** `iniciar_acao_conta`/`finalizar_acao_conta` (só service_role) gravam uma trava
+  de 5 minutos (`acao_conta_token`/`acao_conta_ate`) para que cancelar, excluir e checkout não
+  rodem ao mesmo tempo; checkout e desfazer cancelamento ficam bloqueados com exclusão pendente.
+- **Assinatura estornada nunca volta:** tabela privada `assinaturas_estornadas` + trigger
+  `proteger_acesso_estornado`; webhooks atrasados não restauram Pro nem renovam a cobrança.
+- **Purga:** `purgar_dados_conta` (só service_role) exige exclusão agendada e vencida, trava todas
+  as tabelas com `user_id`, desliga temporariamente os triggers de usuária, apaga e confere tudo,
+  e religa os triggers. A função `purgar-contas-excluidas` também apaga as pastas nos buckets e o
+  login; `purga-contas-diaria` é acionada todo dia às 06:00 UTC.
 
 - **Planos:** teste de **40 dias** a partir da criação da conta, sem cartão; **Pro Mensal
   R$ 39,90** e **Pro Anual R$ 359,00** (cobrado à vista; “economize 25%”). Sem plano gratuito,
@@ -655,6 +675,13 @@ _Exclusão dos totais em dinheiro_
   estavam pendentes; o commit “Concluiu integração Stripe” é do mesmo dia).
 
 ### 4.15 Registro das atualizações
+
+**23/11/2026 — conferência até o commit `670bb4e`.**
+
+- **Adicionado:** cancelamento da renovação Pro e exclusão de conta (30 dias, estorno em 7 dias,
+  tela Conta em exclusão, purga diária, ledger de assinaturas estornadas, serialização de ações);
+  card Fale com a gente na Ajuda; Drawer de replicação de faixas listado nas telas; migrações
+  Drizzle 0013–0016, novas tabelas/colunas/RPCs e Edge Functions documentadas.
 
 **18/11/2026 — conferência do repositório após a revisão de 14/11** (commits até `5ee02cb`).
 Revisadas seções 1, 3, 4, 5, 6, 7 e 10.
@@ -711,6 +738,8 @@ serviço, cor própria de manutenção e passo Próxima manutenção / `Schedule
     Plano, isenção e IDs Stripe nunca são escritos pelo cliente; acesso Pro só por evento
     Stripe assinado (`invoice.paid`). Mensalidade não entra em `transactions`.
 12. **Chat de ajuda não acessa dados da conta** — responde só pelo manual.
+13. **Exclusão de conta:** 30 dias para desistir; estorno só até 7 dias do primeiro pagamento;
+    assinatura estornada nunca é restaurada; purga só por função de serviço após o prazo.
 
 ## 6. Modelo de dados
 
@@ -729,14 +758,20 @@ serviço, cor própria de manutenção e passo Próxima manutenção / `Schedule
 | `permuta_lancamentos` | Lançamentos da conta corrente de permuta (`fui_atendida`, `ajuste`, `saldo_inicial`, `acerto_recebido`, `acerto_pago`)                                                                                       |
 | `assinaturas`         | Uma linha por usuária: plano, periodicidade, status, `teste_ate`, IDs Stripe, fim do período, isenção. Usuária só lê a própria                                                                               |
 | `eventos_stripe`      | Eventos Stripe processados (idempotência/auditoria); sem acesso para usuárias                                                                                                                                |
+| `contas_exclusao`     | Pedidos de exclusão (`agendada`/`cancelada`/`concluida`, `excluir_apos` = +30 dias, estorno, último erro); usuária só lê a própria |
+| `assinaturas_estornadas` | Assinaturas Stripe estornadas na exclusão (bloqueia reativação por webhook); só service_role |
+
+`assinaturas` ganhou `estorno_exclusao_em`, `acao_conta_token`, `acao_conta_ate` e `exclusao_tentativa_em`.
 
 **Views:** `permuta_transacoes_legadas`, `permuta_extrato`, `permuta_saldos` (todas
 `security_invoker`). **RPCs principais:** `plano_efetivo`, `resumo_assinatura`,
 `aplicar_evento_stripe` (só service_role), `registrar_acerto_permuta`,
-`revisar_conta_corrente_permuta`, `ativar_conta_corrente_permuta`.
+`revisar_conta_corrente_permuta`, `ativar_conta_corrente_permuta`, `exclusao_conta_pendente`;
+só service_role: `reativar_conta_exclusao`, `purgar_dados_conta`, `iniciar_acao_conta`,
+`finalizar_acao_conta`. Trigger `proteger_acesso_estornado` em `assinaturas`.
 
 Fonte da verdade do schema: `supabase/migrations/` (histórico até 28/09/2026) **e, desde então,
-`drizzle/migrations/`** (0000–0012, com `drizzle/schema.ts`). Novas migrações seguem a
+`drizzle/migrations/`** (0000–0016, com `drizzle/schema.ts`). Novas migrações seguem a
 numeração do Drizzle. `SCHEMA_ATUAL.sql` é a fotografia consolidada.
 `src/integrations/supabase/types.ts` é **gerado** — nunca editar à mão.
 
@@ -752,6 +787,9 @@ numeração do Drizzle. `SCHEMA_ATUAL.sql` é a fotografia consolidada.
   `gerenciar-assinatura` e `stripe-webhook` (helpers em `_shared/assinaturas.ts`). Secrets:
   `STRIPE_SECRET_KEY` (chave restrita), `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MENSAL_ID`,
   `STRIPE_PRICE_ANUAL_ID`, `STRIPE_AMBIENTE`. Detalhes em 4.14.
+- **Ciclo da conta:** Edge Functions `cancelar-assinatura`, `excluir-conta`,
+  `purgar-contas-excluidas` e `purga-contas-diaria` (agendamento diário 06:00 UTC, autenticado
+  por segredo próprio, que repassa um segredo separado de purga).
 - **Lovable AI Gateway**: Edge Function `chat-ajuda` para o chat da Ajuda, só com o manual.
 
 ## 8. Escala atual (ago/2026, referência)
@@ -771,7 +809,8 @@ Volume ainda não exige paginação agressiva, mas evite carregar tudo sem filtr
 - [x] Monetização: **decidido SaaS** — teste de 40 dias + Pro mensal/anual via Stripe (4.14).
 - [ ] Backup/retenção além do `ExportData`.
 - [ ] LGPD formal (há fotos e anamneses = dados sensíveis). Termos e Política de Privacidade
-      já publicados (4.13); falta avaliação jurídica formal.
+      já publicados (4.13) e exclusão integral da conta implementada (4.14); falta avaliação
+      jurídica formal.
 
 ---
 
