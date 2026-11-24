@@ -8,20 +8,13 @@ import { useLogoUrl } from '@/hooks/useMarca';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMemo } from 'react';
+import { montarDocumentoAnamnese, rotuloRespostaAnamnese as labelForValue } from '@/lib/anamneseImpressao';
 
 interface Props {
   responseId: string | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }
-
-const labelForValue = (type: string, v: unknown): string => {
-  if (v === undefined || v === null || v === '') return '—';
-  if (Array.isArray(v)) return v.join(', ') || '—';
-  if (type === 'checkbox') return v ? 'Sim' : 'Não';
-  if (type === 'sim_nao') return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : String(v);
-  return String(v);
-};
 
 export function AnamneseViewer({ responseId, open, onOpenChange }: Props) {
   const { data, isLoading } = useAnamneseResponseDetail(responseId ?? undefined);
@@ -47,25 +40,21 @@ export function AnamneseViewer({ responseId, open, onOpenChange }: Props) {
   }, [data?.answers]);
 
   const handlePrint = () => {
-    const el = document.getElementById('anamnese-print-area');
-    if (!el) return;
+    if (!data) return;
     const w = window.open('', '_blank', 'width=900,height=700');
     if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>Anamnese</title>
-      <style>
-        body { font-family: -apple-system, sans-serif; padding: 32px; color: #111; }
-        h1 { font-size: 20px; margin: 0 0 4px; }
-        h2 { font-size: 14px; margin: 16px 0 6px; padding-bottom: 4px; border-bottom: 1px solid #ddd; color: #b8336a; }
-        p { margin: 4px 0; font-size: 13px; }
-        .q { margin-bottom: 6px; }
-        .lbl { font-weight: 600; }
-        .meta { color: #666; font-size: 12px; }
-        img { max-width: 320px; border: 1px solid #ddd; }
-        .marca { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .marca img { width: 48px; height: 48px; max-width: 48px; border-radius: 50%; object-fit: cover; }
-        .marca .nome { font-size: 16px; font-weight: 700; }
-        @media print { body { padding: 0; } }
-      </style></head><body>${el.innerHTML}</body></html>`);
+    w.document.write(montarDocumentoAnamnese({
+      nomeModelo: data.template.name,
+      versao: data.version.version,
+      nomeCliente: client?.name ?? null,
+      status: data.response.status,
+      signedAt: data.response.signed_at,
+      signatureData: data.response.signature_data,
+      perguntas: data.questions,
+      respostas: answerMap,
+      nomeNegocio: settings?.nome_negocio ?? null,
+      logoSrc: logoUrl,
+    }));
     w.document.close();
     setTimeout(() => { w.focus(); w.print(); }, 300);
   };

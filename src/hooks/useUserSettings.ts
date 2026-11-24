@@ -55,7 +55,7 @@ const DEFAULTS = {
 };
 
 // Safe column list — never select OAuth client secret or access/refresh tokens client-side.
-const SAFE_COLUMNS =
+export const SAFE_COLUMNS =
   'id, user_id, google_calendar_enabled, google_client_id, google_token_expiry, retention_intervals, retention_reminder_days, retention_color_previsto, retention_color_aguardando, retention_color_confirmado, crm_inactive_days, crm_confirm_days, crm_vip_count, crm_monthly_goal, caixa_reserva_ativo, caixa_reserva_valor, caixa_inicio_em, confirm_message_template, cancellation_notice_hours, cancellation_fee, nome_negocio, logo_path, cor_primaria, onboarding_concluido_em, permuta_corte_em, primeiros_passos_oculto_em';
 
 export function useUserSettings() {
