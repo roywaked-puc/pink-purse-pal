@@ -15,6 +15,7 @@ export const TABELAS_BACKUP = [
   'user_settings',
 ] as const;
 export type TabelaBackup = (typeof TABELAS_BACKUP)[number];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- linhas cruas do banco
 export type Linha = Record<string, any>;
 export type DadosBackup = Record<TabelaBackup, Linha[]>;
 
@@ -84,7 +85,7 @@ export function formatarRespostaAnamnese(tipo: string, v: unknown): string {
 export function sanitizarNome(nome: string | null | undefined, max = 40): string {
   const s = (nome ?? '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[/\\:*?"<>|\u0000-\u001f]/g, '')
+    .replace(/[/\\:*?"<>|]/g, '').replace(/\p{Cc}/gu, '')
     .replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^[_.]+|[_.]+$/g, '')
     .slice(0, max).replace(/[_.]+$/g, '');
   return s || 'sem_nome';
@@ -117,7 +118,7 @@ export function montarPlanilhas(d: DadosBackup, caminhos: CaminhosNoZip): Record
   const cta = mapaPor(d.accounts), tct = mapaPor(d.account_fee_types), tpl = mapaPor(d.anamnese_templates);
   const ver = mapaPor(d.anamnese_template_versions), qst = mapaPor(d.anamnese_questions);
   const rsp = mapaPor(d.anamnese_responses);
-  const n = (m: Map<any, Linha>, id: unknown, campo = 'name') => (id ? m.get(id)?.[campo] ?? '' : '');
+  const n = (m: Map<unknown, Linha>, id: unknown, campo = 'name') => (id ? m.get(id)?.[campo] ?? '' : '');
   const out: Record<string, string> = {};
 
   out['clientes.csv'] = gerarCsv(
@@ -193,7 +194,7 @@ export function montarLeiaMe(geradoEm: Date, incluiFotos: boolean): string {
     'O que tem aqui:',
     '- planilhas/: seus dados em planilhas. Abra no Excel ou no Google Planilhas.',
     `- fotos/: fotos das clientes, uma pasta por cliente.${incluiFotos ? '' : ' (Este backup foi feito sem fotos.)'}`,
-    '- anamneses/: fichas de anamnese assinadas, uma pasta por cliente. Abra no navegador para ver ou imprimir (ou salvar em PDF).',
+    '- anamneses/: fichas de anamnese assinadas em PDF, prontas para imprimir, uma pasta por cliente.',
     '- marca/: a logo do seu negócio, se você cadastrou.',
     '- restauracao/ e manifesto.json: cópia fiel dos seus dados, para uma restauração no futuro. Não edite esses arquivos.',
     '- erros.txt: aparece só se algum arquivo não pôde ser copiado.',

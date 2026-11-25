@@ -20,8 +20,8 @@ export function ExcluirConta() {
         </AlertDialogHeader>
         <p className="text-sm text-muted-foreground">A cobrança da assinatura será encerrada agora. Se a primeira contratação paga foi há até 7 dias, o valor pago será estornado automaticamente e o Pro encerrado imediatamente. Fora desse prazo, desligamos a renovação, sem estorno.</p>
         <p className="text-sm text-muted-foreground">Ao reativar, a assinatura não será religada automaticamente.</p>
-        <p className="text-sm text-muted-foreground">Recomendamos exportar seus dados antes. O CSV não inclui fotos nem fichas de anamnese.</p>
-        <Button asChild variant="outline" className="min-h-11"><Link to="/configuracoes?abrir=export" onClick={() => setOpen(false)}>Exportar Dados</Link></Button>
+        <p className="text-sm text-muted-foreground">Antes, faça o backup dos seus dados (inclui fotos e fichas assinadas).</p>
+        <Button asChild variant="outline" className="min-h-11"><Link to="/configuracoes?abrir=backup" onClick={() => setOpen(false)}>Fazer backup</Link></Button>
         <label htmlFor="confirmar-exclusao" className="text-sm font-medium">Digite EXCLUIR para confirmar</label>
         <Input id="confirmar-exclusao" autoComplete="off" value={confirmacao} onChange={e => setConfirmacao(e.target.value)} />
         <AlertDialogFooter>

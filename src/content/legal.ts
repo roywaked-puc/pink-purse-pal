@@ -153,7 +153,7 @@ export const termos: DocumentoLegal = {
       "blocos": [
         {
           "tipo": "paragrafo",
-          "texto": "Tudo o que você cadastra no Belafy continua sendo seu. Você pode exportar clientes, serviços, agendamentos, movimentações, categorias e contas em Configurações → Exportar Dados."
+          "texto": "Tudo o que você cadastra no Belafy continua sendo seu. Você pode baixar uma cópia completa (clientes, agenda, financeiro, fichas de anamnese e fotos) em Configurações → Backup dos meus dados."
         },
         {
           "tipo": "paragrafo",
@@ -219,7 +219,7 @@ export const termos: DocumentoLegal = {
         },
         {
           "tipo": "paragrafo",
-          "texto": "Recomendamos exportar seus dados periodicamente em Configurações → Exportar Dados."
+          "texto": "Recomendamos fazer o backup dos seus dados periodicamente em Configurações → Backup dos meus dados."
         }
       ]
     },
@@ -254,7 +254,7 @@ export const termos: DocumentoLegal = {
       "blocos": [
         {
           "tipo": "paragrafo",
-          "texto": "Você pode excluir sua conta em Configurações → Excluir minha conta. A cobrança da assinatura é encerrada na hora: em até 7 dias da primeira contratação paga, há estorno e cancelamento imediato; fora desse prazo, desligamos a renovação automática. Você tem 30 dias para desistir, entrando novamente e reativando a conta; isso não religa a assinatura automaticamente. Depois, todos os dados são apagados de vez, inclusive fotos, anamneses assinadas e login, preservando apenas registros mínimos exigidos pela legislação fiscal. Exporte seus dados antes: o CSV não inclui fotos nem fichas de anamnese."
+          "texto": "Você pode excluir sua conta em Configurações → Excluir minha conta. A cobrança da assinatura é encerrada na hora: em até 7 dias da primeira contratação paga, há estorno e cancelamento imediato; fora desse prazo, desligamos a renovação automática. Você tem 30 dias para desistir, entrando novamente e reativando a conta; isso não religa a assinatura automaticamente. Depois, todos os dados são apagados de vez, inclusive fotos, anamneses assinadas e login, preservando apenas registros mínimos exigidos pela legislação fiscal. Faça o backup dos seus dados antes (inclui fotos e fichas assinadas)."
         },
         {
           "tipo": "paragrafo",
@@ -562,7 +562,7 @@ export const privacidade: DocumentoLegal = {
             "confirmar se tratamos seus dados e acessá-los;",
             "corrigir dados incompletos ou desatualizados;",
             "pedir a exclusão ou a anonimização de dados desnecessários;",
-            "receber os dados em formato que permita levá-los a outro serviço (a profissional pode exportar em Configurações → Exportar Dados);",
+            "receber os dados em formato que permita levá-los a outro serviço (a profissional pode baixar o backup em Configurações → Backup dos meus dados);",
             "saber com quem os dados foram compartilhados;",
             "revogar o consentimento, quando o tratamento se basear nele;",
             "reclamar à ANPD."

@@ -43,6 +43,7 @@ export const comoFaco: { pergunta: string; resposta: string }[] = [
   { pergunta: 'Mudar o preço de um serviço', resposta: 'Configurações → Serviços → editar' },
   { pergunta: 'Esconder os valores da tela', resposta: 'Início → ícone de olho' },
   { pergunta: 'Trocar a senha', resposta: 'Configurações → Alterar Senha' },
+  { pergunta: 'Guardar uma cópia dos meus dados', resposta: 'Configurações → Backup dos meus dados → Fazer backup' },
 ];
 
 export const secoesManual: SecaoManual[] = [

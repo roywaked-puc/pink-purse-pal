@@ -125,7 +125,7 @@ Esta seção descreve o que existe no código, não uma proposta de redesenho.
 
 - **Configurações:** ordem dos grupos: **Meu Plano**, Minha Marca, Clientes, Serviços, Categorias,
   Contas e Bancos, Google Calendar, Retenção de Clientes, CRM, Modelos de Anamnese,
-  Separação de Caixa e Exportar Dados. Um grupo aberto por vez; grade de uma coluna no
+  Separação de Caixa e Backup dos meus dados. Um grupo aberto por vez; grade de uma coluna no
   celular e duas em `md`. No card da conta, “Conectado como” fica acima do e-mail truncável;
   trocar senha e sair ficam na linha de ações.
 - **CRM:** resumo em três colunas no celular/seis em `md`; cards de ação em duas/três.
@@ -496,9 +496,16 @@ _Exclusão dos totais em dinheiro_
   App salva localmente e depois tenta sincronizar, sem transação atômica entre os dois sistemas.
   Cliente recebe só configurações seguras; disponibilidade do segredo por RPC booleana
   autenticada, sem ler tokens/client secret. Corpo remoto tem formatador próprio.
-- **Exportar Dados:** CSV separados de clientes, serviços, agendamentos, movimentações,
-  categorias e contas, a partir dos dados carregados; não é restauração/backup completo do banco.
-- **Dependências:** hooks das entidades, user_settings, funções Google Calendar e exportadores;
+- **Backup dos meus dados** (`BackupDados`, abre por `?abrir=backup`): um botão gera no navegador
+  um .zip `belafy-backup-AAAA-MM-DD-HHmm.zip` (formato `belafy-backup`, `versao_formato` 1) com
+  `planilhas/` (CSV UTF-8 com BOM, `;`, datas de São Paulo), `restauracao/<tabela>.json` (linhas
+  cruas), `fotos/` (opcional), `anamneses/` (fichas assinadas em PDF A4, gerado por `gerarPdfAnamnese` com a
+  mesma estrutura da impressão da aba Anamnese), `marca/`, `manifesto.json` (contagens, arquivos do storage, fichas, falhas,
+  sha256), `LEIA-ME.txt` e `erros.txt` se algo falhar. Lê o banco paginado (1000 por vez), nunca o
+  AppContext; 15 tabelas da usuária, `user_settings` só com as colunas seguras; nunca assinaturas,
+  Stripe, exclusão ou modelos iniciais. Falha de tabela aborta; falha de arquivo só é registrada.
+  Drawer de progresso com cancelamento confirmado. Restauração ainda não existe.
+- **Dependências:** hooks das entidades, user_settings, funções Google Calendar e backup (`useGerarBackup`, `src/lib/backup.ts`);
   detalhes de marca estão em 4.10.
 
 **Cadastro de serviços — implementado**
@@ -621,7 +628,7 @@ _Exclusão dos totais em dinheiro_
 ### 4.14 Assinaturas Belafy (Stripe)
 
 - **Cancelar assinatura:** Meu Plano permite desligar a renovação Pro e desfazer até o fim do período pago, com confirmação e sem estorno comum. `cancelar-assinatura` valida sessão, origem e vínculo Stripe; exclusão agendada bloqueia desfazer. Assinar Pro fica oculto enquanto há Pro ativo.
-- **Excluir conta:** Configurações → Excluir minha conta exige digitar EXCLUIR; recomenda exportar CSV (sem fotos/anamneses). `excluir-conta` encerra cobrança antes de agendar; até sete dias do primeiro pagamento, estorna com idempotência e encerra Pro imediatamente. Há 30 dias para desistir; a tela exclusiva permite Reativar ou Sair, sem religar a assinatura.
+- **Excluir conta:** Configurações → Excluir minha conta exige digitar EXCLUIR; recomenda fazer antes o backup completo (link para Configurações → Backup). `excluir-conta` encerra cobrança antes de agendar; até sete dias do primeiro pagamento, estorna com idempotência e encerra Pro imediatamente. Há 30 dias para desistir; a tela exclusiva permite Reativar ou Sair, sem religar a assinatura.
 - **Exclusão definitiva:** `contas_exclusao`, RPC própria e purga restrita a service_role; rotina diária apaga dados public, pastas de todos os buckets e login, com tentativas em falhas. Mantém registro fiscal mínimo e limpa o e-mail. A purga não afeta outras contas.
 
 - **Telas/componentes:** `CancelarAssinatura` (Meu Plano), `ExcluirConta` (Configurações),
@@ -807,7 +814,7 @@ Volume ainda não exige paginação agressiva, mas evite carregar tudo sem filtr
 ## 10. Lacunas a decidir
 
 - [x] Monetização: **decidido SaaS** — teste de 40 dias + Pro mensal/anual via Stripe (4.14).
-- [ ] Backup/retenção além do `ExportData`.
+- [x] Backup baixável pela usuária implementado (Configurações → Backup dos meus dados, formato v1). Restauração ainda não existe.
 - [ ] LGPD formal (há fotos e anamneses = dados sensíveis). Termos e Política de Privacidade
       já publicados (4.13) e exclusão integral da conta implementada (4.14); falta avaliação
       jurídica formal.

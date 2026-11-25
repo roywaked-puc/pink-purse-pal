@@ -4,7 +4,7 @@ import { ClientList } from '@/components/settings/ClientList';
 import { ServiceList } from '@/components/settings/ServiceList';
 import { CategoryList } from '@/components/settings/CategoryList';
 import { AccountList } from '@/components/settings/AccountList';
-import { ExportData } from '@/components/settings/ExportData';
+import { BackupDados } from '@/components/settings/BackupDados';
 import { ChangePasswordDialog } from '@/components/settings/ChangePasswordDialog';
 import { GoogleCalendarSettings } from '@/components/settings/GoogleCalendarSettings';
 import { RetentionSettings } from '@/components/settings/RetentionSettings';
@@ -36,7 +36,8 @@ const Configuracoes = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const secaoInicial = searchParams.get('abrir') ?? undefined;
+  const abrirParam = searchParams.get('abrir') ?? undefined;
+  const secaoInicial = abrirParam === 'export' ? 'backup' : abrirParam;
 
   const handleLogout = async () => {
     await signOut();
@@ -266,20 +267,20 @@ const Configuracoes = () => {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="export" className="border rounded-lg px-4">
+          <AccordionItem value="backup" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline py-4">
               <div className="flex items-center gap-3">
                 <Download className="h-5 w-5 text-primary" />
                 <div className="text-left">
-                  <p className="font-semibold">Exportar Dados</p>
+                  <p className="font-semibold">Backup dos meus dados</p>
                   <p className="text-sm text-muted-foreground font-normal">
-                    Backup em CSV
+                    Clientes, agenda, financeiro, fichas e fotos
                   </p>
                 </div>
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <ExportData />
+              <BackupDados />
             </AccordionContent>
           </AccordionItem>
         </Accordion>

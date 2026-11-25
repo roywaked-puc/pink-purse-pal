@@ -86,3 +86,59 @@ export function montarDocumentoAnamnese(d: DadosImpressaoAnamnese): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Anamnese</title>
       <style>${ESTILO_IMPRESSAO_ANAMNESE}</style></head><body>${montarCorpoAnamnese(d)}</body></html>`;
 }
+
+/** Gera um PDF A4 da ficha, com a mesma estrutura do documento de impressão. */
+export async function gerarPdfAnamnese(d: DadosImpressaoAnamnese): Promise<Uint8Array> {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const margem = 14;
+  const largura = doc.internal.pageSize.getWidth() - margem * 2;
+  const alturaPagina = doc.internal.pageSize.getHeight();
+  let y = margem;
+  const garantir = (h: number) => { if (y + h > alturaPagina - margem) { doc.addPage(); y = margem; } };
+  const texto = (t: string, tam: number, estilo: 'normal' | 'bold', cor: [number, number, number] = [17, 17, 17]) => {
+    doc.setFont('helvetica', estilo); doc.setFontSize(tam); doc.setTextColor(...cor);
+    const linhas = doc.splitTextToSize(t, largura) as string[];
+    const h = tam * 0.42;
+    for (const l of linhas) { garantir(h); doc.text(l, margem, y + h * 0.8); y += h; }
+  };
+
+  if (d.nomeNegocio || d.logoSrc) {
+    let x = margem;
+    if (d.logoSrc) {
+      try { doc.addImage(d.logoSrc, margem, y, 13, 13); x += 16; } catch { /* segue sem logo */ }
+    }
+    if (d.nomeNegocio) { doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(17, 17, 17); doc.text(d.nomeNegocio, x, y + 8.5); }
+    y += 17;
+  }
+  texto(d.nomeModelo, 16, 'bold');
+  y += 1;
+  const situacao = d.signedAt
+    ? `Assinada em ${format(new Date(d.signedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`
+    : `Status: ${d.status}`;
+  texto(`Cliente: ${d.nomeCliente ?? '—'} · Versão ${d.versao} · ${situacao}`, 9.5, 'normal', [102, 102, 102]);
+
+  const secao = (titulo: string) => {
+    y += 4; garantir(10);
+    texto(titulo, 11, 'bold', [184, 51, 106]);
+    doc.setDrawColor(221, 221, 221); doc.line(margem, y + 1, margem + largura, y + 1); y += 3;
+  };
+  for (const [s, qs] of agruparPorSecao(d.perguntas)) {
+    secao(s);
+    for (const q of qs) {
+      texto(`${q.label}: ${rotuloRespostaAnamnese(q.type, d.respostas[q.id])}`, 10, 'normal');
+      y += 1.2;
+    }
+  }
+  if (d.signatureData) {
+    secao('Assinatura');
+    try {
+      const p = doc.getImageProperties(d.signatureData);
+      const w = Math.min(85, largura); const h = (p.height / p.width) * w;
+      garantir(h + 2);
+      doc.setDrawColor(221, 221, 221); doc.rect(margem, y, w, h);
+      doc.addImage(d.signatureData, margem, y, w, h); y += h;
+    } catch { texto('(assinatura não pôde ser incluída)', 9, 'normal', [102, 102, 102]); }
+  }
+  return new Uint8Array(doc.output('arraybuffer'));
+}

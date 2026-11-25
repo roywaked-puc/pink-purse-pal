@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SAFE_COLUMNS } from '@/hooks/useUserSettings';
 import { LOGOS_BUCKET } from '@/hooks/useMarca';
 import { sanitizeDbError } from '@/lib/sanitizeError';
-import { montarDocumentoAnamnese } from '@/lib/anamneseImpressao';
+import { gerarPdfAnamnese, type DadosImpressaoAnamnese } from '@/lib/anamneseImpressao';
 import {
   TABELAS_BACKUP, type DadosBackup, type Linha, type FalhaBackup, type ArquivoStorage, type PdfFicha,
   montarPlanilhas, montarManifesto, montarLeiaMe, montarErros, nomeArquivoZip, nomeComId,
@@ -28,7 +28,7 @@ const abortar = (signal: AbortSignal) => {
 };
 
 async function sha256Hex(dados: Uint8Array): Promise<string> {
-  const h = await crypto.subtle.digest('SHA-256', dados);
+  const h = await crypto.subtle.digest('SHA-256', dados as Uint8Array<ArrayBuffer>);
   return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
@@ -68,7 +68,9 @@ export function useGerarBackup() {
       const linhas: Linha[] = [];
       for (let de = 0; ; de += PAGINA) {
         abortar(signal);
-        const { data, error } = await (supabase.from(tabela as any) as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tabela dinâmica
+        const consulta = supabase.from(tabela) as any;
+        const { data, error } = await consulta
           .select(colunas).eq('user_id', user.id).order('id').range(de, de + PAGINA - 1);
         if (error) throw sanitizeDbError(error);
         linhas.push(...(data ?? []));
@@ -165,20 +167,21 @@ export function useGerarBackup() {
           .sort((a, b) => a.order_index - b.order_index);
         const respostas: Record<string, unknown> = {};
         dados.anamnese_answers.filter((a) => a.response_id === r.id).forEach((a) => { respostas[a.question_id] = a.value; });
-        const html = montarDocumentoAnamnese({
+        const pdf = await gerarPdfAnamnese({
           nomeModelo: modelo?.name ?? 'Anamnese',
           versao: versoes.get(r.version_id)?.version ?? 1,
           nomeCliente: clientes.get(r.client_id)?.name ?? null,
           status: r.status,
           signedAt: r.signed_at,
           signatureData: r.signature_data,
-          perguntas,
+          perguntas: perguntas as DadosImpressaoAnamnese['perguntas'],
           respostas,
           nomeNegocio: settings?.nome_negocio ?? null,
           logoSrc: logoDataUrl,
         });
-        const caminho = `${base}.html`;
-        arquivos[caminho] = strToU8(html);
+        const caminho = `${base}.pdf`;
+        arquivos[caminho] = pdf;
+        semCompressao.add(caminho);
         caminhosFichas.set(r.id, caminho);
         pdfs.push({ response_id: r.id, arquivo_no_zip: caminho });
         fichasOk++;
@@ -217,7 +220,7 @@ export function useGerarBackup() {
     onProgresso({ etapa: 'Pronto!', percentual: 100 });
 
     return {
-      blob: new Blob([bytes], { type: 'application/zip' }),
+      blob: new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/zip' }),
       nome: nomeArquivoZip(geradoEm),
       resumo: {
         clientes: dados.clients.length, agendamentos: dados.appointments.length,
