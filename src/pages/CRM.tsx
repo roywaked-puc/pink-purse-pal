@@ -13,6 +13,8 @@ import {
   ChevronRight,
   TrendingUp,
   CalendarDays,
+  Search,
+  X,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -21,6 +23,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { BotaoAjuda } from '@/components/ajuda/BotaoAjuda';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { ActionCard } from '@/components/crm/ActionCard';
 import { CrmListSheet } from '@/components/crm/CrmListSheet';
 import { WhatsAppButton } from '@/components/crm/WhatsAppButton';
@@ -57,6 +60,10 @@ type SheetType =
 const formatBRL = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
+// Busca sem diferenciar acentos/maiúsculas ("aldeneia" acha "Aldenéia").
+const normalizarBusca = (s: string) =>
+  s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
 const filterChips: { value: string; label: string }[] = [
   { value: 'todas', label: 'Todas' },
   { value: 'ativas', label: 'Ativas' },
@@ -86,6 +93,7 @@ export default function CRM() {
   const [sheet, setSheet] = useState<SheetType>(null);
   const [productionFilter, setProductionFilter] = useState<ProductionFilter | null>(null);
   const [filter, setFilter] = useState<string>('todas');
+  const [busca, setBusca] = useState('');
   const [cobrancaClient, setCobrancaClient] = useState<Client | null>(null);
 
   const activeClients = useMemo(() => stats.filter((s) => s.isActive), [stats]);
@@ -129,21 +137,28 @@ export default function CRM() {
   const vipIds = useMemo(() => new Set(vipClients.map((v) => v.client.id)), [vipClients]);
 
   const filteredList = useMemo(() => {
+    let lista = stats;
     switch (filter) {
       case 'ativas':
-        return stats.filter((s) => s.isActive);
+        lista = stats.filter((s) => s.isActive);
+        break;
       case 'inativas':
-        return stats.filter((s) => s.isInactive);
+        lista = stats.filter((s) => s.isInactive);
+        break;
       case 'saldo':
-        return stats.filter((s) => s.pendingBalance > 0.01);
+        lista = stats.filter((s) => s.pendingBalance > 0.01);
+        break;
       case 'retorno':
-        return stats.filter((s) => s.lastAttended && !s.nextScheduled && !s.isInactive);
+        lista = stats.filter((s) => s.lastAttended && !s.nextScheduled && !s.isInactive);
+        break;
       case 'vip':
-        return stats.filter((s) => vipIds.has(s.client.id));
-      default:
-        return stats;
+        lista = stats.filter((s) => vipIds.has(s.client.id));
+        break;
     }
-  }, [stats, filter, vipIds]);
+    const termo = normalizarBusca(busca);
+    if (!termo) return lista;
+    return lista.filter((s) => normalizarBusca(s.client.name).includes(termo));
+  }, [stats, filter, vipIds, busca]);
 
   const handleConfirm = async (apptId: string) => {
     try {
@@ -260,6 +275,29 @@ export default function CRM() {
           <h2 className="font-semibold">Clientes</h2>
           <span className="text-xs text-muted-foreground">{filteredList.length} resultado(s)</span>
         </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            placeholder="Buscar cliente pelo nome..."
+            aria-label="Buscar cliente pelo nome"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="pl-10 pr-10 [&::-webkit-search-cancel-button]:hidden"
+          />
+          {busca && (
+            <button
+              type="button"
+              onClick={() => setBusca('')}
+              aria-label="Limpar busca"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           {filterChips.map((c) => (
             <button
@@ -280,8 +318,14 @@ export default function CRM() {
         {filteredList.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="Nenhuma cliente neste filtro"
-            description="Tente outro filtro ou cadastre clientes em Configurações."
+            title={busca.trim() ? 'Nenhuma cliente encontrada' : 'Nenhuma cliente neste filtro'}
+            description={
+              busca.trim()
+                ? filter === 'todas'
+                  ? 'Confira o nome digitado.'
+                  : 'Confira o nome ou toque em "Todas" para buscar em todas as clientes.'
+                : 'Tente outro filtro ou cadastre clientes em Configurações.'
+            }
           />
         ) : (
           <div className="space-y-2">
